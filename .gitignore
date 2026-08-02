@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build output
+.next/
+out/
+dist/
+build/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Local data / logs
+*.log
+.DS_Store
+
+# Test / coverage
+coverage/
+.vitest/
+
+# Editor
+.idea/
+.vscode/
+
+# Brainstorm/visual-companion scratch (if ever run inside the repo)
+.superpowers/brainstorm/
