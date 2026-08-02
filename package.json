@@ -14,16 +14,20 @@
   "license": "UNLICENSED",
   "packageManager": "pnpm@10.32.1",
   "dependencies": {
+    "drizzle-orm": "^0.45.2",
     "next": "^15.5.22",
+    "postgres": "^3.4.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.4",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "drizzle-kit": "^0.31.10",
     "postcss": "^8.5.25",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
