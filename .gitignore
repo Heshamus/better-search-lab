@@ -22,6 +22,10 @@ build/
 coverage/
 .vitest/
 
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
 # Editor
 .idea/
 .vscode/
