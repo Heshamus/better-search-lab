@@ -1,0 +1,16 @@
+import { apiUsage } from "@/db/schema";
+// Pricing per request (approx, 2026-08); refine against live pricing later.
+const PRICES: Record<string, number> = {
+  "/v3/serp/google/organic/live/advanced": 0.002,
+  "/v3/dataforseo_labs/google/keyword_ideas/live": 0.012,
+  "/v3/dataforseo_labs/google/domain_intersection/live": 0.012,
+};
+export function estimateCost(endpoint: string, _rows: number): number {
+  return PRICES[endpoint] ?? 0.012;
+}
+export async function logApiUsage(db: any, entry: { endpoint: string; rows: number; projectId?: string }) {
+  await db.insert(apiUsage).values({
+    endpoint: entry.endpoint, rows: entry.rows,
+    projectId: entry.projectId ?? null, estCost: String(estimateCost(entry.endpoint, entry.rows)),
+  });
+}
