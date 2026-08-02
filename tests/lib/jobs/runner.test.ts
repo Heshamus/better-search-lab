@@ -34,4 +34,18 @@ describe("runJob", () => {
     const rows = await t.db.select().from(jobs);
     expect(rows[0].error).toContain("boom");
   });
+
+  it("re-runs a job whose prior attempt failed (not skipped)", async () => {
+    const t = await createTestDb(); close = t.close;
+    const failing = vi.fn().mockRejectedValue(new Error("boom"));
+    const succeeding = vi.fn().mockResolvedValue({ rows: 5, cost: 0.01 });
+    const first = await runJob(t.db, { type: "rank", date: "2026-08-02", handler: failing });
+    expect(first).toBe("failed");
+    const second = await runJob(t.db, { type: "rank", date: "2026-08-02", handler: succeeding });
+    expect(second).toBe("done"); // re-claimed, not skipped
+    expect(succeeding).toHaveBeenCalledTimes(1);
+    const [row] = await t.db.select().from(jobs);
+    expect(row.status).toBe("done");
+    expect(row.error).toBeNull(); // error cleared on re-claim
+  });
 });
