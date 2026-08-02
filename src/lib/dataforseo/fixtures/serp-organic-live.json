@@ -1,0 +1,120 @@
+{
+  "version": "0.1.20260115",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "0.2317 sec.",
+  "cost": 0.002,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "08021535-1535-0066-0000-a1b2c3d4e5f6",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "0.1984 sec.",
+      "cost": 0.002,
+      "result_count": 1,
+      "path": ["v3", "serp", "google", "organic", "live", "advanced"],
+      "data": {
+        "api": "serp",
+        "function": "live",
+        "se": "google",
+        "se_type": "organic",
+        "keyword": "seo reporting software",
+        "location_code": 2840,
+        "language_code": "en",
+        "device": "desktop",
+        "os": "windows",
+        "depth": 100
+      },
+      "result": [
+        {
+          "keyword": "seo reporting software",
+          "type": "organic",
+          "se_domain": "google.com",
+          "location_code": 2840,
+          "language_code": "en",
+          "check_url": "https://www.google.com/search?q=seo+reporting+software&num=100&hl=en&gl=US",
+          "datetime": "2026-08-02 14:03:11 +00:00",
+          "spell": null,
+          "item_types": ["featured_snippet", "organic", "people_also_ask"],
+          "se_results_count": 48200000,
+          "items_count": 7,
+          "items": [
+            {
+              "type": "featured_snippet",
+              "rank_group": 0,
+              "rank_absolute": 1,
+              "domain": "www.semrush.com",
+              "title": "10 Best SEO Reporting Tools & Software in 2026",
+              "url": "https://www.semrush.com/blog/seo-reporting-tools/",
+              "description": "Compare the top SEO reporting software platforms for agencies and in-house teams, including pricing and feature breakdowns."
+            },
+            {
+              "type": "organic",
+              "rank_group": 1,
+              "rank_absolute": 2,
+              "domain": "www.semrush.com",
+              "title": "10 Best SEO Reporting Tools & Software in 2026",
+              "url": "https://www.semrush.com/blog/seo-reporting-tools/",
+              "breadcrumb": "semrush.com › blog › seo-reporting-tools",
+              "description": "Compare the top SEO reporting software platforms for agencies and in-house teams, including pricing and feature breakdowns."
+            },
+            {
+              "type": "organic",
+              "rank_group": 2,
+              "rank_absolute": 3,
+              "domain": "ahrefs.com",
+              "title": "Free SEO Reporting Tool - Ahrefs",
+              "url": "https://ahrefs.com/seo-reporting-tool",
+              "breadcrumb": "ahrefs.com › seo-reporting-tool",
+              "description": "Build white-label SEO reports in minutes with live rank tracking, backlink, and traffic data."
+            },
+            {
+              "type": "organic",
+              "rank_group": 3,
+              "rank_absolute": 4,
+              "domain": "www.wordstream.com",
+              "title": "The 9 Best SEO Reporting Tools for Agencies in 2026",
+              "url": "https://www.wordstream.com/blog/ws/seo-reporting-software",
+              "breadcrumb": "wordstream.com › blog › ws › seo-reporting-software",
+              "description": "A side-by-side comparison of automated SEO reporting tools, from budget-friendly options to full-service platforms."
+            },
+            {
+              "type": "people_also_ask",
+              "rank_group": 4,
+              "rank_absolute": 5,
+              "items": [
+                {
+                  "type": "people_also_ask_element",
+                  "title": "What is SEO reporting software?",
+                  "seed_question": "What is SEO reporting software?"
+                }
+              ]
+            },
+            {
+              "type": "organic",
+              "rank_group": 5,
+              "rank_absolute": 6,
+              "domain": "moz.com",
+              "title": "SEO Reporting: How to Build Reports Clients Understand",
+              "url": "https://moz.com/blog/seo-reporting-tools-clients",
+              "breadcrumb": "moz.com › blog › seo-reporting-tools-clients",
+              "description": "Learn which metrics matter in a client SEO report and the tools that automate the process end to end."
+            },
+            {
+              "type": "organic",
+              "rank_group": 9,
+              "rank_absolute": 12,
+              "domain": "harperflow.io",
+              "title": "HarperFlow — Automated SEO Reporting Software",
+              "url": "https://harperflow.io/features/seo-reporting",
+              "breadcrumb": "harperflow.io › features › seo-reporting",
+              "description": "HarperFlow auto-generates GEO-optimized SEO reports and publishes ranked content straight to your CMS."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
