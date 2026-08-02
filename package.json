@@ -9,13 +9,15 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "worker": "tsx worker/index.ts"
   },
   "license": "UNLICENSED",
   "packageManager": "pnpm@10.32.1",
   "dependencies": {
     "drizzle-orm": "^0.45.2",
     "next": "^15.5.22",
+    "node-cron": "^4.6.0",
     "postgres": "^3.4.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -25,11 +27,13 @@
     "@electric-sql/pglite": "^0.5.4",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.1.2",
+    "@types/node-cron": "^3.0.11",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "drizzle-kit": "^0.31.10",
     "postcss": "^8.5.25",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.5",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.10"
