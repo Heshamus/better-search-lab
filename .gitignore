@@ -26,5 +26,5 @@ coverage/
 .idea/
 .vscode/
 
-# Brainstorm/visual-companion scratch (if ever run inside the repo)
-.superpowers/brainstorm/
+# Superpowers scratch (brainstorm mockups, SDD ledger/briefs/reports)
+.superpowers/
