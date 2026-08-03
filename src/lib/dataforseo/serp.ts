@@ -24,7 +24,7 @@ export async function serpOrganicLive(client: DataForSeoClient, params: {
     .filter((i: any) => i.type === "organic")
     .map((i: any) => ({
       rankAbsolute: i.rank_absolute, rankGroup: i.rank_group,
-      domain: i.domain, url: i.url, serpFeatures: features,
+      domain: i.domain, url: i.url, serpFeatures: [...features],
     }));
   return { items, rows: raw.length };
 }

@@ -14,5 +14,9 @@ describe("serpOrganicLive", () => {
     expect(hf?.rankAbsolute).toBe(12);
     expect(items.some((i) => i.serpFeatures.includes("featured_snippet"))).toBe(true);
     expect(rows).toBeGreaterThan(0);
+
+    // each item gets its own serpFeatures array (no shared-reference aliasing)
+    expect(items.length).toBeGreaterThan(1);
+    expect(items[0].serpFeatures).not.toBe(items[1].serpFeatures);
   });
 });
