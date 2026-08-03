@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import fx from "@/lib/dataforseo/fixtures/keyword-overview-live.json";
 import { keywordOverview } from "@/lib/dataforseo/labs";
-import { DataForSeoClient } from "@/lib/dataforseo/client";
+import { DataForSeoClient, DataForSeoError } from "@/lib/dataforseo/client";
 import { estimateCost } from "@/lib/dataforseo/cost";
 
 describe("keywordOverview + cost", () => {
@@ -13,5 +13,19 @@ describe("keywordOverview + cost", () => {
   });
   it("prices the labs endpoints", () => {
     expect(estimateCost("/v3/dataforseo_labs/google/ranked_keywords/live", 100)).toBeCloseTo(0.012, 4);
+  });
+  it("throws on a task-level error envelope instead of silently returning zero items (metrics path must fail loud)", async () => {
+    const c = new DataForSeoClient({ login: "L", password: "P" });
+    const billingLapseEnvelope = {
+      status_code: 20000,
+      status_message: "Ok.",
+      tasks: [
+        { status_code: 40200, status_message: "Payment required.", result: null },
+      ],
+    };
+    vi.spyOn(c, "post").mockResolvedValue(billingLapseEnvelope as any);
+    await expect(
+      keywordOverview(c, { keywords: ["seo reporting software"], locationCode: 2840, languageCode: "en" })
+    ).rejects.toBeInstanceOf(DataForSeoError);
   });
 });

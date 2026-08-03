@@ -1,7 +1,7 @@
 import { keywords, keywordMetrics } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { keywordOverview } from "@/lib/dataforseo/labs";
-import { logApiUsage } from "@/lib/dataforseo/cost";
+import { logApiUsage, estimateCost } from "@/lib/dataforseo/cost";
 import type { DataForSeoClient } from "@/lib/dataforseo/client";
 
 const OVERVIEW_ENDPOINT = "/v3/dataforseo_labs/google/keyword_overview/live";
@@ -29,6 +29,6 @@ export function metricsRefreshHandler(client: DataForSeoClient, overview: typeof
       rows++;
     }
     await logApiUsage(db, { endpoint: OVERVIEW_ENDPOINT, rows, projectId });
-    return { rows, cost: 0.012 + rows * 0.00012 };
+    return { rows, cost: estimateCost(OVERVIEW_ENDPOINT, rows) };
   };
 }

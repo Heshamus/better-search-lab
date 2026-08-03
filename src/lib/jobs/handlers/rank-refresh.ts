@@ -2,7 +2,7 @@ import { projects, keywords, rankSnapshots } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { serpOrganicLive } from "@/lib/dataforseo/serp";
 import { findDomainRank } from "@/lib/core/rank";
-import { logApiUsage } from "@/lib/dataforseo/cost";
+import { logApiUsage, estimateCost } from "@/lib/dataforseo/cost";
 import type { DataForSeoClient } from "@/lib/dataforseo/client";
 
 const SERP_ENDPOINT = "/v3/serp/google/organic/live/advanced";
@@ -27,7 +27,7 @@ export function rankRefreshHandler(client: DataForSeoClient, serp: typeof serpOr
         await db.insert(rankSnapshots).values({ keywordId: kw.id, fetchStatus: "failed", reason: String(e?.message ?? e) });
       }
       await logApiUsage(db, { endpoint: SERP_ENDPOINT, rows: 1, projectId: projectId });
-      rows += 1; cost += 0.002;
+      rows += 1; cost += estimateCost(SERP_ENDPOINT, 1);
     }
     return { rows, cost };
   };

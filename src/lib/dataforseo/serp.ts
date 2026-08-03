@@ -1,4 +1,5 @@
 import type { DataForSeoClient } from "./client";
+import { assertTasksOk } from "./client";
 
 export interface SerpItem {
   rankAbsolute: number;
@@ -18,6 +19,7 @@ export async function serpOrganicLive(client: DataForSeoClient, params: {
     language_code: params.languageCode, device: params.device ?? "desktop", depth: params.depth ?? 100,
   }];
   const resp = await client.post<any>("/v3/serp/google/organic/live/advanced", body);
+  assertTasksOk(resp);
   const raw = resp?.tasks?.[0]?.result?.[0]?.items ?? [];
   const features = raw.filter((i: any) => FEATURE_TYPES.has(i.type)).map((i: any) => i.type);
   const items: SerpItem[] = raw

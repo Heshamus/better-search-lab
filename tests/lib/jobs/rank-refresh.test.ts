@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { createTestDb } from "@/db/test-db";
 import { createProject } from "@/lib/projects";
 import { addKeywords } from "@/lib/keywords";
-import { rankSnapshots } from "@/db/schema";
+import { rankSnapshots, apiUsage } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { rankRefreshHandler } from "@/lib/jobs/handlers/rank-refresh";
 import { DataForSeoClient } from "@/lib/dataforseo/client";
@@ -23,6 +23,11 @@ describe("rankRefreshHandler", () => {
     expect(snap.rankAbsolute).toBe(12);
     expect(snap.serpFeatures).toContain("featured_snippet");
     expect(r.rows).toBeGreaterThan(0);
+    // jobs.est_cost (r.cost) must reconcile with what logApiUsage wrote to api_usage.est_cost —
+    // both now derive from the same estimateCost() call instead of a duplicated price literal.
+    const usage = await t.db.select().from(apiUsage);
+    const totalLogged = usage.reduce((sum: number, u: any) => sum + Number(u.estCost), 0);
+    expect(r.cost).toBeCloseTo(totalLogged, 5);
   });
   it("stores fetch_status=failed (no fake rank) when SERP throws", async () => {
     const t = await createTestDb(); close = t.close;
