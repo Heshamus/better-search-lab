@@ -36,9 +36,13 @@ export async function listRankings(db: any, projectId: string, asOf: Date): Prom
 
   const keywordIds = tracked.map((k: any) => k.id);
 
+  // Secondary sort on `id` makes ties on capturedAt (simultaneous captures)
+  // deterministic, matching deltaForKeyword/latestAtOrBefore's own id
+  // tie-break — otherwise "the last element = latest" below would silently
+  // depend on whatever order the DB happens to return tied rows in.
   const snaps = await db.select().from(rankSnapshots)
     .where(inArray(rankSnapshots.keywordId, keywordIds))
-    .orderBy(asc(rankSnapshots.capturedAt));
+    .orderBy(asc(rankSnapshots.capturedAt), asc(rankSnapshots.id));
 
   const metricsRows = await db.select().from(keywordMetrics)
     .where(inArray(keywordMetrics.keywordId, keywordIds));
@@ -91,5 +95,5 @@ export async function rankHistory(
     fetchStatus: rankSnapshots.fetchStatus,
   }).from(rankSnapshots)
     .where(eq(rankSnapshots.keywordId, keywordId))
-    .orderBy(asc(rankSnapshots.capturedAt));
+    .orderBy(asc(rankSnapshots.capturedAt), asc(rankSnapshots.id));
 }

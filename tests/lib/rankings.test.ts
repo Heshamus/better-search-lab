@@ -96,6 +96,11 @@ describe("listRankings", () => {
     expect(rows[0].rankAbsolute).toBeNull();
     expect(rows[0].url).toBeNull();
     expect(rows[0].serpFeatures).toEqual([]);
+    // Only one ok sample exists (2026-08-01) — deltaForKeyword's current and
+    // previous cutoffs both resolve to that SAME stale snapshot, so the
+    // honest answer is "no recent data" (null), never a fabricated 0.
+    expect(rows[0].delta7).toBeNull();
+    expect(rows[0].delta30).toBeNull();
   });
 });
 
