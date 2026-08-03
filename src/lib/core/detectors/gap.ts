@@ -1,11 +1,13 @@
 import type { DetectorInput, Candidate } from "./types";
 
-const MIN_COMPETITORS = 2;
+const MIN_COMPETITORS = 1;
 const MAX_KD = 60;
 
 /**
- * A keyword ≥ MIN_COMPETITORS competitors rank for that we don't track at
- * all, and winnable (KD ≤ MAX_KD, or unscored). Not a tracked keyword, so
+ * A keyword where at least one competitor ranks and we don't track it at
+ * all, and winnable (KD ≤ MAX_KD, or unscored). More competitors strengthen
+ * the signal via `competitorCount` in scoring, but a single competitor is
+ * enough to qualify as a gap. Not a tracked keyword, so
  * keywordId/currentPosition/trend are null — there's no rank history yet.
  */
 export function gap(input: DetectorInput): Candidate[] {

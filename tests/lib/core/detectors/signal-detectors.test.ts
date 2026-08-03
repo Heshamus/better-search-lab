@@ -11,7 +11,7 @@ const ks = (o: Partial<KeywordSignal>): KeywordSignal => ({ keywordId: "k", keyw
 const snap = (rank: number | null, features: string[] = [], ownUrls: string[] = []) => ({ keywordId: "k", capturedAt: d("2026-08-10"), rankAbsolute: rank, fetchStatus: "ok", serpFeatures: features, ownUrls });
 
 describe("gap", () => {
-  it("flags winnable keywords ≥2 competitors rank for", () => {
+  it("flags winnable keywords a competitor ranks for", () => {
     const g: GapSignal = { keyword: "rank tracker", volume: 800, difficulty: 40, competitorCount: 2 };
     const out = gap(base({ gapSignals: [g] }));
     expect(out).toHaveLength(1);
@@ -19,9 +19,11 @@ describe("gap", () => {
     expect(out[0].keywordId).toBeNull();
     expect(out[0].evidence.competitorCount).toBe(2);
   });
-  it("skips single-competitor and unwinnable (high-KD) gaps", () => {
-    expect(gap(base({ gapSignals: [{ keyword: "a", volume: 1, difficulty: 10, competitorCount: 1 }] }))).toHaveLength(0);
+  it("skips unwinnable (high-KD) gaps regardless of competitor count", () => {
     expect(gap(base({ gapSignals: [{ keyword: "b", volume: 1, difficulty: 95, competitorCount: 3 }] }))).toHaveLength(0);
+  });
+  it("skips gaps no competitor ranks for", () => {
+    expect(gap(base({ gapSignals: [{ keyword: "a", volume: 1, difficulty: 10, competitorCount: 0 }] }))).toHaveLength(0);
   });
 });
 
