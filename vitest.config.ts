@@ -18,6 +18,14 @@ export default defineConfig({
     // current-correct per-file mechanism) — see tests/components/*.
     environment: "node",
     setupFiles: ["./tests/setup/vitest-setup.ts"],
+    // Every DB test builds a fresh PGlite via drizzle-kit `pushSchema`
+    // (introspect + diff + apply the whole schema). Under vitest's parallel
+    // file execution, dozens of concurrent pushSchema calls contend and blow
+    // past the 5s default — a flaky, table-count-sensitive timeout that grows
+    // as the schema does. 30s absorbs the contention without changing what any
+    // test does. (If this ever proves insufficient, cap file parallelism.)
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     server: {
       deps: {
         // next-auth (reached via `@/auth` from every guarded API route) is
