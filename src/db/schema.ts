@@ -100,6 +100,14 @@ export const competitorKeywords = pgTable("competitor_keywords", {
   fetchedAt: timestamp("fetched_at").defaultNow().notNull(),
 });
 
+export const researchSearches = pgTable("research_searches", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  seed: text("seed").notNull(),
+  results: jsonb("results").$type<unknown>().notNull().default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const opportunities = pgTable("opportunities", {
   id: uuid("id").defaultRandom().primaryKey(),
   projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),

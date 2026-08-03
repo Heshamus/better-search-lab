@@ -45,13 +45,17 @@ const promptBoxClass =
 
 /**
  * The Research view's seed -> keyword-ideas explorer (Task 7). Client
- * component: a seed search calls the guarded, live (no-persistence)
- * `POST /api/research` and renders whatever it returns; a multi-select of
- * the results can be added to tracking via the guarded `POST /api/keywords`,
- * after which the server-rendered parts of the shell are refreshed. Unlike
- * Tasks 4-6, there is no server-fetched data to seed this component with —
- * research is live-on-demand, so `projectId`/`locationCode`/`languageCode`
- * are the only inputs, all sourced from the current project's row.
+ * component: a seed search calls the guarded `POST /api/research` and
+ * renders whatever it returns; a multi-select of the results can be added
+ * to tracking via the guarded `POST /api/keywords`, after which the
+ * server-rendered parts of the shell are refreshed. Unlike Tasks 4-6, there
+ * is no server-fetched data to seed this component with — research is
+ * live-on-demand, so `projectId`/`locationCode`/`languageCode` are the only
+ * inputs, all sourced from the current project's row. `projectId` also
+ * rides along in the `/api/research` body so the server can record the
+ * search to that project's history (Task 16); this component itself stays
+ * stateless across navigations — surfacing that history as Recents is
+ * Task 18, not here.
  *
  * Honesty guardrail (brief): a failed or network-erroring `/api/research`
  * call NEVER renders fabricated ideas — it clears any prior results and
@@ -87,7 +91,7 @@ export function ResearchExplorer({
       const res = await fetch("/api/research", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ keywords: [trimmed], locationCode, languageCode }),
+        body: JSON.stringify({ projectId, keywords: [trimmed], locationCode, languageCode }),
       });
       if (!res.ok) {
         setSearch({ status: "error" });

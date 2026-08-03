@@ -57,6 +57,13 @@
       "when": 1785793647262,
       "tag": "0007_great_prima",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1785798213344,
+      "tag": "0008_brave_serpent_society",
+      "breakpoints": true
     }
   ]
 }

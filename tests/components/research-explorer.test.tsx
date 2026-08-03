@@ -43,7 +43,7 @@ describe("ResearchExplorer", () => {
     expect(screen.getByText(/enter a seed keyword/i)).toBeTruthy();
   });
 
-  it("entering a seed and clicking Research posts /api/research with the seed + location/language", async () => {
+  it("entering a seed and clicking Research posts /api/research with the projectId + seed + location/language", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ items: [] }) });
     vi.stubGlobal("fetch", fetchMock);
 
@@ -56,6 +56,7 @@ describe("ResearchExplorer", () => {
         expect.objectContaining({
           method: "POST",
           body: JSON.stringify({
+            projectId: "proj-1",
             keywords: ["best crm software"],
             locationCode: 2840,
             languageCode: "en",
