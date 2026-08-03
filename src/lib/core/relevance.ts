@@ -8,14 +8,22 @@
  * me") from surfacing as an "opportunity" for an unrelated SaaS site.
  */
 
-/** Generic, low-information words dropped before computing overlap. */
+/**
+ * Generic, low-information words dropped before computing overlap. Deliberately
+ * excludes topical anchor words that read as "generic" in isolation but are
+ * load-bearing for real niches — e.g. "service" (ITSM/professional/financial/
+ * customer-service sites) and "new" (real-estate/automotive) — since this same
+ * tokenizer also builds the niche profile itself; stopping those words would
+ * erase the one term tying a real service- or new-product-industry niche
+ * together. Only words shorter than 3 chars would be dropped by the length
+ * filter anyway, so 1-2 char entries are omitted here as dead weight.
+ */
 const STOPWORDS = new Set([
-  "the", "a", "an", "of", "to", "in", "on", "at", "by", "is", "are", "be",
-  "it", "as", "if", "so",
-  "and", "or", "for", "with", "how", "what", "why", "who", "when", "where",
-  "your", "you", "me", "my", "our", "their", "his", "her", "its",
-  "best", "top", "near", "good", "great", "new",
-  "service", "get", "buy", "free", "cheap", "guide",
+  "the", "are",
+  "and", "for", "with", "how", "what", "why", "who", "when", "where",
+  "your", "you", "our", "their", "his", "her", "its",
+  "best", "top", "near", "good", "great",
+  "get", "buy", "free", "cheap", "guide",
 ]);
 
 /** Splits on any run of non-alphanumeric characters and drops empties. */
