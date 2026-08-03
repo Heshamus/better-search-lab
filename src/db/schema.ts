@@ -76,6 +76,17 @@ export const competitorGaps = pgTable("competitor_gaps", {
   capturedAt: timestamp("captured_at").defaultNow().notNull(),
 });
 
+export const profileCandidates = pgTable("profile_candidates", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  keyword: text("keyword").notNull(),
+  source: text("source").notNull(), // crawl | ranking | expansion
+  volume: integer("volume"),
+  difficulty: integer("difficulty"),
+  selected: boolean("selected").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const opportunities = pgTable("opportunities", {
   id: uuid("id").defaultRandom().primaryKey(),
   projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
