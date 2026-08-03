@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+/* Hybrid dashboard palette (spec §8): a single green accent for
+   positive/CTA states, amber reserved for "at-risk". Defined under the
+   `--color-*` theme namespace so Tailwind v4 generates bg-/text-/border-
+   utilities (with opacity modifiers, e.g. bg-accent/20) for both. */
+@theme {
+  --color-accent: #84fd9e;
+  --color-at-risk: #f59e0b;
+}
