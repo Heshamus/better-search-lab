@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { authConfig } from "./auth.config";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
@@ -25,7 +25,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = typeof credentials?.password === "string" ? credentials.password : undefined;
         if (!email || !password) return null;
 
-        const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+        // Case-insensitive lookup: `isAllowed` is deliberately
+        // case-insensitive, but a plain `eq(users.email, email)` is not —
+        // if a stored row's casing differs from what the user types, that
+        // exact-match lookup fails and `authorize` rejects at the "no user"
+        // gate before `isAllowed` is ever consulted, locking out an
+        // allowlisted user. Normalize at the query layer instead of
+        // assuming stored casing (we don't control how `users` rows get
+        // seeded).
+        const normalizedEmail = email.trim().toLowerCase();
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(sql`lower(${users.email}) = ${normalizedEmail}`)
+          .limit(1);
         if (!user) return null;
 
         const passwordValid = await compare(password, user.passwordHash);
