@@ -1,8 +1,9 @@
 import { describe, it, expect, afterEach } from "vitest";
+import { eq } from "drizzle-orm";
 import { createTestDb } from "@/db/test-db";
 import { createProject } from "@/lib/projects";
 import { addKeywords } from "@/lib/keywords";
-import { rankSnapshots, keywordMetrics, competitorGaps, opportunities } from "@/db/schema";
+import { rankSnapshots, keywordMetrics, competitorGaps, opportunities, projects } from "@/db/schema";
 import { weeklyOpportunitiesHandler } from "@/lib/jobs/handlers/weekly-opportunities";
 import { listOpportunities, mondayOf, setOpportunityStatus } from "@/lib/opportunities";
 
@@ -102,5 +103,36 @@ describe("weeklyOpportunitiesHandler", () => {
     expect(matching.length).toBe(1); // NOT resurrected as a second "new" row for the same (keyword, type)
     expect(matching[0].id).toBe(target.id); // still the original row, not a fresh insert
     expect(matching[0].status).toBe("dismissed"); // user action preserved, not reset to "new"
+  });
+
+  it("threads the project's saved opportunityWeights into scoring, not DEFAULT_WEIGHTS", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+
+    // Heavily favor winnability over volume — the opposite of DEFAULT_WEIGHTS'
+    // balanced blend (volume 0.25 / winnability 0.25).
+    const winnabilityHeavy = { volume: 0.05, winnability: 0.6, position: 0.1, trend: 0.05, relevance: 0.2 };
+    await t.db.update(projects).set({ opportunityWeights: winnabilityHeavy }).where(eq(projects.id, p.id));
+
+    // Quick-win: trivially easy (KD 1) but tiny volume, decent-not-great position.
+    const [quickWin] = await addKeywords(t.db, p.id, [{ keyword: "email marketing quick win", locationCode: 2840, languageCode: "en" }]);
+    await t.db.insert(rankSnapshots).values({ keywordId: quickWin.id, rankAbsolute: 10, rankGroup: 10, fetchStatus: "ok", ownUrls: [] });
+    await t.db.insert(keywordMetrics).values({ keywordId: quickWin.id, searchVolume: 20, difficulty: 1 });
+
+    // Big-bet: huge volume but much harder (KD 60), slightly better position.
+    const [bigBet] = await addKeywords(t.db, p.id, [{ keyword: "email marketing big bet", locationCode: 2840, languageCode: "en" }]);
+    await t.db.insert(rankSnapshots).values({ keywordId: bigBet.id, rankAbsolute: 6, rankGroup: 6, fetchStatus: "ok", ownUrls: [] });
+    await t.db.insert(keywordMetrics).values({ keywordId: bigBet.id, searchVolume: 9800, difficulty: 60 });
+
+    // Under DEFAULT_WEIGHTS the big-bet's volume+position edge would outrank the
+    // quick-win (score ≈79 vs ≈76) — so a top-of-list quick-win below only proves
+    // the job actually read and threaded this project's saved weights.
+    const asOf = new Date("2026-08-10T00:00:00Z");
+    await weeklyOpportunitiesHandler()({ db: t.db, projectId: p.id, asOf });
+
+    const rows = await listOpportunities(t.db, p.id, mondayOf("2026-08-10"));
+    expect(rows).toHaveLength(2);
+    expect(rows[0].keyword).toBe("email marketing quick win"); // winnability-heavy weights promoted it to #1
+    expect(rows[1].keyword).toBe("email marketing big bet");
   });
 });

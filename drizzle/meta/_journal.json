@@ -29,6 +29,13 @@
       "when": 1785745883881,
       "tag": "0003_dark_rawhide_kid",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785750084655,
+      "tag": "0004_yellow_zaran",
+      "breakpoints": true
     }
   ]
 }

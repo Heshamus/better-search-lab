@@ -16,6 +16,11 @@ export const projects = pgTable("projects", {
   defaultLanguageCode: text("default_language_code").notNull().default("en"),
   defaultDevice: text("default_device").notNull().default("desktop"),
   refreshCadence: text("refresh_cadence").notNull().default("weekly"), // daily | weekly
+  // Per-project override for scoreOpportunity's blend (Weights: volume/winnability/
+  // position/trend/relevance). Nullable — null means "never tuned", and
+  // weeklyOpportunitiesHandler passes `undefined` through to assembleOpportunities,
+  // which falls back to DEFAULT_WEIGHTS. Set via POST /api/projects/[id]/settings.
+  opportunityWeights: jsonb("opportunity_weights").$type<Record<string, number>>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
