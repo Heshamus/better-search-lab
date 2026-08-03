@@ -1,5 +1,10 @@
 export class DataForSeoError extends Error {
-  constructor(msg: string, readonly status: number, readonly body?: unknown) { super(msg); }
+  constructor(
+    msg: string,
+    readonly status: number,
+    readonly body?: unknown,
+    readonly kind: "http" | "task" = "http",
+  ) { super(msg); }
 }
 
 // DataForSEO returns HTTP 200 for task-level failures (bad location code, and critically an
@@ -20,7 +25,7 @@ export function assertTasksOk(resp: any): void {
   if (topOk && taskOk) return;
   const status = task?.status_code ?? resp?.status_code ?? 0;
   const message = task?.status_message ?? resp?.status_message ?? "DataForSEO task-level failure";
-  throw new DataForSeoError(`DataForSEO task error ${status}: ${message}`, status, resp);
+  throw new DataForSeoError(`DataForSEO task error ${status}: ${message}`, status, resp, "task");
 }
 
 const BASE = "https://api.dataforseo.com";
@@ -44,7 +49,7 @@ export class DataForSeoClient {
       if (r.ok) return (await r.json()) as T;
       const retryable = r.status === 429 || r.status >= 500;
       if (retryable && attempt < this.maxRetries) { await sleep(200 * 2 ** attempt); continue; }
-      throw new DataForSeoError(`DataForSEO ${r.status}`, r.status, await r.json().catch(() => undefined));
+      throw new DataForSeoError(`DataForSEO ${r.status}`, r.status, await r.json().catch(() => undefined), "http");
     }
   }
 }
