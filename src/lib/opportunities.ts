@@ -72,6 +72,14 @@ export async function loadDetectorInput(db: any, projectId: string, asOf: Date):
  * weekOf)`'s prior `status='new'` rows, then inserts `results`. User-actioned
  * rows (`tracked`/`dismissed`/`done`) are left untouched, so re-running the
  * job only refreshes the un-actioned shortlist — idempotent per week.
+ *
+ * A same-week re-run must not resurrect a user-actioned `(keyword, type)` as
+ * a fresh `new` row (e.g. a dismissed opportunity coming back). After the
+ * `status='new'` delete, whatever remains for this `(projectId, weekOf)` is,
+ * by construction, already actioned (tracked/dismissed/done) — so `results`
+ * are filtered to skip any `(keyword, type)` already present among those
+ * survivors. Genuinely-new candidates still insert; a re-run with no status
+ * changes nets the same rows either way (nothing survives to filter against).
  */
 export async function upsertOpportunities(db: any, projectId: string, weekOf: string, results: EngineResult[]): Promise<void> {
   await db.delete(opportunities).where(and(
@@ -82,10 +90,21 @@ export async function upsertOpportunities(db: any, projectId: string, weekOf: st
 
   if (!results.length) return;
 
-  await db.insert(opportunities).values(results.map((r) => ({
+  const surviving = await db.select({ keyword: opportunities.keyword, type: opportunities.type }).from(opportunities)
+    .where(and(eq(opportunities.projectId, projectId), eq(opportunities.weekOf, weekOf)));
+  const actioned = new Set(surviving.map((s: any) => `${s.keyword}|${s.type}`));
+  const toInsert = results.filter((r) => !actioned.has(`${r.keyword}|${r.type}`));
+
+  if (!toInsert.length) return;
+
+  await db.insert(opportunities).values(toInsert.map((r) => ({
     projectId,
     keywordId: r.keywordId,
     keyword: r.keyword,
+    volume: r.volume,
+    difficulty: r.difficulty,
+    currentPosition: r.currentPosition,
+    trend: r.trend,
     type: r.type,
     score: r.score,
     scoreBreakdown: r.scoreBreakdown,

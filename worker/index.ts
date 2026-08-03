@@ -14,6 +14,7 @@ import { projects as projectsTable } from "../src/db/schema";
 import { dueProjects } from "../src/lib/schedule";
 import { rankRefreshHandler } from "../src/lib/jobs/handlers/rank-refresh";
 import { metricsRefreshHandler } from "../src/lib/jobs/handlers/metrics-refresh";
+import { gapRefreshHandler } from "../src/lib/jobs/handlers/gap-refresh";
 import { weeklyOpportunitiesHandler } from "../src/lib/jobs/handlers/weekly-opportunities";
 import { DataForSeoClient } from "../src/lib/dataforseo/client";
 import { loadEnv } from "../src/config/env";
@@ -31,6 +32,11 @@ async function run() {
   }
   for (const pid of due.metricsRefresh) {
     await runJob(db, { type: "keyword_metrics_refresh", projectId: pid, date: today, handler: metricsRefreshHandler(client) });
+  }
+  // Must run BEFORE weekly_opportunities: fresh competitor_gaps rows need to exist
+  // this same tick so the shortlist's gap detector has signals to read.
+  for (const pid of due.gaps) {
+    await runJob(db, { type: "gap_refresh", projectId: pid, date: today, handler: gapRefreshHandler(client) });
   }
   for (const pid of due.opportunities) {
     await runJob(db, { type: "weekly_opportunities", projectId: pid, date: today, handler: weeklyOpportunitiesHandler() });

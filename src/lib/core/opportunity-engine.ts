@@ -20,6 +20,15 @@ export interface EngineResult {
   scoreBreakdown: Record<string, number>;
   why: string;
   upsideEstimate: string | null;
+  /** Raw metrics row (Vol/Pos/KD/trend) for the §8 advisor card — copied
+   *  straight from the scored `Candidate`, unlike `scoreBreakdown` which is
+   *  log-scaled/clamped and conflates null-defaults with real values. Gap
+   *  cards (`keywordId: null`) need these to be self-contained since they
+   *  can't re-join to `keywords`. */
+  volume: number | null;
+  difficulty: number | null;
+  currentPosition: number | null;
+  trend: number | null;
 }
 
 /**
@@ -122,5 +131,9 @@ export function assembleOpportunities(
     scoreBreakdown: scored.breakdown,
     why: explain(candidate),
     upsideEstimate: estimateUpside(candidate),
+    volume: candidate.volume,
+    difficulty: candidate.difficulty,
+    currentPosition: candidate.currentPosition,
+    trend: candidate.trend,
   }));
 }

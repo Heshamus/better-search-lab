@@ -49,6 +49,14 @@ describe("weeklyOpportunitiesHandler", () => {
     expect(gapRow).toBeTruthy();
     expect(gapRow!.keyword).toBe("automated seo reporting"); // recoverable even with no FK
     expect(gapRow!.keywordId).toBeNull(); // gap candidates aren't tracked keywords
+    // The §8 advisor card's metrics row (Vol/Pos/KD/trend) needs these persisted —
+    // gap cards can't re-join to keywords (keywordId is null), so the row must be
+    // self-contained. volume/difficulty come straight from the gap signal;
+    // currentPosition/trend are null (no rank history for an untracked keyword).
+    expect(gapRow!.volume).toBe(3000);
+    expect(gapRow!.difficulty).toBe(30);
+    expect(gapRow!.currentPosition).toBeNull();
+    expect(gapRow!.trend).toBeNull();
   });
 
   it("a user-actioned row survives a re-run of the same week (status-scoped delete)", async () => {
@@ -71,5 +79,28 @@ describe("weeklyOpportunitiesHandler", () => {
     const stillThere = after.find((r: any) => r.id === target.id);
     expect(stillThere).toBeTruthy(); // the status='new'-scoped delete never touched this row
     expect(stillThere!.status).toBe("tracked"); // user action preserved
+  });
+
+  it("a dismissed opportunity does not resurrect as a fresh 'new' row on a same-week re-run", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const [kw] = await addKeywords(t.db, p.id, [{ keyword: "seo reporting software", locationCode: 2840, languageCode: "en" }]);
+    await t.db.insert(rankSnapshots).values({ keywordId: kw.id, rankAbsolute: 8, rankGroup: 8, fetchStatus: "ok", ownUrls: [] });
+    await t.db.insert(keywordMetrics).values({ keywordId: kw.id, searchVolume: 2000, difficulty: 25 });
+    const asOf = new Date("2026-08-10T00:00:00Z");
+
+    await weeklyOpportunitiesHandler()({ db: t.db, projectId: p.id, asOf });
+    const firstRun = await t.db.select().from(opportunities);
+    expect(firstRun.length).toBeGreaterThan(0);
+    const target = firstRun[0];
+    await setOpportunityStatus(t.db, target.id, "dismissed");
+
+    await weeklyOpportunitiesHandler()({ db: t.db, projectId: p.id, asOf }); // re-run, same week, same signals
+
+    const after = await t.db.select().from(opportunities);
+    const matching = after.filter((r: any) => r.keyword === target.keyword && r.type === target.type);
+    expect(matching.length).toBe(1); // NOT resurrected as a second "new" row for the same (keyword, type)
+    expect(matching[0].id).toBe(target.id); // still the original row, not a fresh insert
+    expect(matching[0].status).toBe("dismissed"); // user action preserved, not reset to "new"
   });
 });

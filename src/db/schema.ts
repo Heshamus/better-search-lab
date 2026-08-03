@@ -76,6 +76,10 @@ export const opportunities = pgTable("opportunities", {
   projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   keywordId: uuid("keyword_id").references(() => keywords.id, { onDelete: "set null" }),
   keyword: text("keyword").notNull().default(""), // always present (EngineResult.keyword) — the only structured way to recover a gap row's keyword, since gap candidates have keywordId: null
+  volume: integer("volume"), // §8 advisor card metrics row — copied from the scored Candidate, self-contained even for gap rows (keywordId null, can't re-join to keywords)
+  difficulty: integer("difficulty"),
+  currentPosition: integer("current_position"),
+  trend: integer("trend"),
   type: text("type").notNull(),
   score: real("score").notNull(),
   scoreBreakdown: jsonb("score_breakdown").$type<Record<string, number>>().notNull().default({}),
