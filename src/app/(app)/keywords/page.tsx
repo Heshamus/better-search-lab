@@ -5,6 +5,13 @@ import { listTrackedKeywords } from "@/lib/keywords";
 import { EmptyState } from "@/components/empty-state";
 import { KeywordManager } from "@/components/keyword-manager";
 
+// This page reads the DB (getCurrentProject/listTrackedKeywords) via
+// cookies() on every request — force-dynamic skips the build-time
+// static-generation pass (which has no DB to connect to) rather than
+// swallowing a non-fatal ECONNREFUSED. Purely a build-time hint; the route
+// was already `ƒ` Dynamic.
+export const dynamic = "force-dynamic";
+
 // Server component (Task 6, mirrors Task 4/5's pages): resolves the current
 // project directly — no `/api` fetch, `(app)/*` is already middleware-guarded
 // — then reads the tracked keyword set straight from `src/lib`. All

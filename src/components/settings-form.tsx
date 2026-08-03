@@ -42,7 +42,7 @@ export function SettingsForm({
   cadence,
 }: {
   projectId: string;
-  weights: Record<string, number> | null;
+  weights: Weights | Record<string, number> | null | undefined;
   cadence: string;
 }) {
   const router = useRouter();

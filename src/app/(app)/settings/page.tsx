@@ -5,6 +5,12 @@ import { listProjects } from "@/lib/projects";
 import { ProjectCreateForm } from "@/components/project-create-form";
 import { SettingsForm } from "@/components/settings-form";
 
+// This page reads the DB (listProjects/getCurrentProject) via cookies() on
+// every request — force-dynamic skips the build-time static-generation pass
+// (which has no DB to connect to) rather than swallowing a non-fatal
+// ECONNREFUSED. Purely a build-time hint; the route was already `ƒ` Dynamic.
+export const dynamic = "force-dynamic";
+
 // Server component (Task 9, mirrors Tasks 4-8): resolves the current
 // project directly — no /api fetch, (app)/* is already middleware-guarded —
 // and also reads the full project roster via listProjects so the page can

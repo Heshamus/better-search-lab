@@ -5,6 +5,12 @@ import { listRankings } from "@/lib/rankings";
 import { EmptyState } from "@/components/empty-state";
 import { RankingsTable } from "@/components/rankings-table";
 
+// This page reads the DB (getCurrentProject/listRankings) via cookies() on
+// every request — force-dynamic skips the build-time static-generation pass
+// (which has no DB to connect to) rather than swallowing a non-fatal
+// ECONNREFUSED. Purely a build-time hint; the route was already `ƒ` Dynamic.
+export const dynamic = "force-dynamic";
+
 // Server component (Task 5, mirrors Task 4's opportunities page): resolves
 // the current project directly — no `/api` fetch, `(app)/*` is already
 // middleware-guarded — then reads this run's ranking rows straight from

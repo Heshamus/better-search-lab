@@ -5,6 +5,12 @@ import { usageSummary } from "@/lib/usage";
 import { EmptyState } from "@/components/empty-state";
 import { UsageReport } from "@/components/usage-report";
 
+// This page reads the DB (getCurrentProject/usageSummary) via cookies() on
+// every request — force-dynamic skips the build-time static-generation pass
+// (which has no DB to connect to) rather than swallowing a non-fatal
+// ECONNREFUSED. Purely a build-time hint; the route was already `ƒ` Dynamic.
+export const dynamic = "force-dynamic";
+
 // Server component (Task 9, mirrors Tasks 4-8): resolves the current
 // project directly — no /api fetch, (app)/* is already middleware-guarded
 // — then reads this project's api_usage aggregate straight from src/lib.

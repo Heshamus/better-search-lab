@@ -5,6 +5,12 @@ import { listOpportunities } from "@/lib/opportunities";
 import { EmptyState } from "@/components/empty-state";
 import type { OpportunityRow } from "@/components/opportunity-card";
 
+// This page reads the DB (getCurrentProject/listOpportunities) via cookies()
+// on every request — force-dynamic skips the build-time static-generation
+// pass (which has no DB to connect to) rather than swallowing a non-fatal
+// ECONNREFUSED. Purely a build-time hint; the route was already `ƒ` Dynamic.
+export const dynamic = "force-dynamic";
+
 // Server component (Task 9, mirrors Tasks 4-8): resolves the current
 // project directly — no /api fetch, (app)/* is already middleware-guarded.
 //

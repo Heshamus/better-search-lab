@@ -6,6 +6,13 @@ import { EmptyState } from "@/components/empty-state";
 import { GapTable } from "@/components/gap-table";
 import { RefreshGapsButton } from "@/components/refresh-gaps-button";
 
+// This page reads the DB (getCurrentProject/listCompetitors/listGapSignals)
+// via cookies() on every request — force-dynamic skips the build-time
+// static-generation pass (which has no DB to connect to) rather than
+// swallowing a non-fatal ECONNREFUSED. Purely a build-time hint; the route
+// was already `ƒ` Dynamic.
+export const dynamic = "force-dynamic";
+
 // Server component (Task 8, mirrors Tasks 4-7): resolves the current project
 // directly — no /api fetch, (app)/* is already middleware-guarded — then
 // reads the competitor roster + this project's keyword-gap rows straight

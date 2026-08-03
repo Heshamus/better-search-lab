@@ -7,6 +7,12 @@ import { HealthStrip, type Metric } from "@/components/health-strip";
 import { EmptyState } from "@/components/empty-state";
 import { OpportunityCard, type OpportunityRow } from "@/components/opportunity-card";
 
+// This page reads the DB (getCurrentProject/listOpportunities) via cookies()
+// on every request — force-dynamic skips the build-time static-generation
+// pass (which has no DB to connect to) rather than swallowing a non-fatal
+// ECONNREFUSED. Purely a build-time hint; the route was already `ƒ` Dynamic.
+export const dynamic = "force-dynamic";
+
 // Section order + human titles (brief §8, Task 4): striking distance leads
 // (the most immediately actionable — a top-3 push), gaps and at-risk decay
 // follow, then rising momentum, then the two more structural types.

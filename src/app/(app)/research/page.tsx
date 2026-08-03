@@ -4,6 +4,12 @@ import { getCurrentProject } from "@/lib/current-project";
 import { EmptyState } from "@/components/empty-state";
 import { ResearchExplorer } from "@/components/research-explorer";
 
+// This page reads the DB (getCurrentProject) via cookies() on every request
+// — force-dynamic skips the build-time static-generation pass (which has no
+// DB to connect to) rather than swallowing a non-fatal ECONNREFUSED. Purely
+// a build-time hint; the route was already `ƒ` Dynamic.
+export const dynamic = "force-dynamic";
+
 // Server component (Task 7, mirrors Task 4/5/6's pages): resolves the
 // current project directly — no `/api` fetch, `(app)/*` is already
 // middleware-guarded — purely for its id + default location/language, which

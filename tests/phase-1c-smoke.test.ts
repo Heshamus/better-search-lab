@@ -24,6 +24,7 @@ import { listRankings } from "@/lib/rankings";
 import { listOpportunities } from "@/lib/opportunities";
 import { usageSummary } from "@/lib/usage";
 import { listGapSignals } from "@/lib/competitors";
+import type { OpportunityRow } from "@/components/opportunity-card";
 
 let close: () => Promise<void>;
 afterEach(() => close?.());
@@ -138,7 +139,9 @@ describe("phase-1c dashboard read-layer (offline)", () => {
     }
 
     // Includes the on-niche gap, carrying the Phase-1b metric fields.
-    const gapRow = opportunityRows.find((r) => r.type === "gap" && r.keyword === "automated seo reporting");
+    const gapRow = opportunityRows.find(
+      (r: OpportunityRow) => r.type === "gap" && r.keyword === "automated seo reporting",
+    );
     expect(gapRow).toBeTruthy();
     expect(gapRow!.volume).toBe(3000);
     expect(gapRow!.difficulty).toBe(30);
@@ -147,7 +150,9 @@ describe("phase-1c dashboard read-layer (offline)", () => {
     expect(byType.get("gap")?.length).toBeGreaterThan(0);
 
     // Includes the striking-distance keyword, carrying the Phase-1b metric fields.
-    const strikingRow = opportunityRows.find((r) => r.type === "striking_distance" && r.keywordId === kw.id);
+    const strikingRow = opportunityRows.find(
+      (r: OpportunityRow) => r.type === "striking_distance" && r.keywordId === kw.id,
+    );
     expect(strikingRow).toBeTruthy();
     expect(strikingRow!.volume).toBe(2000);
     expect(strikingRow!.difficulty).toBe(25);
@@ -158,7 +163,9 @@ describe("phase-1c dashboard read-layer (offline)", () => {
     // EXCLUDES the off-niche plumbing noise from the shortlist -- proves the
     // relevance gate (not a lucky detector-gate miss, since both gap rows
     // clear gap()'s >=2-competitor/winnable-KD gate identically).
-    expect(opportunityRows.find((r) => r.keyword === "best plumbing near me")).toBeUndefined();
+    expect(
+      opportunityRows.find((r: OpportunityRow) => r.keyword === "best plumbing near me"),
+    ).toBeUndefined();
 
     // --- usageSummary(db, projectId) -- usage page ---
     const usage = await usageSummary(t.db, p.id);
