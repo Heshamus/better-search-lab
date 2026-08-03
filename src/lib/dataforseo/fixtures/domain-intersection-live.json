@@ -1,0 +1,163 @@
+{
+  "version": "0.1.20260115",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "3.4451 sec.",
+  "cost": 0.0312,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "08031537-1537-0066-0000-d4e5f6a7b8c9",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "3.4102 sec.",
+      "cost": 0.0312,
+      "result_count": 1,
+      "path": ["v3", "dataforseo_labs", "google", "domain_intersection", "live"],
+      "data": {
+        "api": "dataforseo_labs",
+        "function": "domain_intersection",
+        "se_type": "google",
+        "target1": "rival.com",
+        "target2": "harperflow.io",
+        "location_code": 2840,
+        "language_code": "en",
+        "intersections": false,
+        "limit": 100
+      },
+      "result": [
+        {
+          "se_type": "google",
+          "first_domain": "rival.com",
+          "second_domain": "harperflow.io",
+          "location_code": 2840,
+          "language_code": "en",
+          "total_count": 3,
+          "items_count": 3,
+          "items": [
+            {
+              "se_type": "google",
+              "keyword_data": {
+                "se_type": "google",
+                "keyword": "backlink checker",
+                "location_code": 2840,
+                "language_code": "en",
+                "keyword_info": {
+                  "se_type": "google",
+                  "last_updated_time": "2026-07-22 00:00:00 +00:00",
+                  "competition": 0.58,
+                  "competition_level": "HIGH",
+                  "cpc": 16.7,
+                  "search_volume": 5400,
+                  "low_top_of_page_bid": 10.1,
+                  "high_top_of_page_bid": 22.3
+                },
+                "keyword_properties": {
+                  "se_type": "google",
+                  "core_keyword": null,
+                  "keyword_difficulty": 52,
+                  "detected_language": "en",
+                  "is_another_language": false
+                }
+              },
+              "first_domain_serp_element": {
+                "type": "organic",
+                "rank_group": 2,
+                "rank_absolute": 2,
+                "domain": "rival.com",
+                "title": "Free Backlink Checker - Rival",
+                "url": "https://rival.com/backlink-checker"
+              },
+              "second_domain_serp_element": {
+                "type": "organic",
+                "rank_group": 9,
+                "rank_absolute": 9,
+                "domain": "harperflow.io",
+                "title": "Backlink Checker Tool",
+                "url": "https://harperflow.io/tools/backlink-checker"
+              }
+            },
+            {
+              "se_type": "google",
+              "keyword_data": {
+                "se_type": "google",
+                "keyword": "white label seo dashboard",
+                "location_code": 2840,
+                "language_code": "en",
+                "keyword_info": {
+                  "se_type": "google",
+                  "last_updated_time": "2026-07-22 00:00:00 +00:00",
+                  "competition": 0.39,
+                  "competition_level": "MEDIUM",
+                  "cpc": 13.2,
+                  "search_volume": 720,
+                  "low_top_of_page_bid": 7.4,
+                  "high_top_of_page_bid": 17.8
+                },
+                "keyword_properties": {
+                  "se_type": "google",
+                  "core_keyword": "seo dashboard",
+                  "keyword_difficulty": 31,
+                  "detected_language": "en",
+                  "is_another_language": false
+                }
+              },
+              "first_domain_serp_element": {
+                "type": "organic",
+                "rank_group": 4,
+                "rank_absolute": 4,
+                "domain": "rival.com",
+                "title": "White Label SEO Dashboard for Agencies",
+                "url": "https://rival.com/white-label-seo-dashboard"
+              },
+              "second_domain_serp_element": null
+            },
+            {
+              "se_type": "google",
+              "keyword_data": {
+                "se_type": "google",
+                "keyword": "seo reporting api",
+                "location_code": 2840,
+                "language_code": "en",
+                "keyword_info": {
+                  "se_type": "google",
+                  "last_updated_time": "2026-07-22 00:00:00 +00:00",
+                  "competition": null,
+                  "competition_level": null,
+                  "cpc": null,
+                  "search_volume": 260,
+                  "low_top_of_page_bid": null,
+                  "high_top_of_page_bid": null
+                },
+                "keyword_properties": {
+                  "se_type": "google",
+                  "core_keyword": "seo reporting software",
+                  "keyword_difficulty": 24,
+                  "detected_language": "en",
+                  "is_another_language": false
+                }
+              },
+              "first_domain_serp_element": {
+                "type": "organic",
+                "rank_group": 11,
+                "rank_absolute": 11,
+                "domain": "rival.com",
+                "title": "SEO Reporting API Docs",
+                "url": "https://rival.com/docs/seo-reporting-api"
+              },
+              "second_domain_serp_element": {
+                "type": "organic",
+                "rank_group": 3,
+                "rank_absolute": 3,
+                "domain": "harperflow.io",
+                "title": "SEO Reporting API - HarperFlow",
+                "url": "https://harperflow.io/api/seo-reporting"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

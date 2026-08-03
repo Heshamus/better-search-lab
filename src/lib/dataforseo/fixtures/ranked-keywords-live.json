@@ -1,0 +1,155 @@
+{
+  "version": "0.1.20260115",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "2.1093 sec.",
+  "cost": 0.0201,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "08031536-1536-0066-0000-c3d4e5f6a7b8",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "2.0812 sec.",
+      "cost": 0.0201,
+      "result_count": 1,
+      "path": ["v3", "dataforseo_labs", "google", "ranked_keywords", "live"],
+      "data": {
+        "api": "dataforseo_labs",
+        "function": "ranked_keywords",
+        "se_type": "google",
+        "target": "rival.com",
+        "location_code": 2840,
+        "language_code": "en",
+        "limit": 100
+      },
+      "result": [
+        {
+          "se_type": "google",
+          "target": "rival.com",
+          "location_code": 2840,
+          "language_code": "en",
+          "total_count": 3,
+          "items_count": 3,
+          "items": [
+            {
+              "se_type": "google",
+              "keyword_data": {
+                "se_type": "google",
+                "keyword": "seo audit tool",
+                "location_code": 2840,
+                "language_code": "en",
+                "keyword_info": {
+                  "se_type": "google",
+                  "last_updated_time": "2026-07-20 00:00:00 +00:00",
+                  "competition": 0.61,
+                  "competition_level": "HIGH",
+                  "cpc": 18.4,
+                  "search_volume": 3600,
+                  "low_top_of_page_bid": 11.3,
+                  "high_top_of_page_bid": 24.9
+                },
+                "keyword_properties": {
+                  "se_type": "google",
+                  "core_keyword": null,
+                  "keyword_difficulty": 45,
+                  "detected_language": "en",
+                  "is_another_language": false
+                }
+              },
+              "ranked_serp_element": {
+                "se_type": "google",
+                "serp_item": {
+                  "type": "organic",
+                  "rank_group": 3,
+                  "rank_absolute": 3,
+                  "domain": "rival.com",
+                  "title": "Free SEO Audit Tool - Rival",
+                  "description": "Run a full technical SEO audit in minutes.",
+                  "url": "https://rival.com/seo-audit-tool"
+                }
+              }
+            },
+            {
+              "se_type": "google",
+              "keyword_data": {
+                "se_type": "google",
+                "keyword": "site audit software",
+                "location_code": 2840,
+                "language_code": "en",
+                "keyword_info": {
+                  "se_type": "google",
+                  "last_updated_time": "2026-07-20 00:00:00 +00:00",
+                  "competition": 0.47,
+                  "competition_level": "MEDIUM",
+                  "cpc": 14.1,
+                  "search_volume": 1200,
+                  "low_top_of_page_bid": 8.6,
+                  "high_top_of_page_bid": 19.2
+                },
+                "keyword_properties": {
+                  "se_type": "google",
+                  "core_keyword": "seo audit tool",
+                  "keyword_difficulty": 38,
+                  "detected_language": "en",
+                  "is_another_language": false
+                }
+              },
+              "ranked_serp_element": {
+                "se_type": "google",
+                "serp_item": {
+                  "type": "organic",
+                  "rank_group": 7,
+                  "rank_absolute": 7,
+                  "domain": "rival.com",
+                  "title": "Site Audit Software for Agencies",
+                  "description": "Automated crawls and prioritized fixes.",
+                  "url": "https://rival.com/site-audit-software"
+                }
+              }
+            },
+            {
+              "se_type": "google",
+              "keyword_data": {
+                "se_type": "google",
+                "keyword": "technical seo checklist",
+                "location_code": 2840,
+                "language_code": "en",
+                "keyword_info": {
+                  "se_type": "google",
+                  "last_updated_time": "2026-07-20 00:00:00 +00:00",
+                  "competition": null,
+                  "competition_level": null,
+                  "cpc": null,
+                  "search_volume": 880,
+                  "low_top_of_page_bid": null,
+                  "high_top_of_page_bid": null
+                },
+                "keyword_properties": {
+                  "se_type": "google",
+                  "core_keyword": "seo audit tool",
+                  "keyword_difficulty": null,
+                  "detected_language": "en",
+                  "is_another_language": false
+                }
+              },
+              "ranked_serp_element": {
+                "se_type": "google",
+                "serp_item": {
+                  "type": "featured_snippet",
+                  "rank_group": null,
+                  "rank_absolute": null,
+                  "domain": "rival.com",
+                  "title": null,
+                  "description": null,
+                  "url": null
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
