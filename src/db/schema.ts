@@ -47,6 +47,7 @@ export const rankSnapshots = pgTable("rank_snapshots", {
   serpFeatures: jsonb("serp_features").$type<string[]>().notNull().default([]),
   fetchStatus: text("fetch_status").notNull().default("ok"), // ok | failed
   reason: text("reason"),
+  ownUrls: jsonb("own_urls").$type<string[]>().notNull().default([]),
 });
 
 export const keywordMetrics = pgTable("keyword_metrics", {
@@ -56,6 +57,18 @@ export const keywordMetrics = pgTable("keyword_metrics", {
   competition: real("competition"),
   difficulty: integer("difficulty"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const competitorGaps = pgTable("competitor_gaps", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  competitorDomain: text("competitor_domain").notNull(),
+  keyword: text("keyword").notNull(),
+  competitorRank: integer("competitor_rank"),
+  ourRank: integer("our_rank"),
+  volume: integer("volume"),
+  difficulty: integer("difficulty"),
+  capturedAt: timestamp("captured_at").defaultNow().notNull(),
 });
 
 export const opportunities = pgTable("opportunities", {
