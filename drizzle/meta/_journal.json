@@ -43,6 +43,13 @@
       "when": 1785785783797,
       "tag": "0005_slippery_meggan",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785790162073,
+      "tag": "0006_flashy_banshee",
+      "breakpoints": true
     }
   ]
 }

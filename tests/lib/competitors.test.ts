@@ -2,10 +2,32 @@ import { describe, it, expect, afterEach } from "vitest";
 import { createTestDb } from "@/db/test-db";
 import { createProject } from "@/lib/projects";
 import { competitors } from "@/db/schema";
-import { listCompetitors } from "@/lib/competitors";
+import {
+  listCompetitors,
+  addCompetitor,
+  removeCompetitor,
+  updateCompetitorDomain,
+  normalizeDomain,
+  MAX_COMPETITORS,
+  CompetitorCapError,
+} from "@/lib/competitors";
 
 let close: () => Promise<void>;
 afterEach(() => close?.());
+
+// Pure-function suite: deliberately placed before any describe block below
+// that calls createTestDb(). The shared `close` above is only ever
+// reassigned by a test that opens a db, and afterEach unconditionally
+// re-invokes whatever it last pointed to — placing a db-free test after one
+// that already ran its own afterEach close would re-close an already-closed
+// PGlite instance and fail this test on a hook error unrelated to its
+// assertions.
+describe("normalizeDomain", () => {
+  it("strips scheme, www, path, trailing slash and lowercases", () => {
+    expect(normalizeDomain("HTTPS://www.Rival.com/pricing/")).toBe("rival.com");
+    expect(normalizeDomain("rival.com")).toBe("rival.com");
+  });
+});
 
 describe("listCompetitors", () => {
   it("returns the project's competitor {id, domain} rows", async () => {
@@ -28,5 +50,36 @@ describe("listCompetitors", () => {
     await t.db.insert(competitors).values([{ projectId: p1.id, domain: "rival-a.com" }]);
 
     expect(await listCompetitors(t.db, p2.id)).toEqual([]);
+  });
+});
+
+describe("competitor CRUD", () => {
+  it("adds, dedupes, caps at 5, edits, and removes", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+
+    const a = await addCompetitor(t.db, p.id, "https://www.rival-a.com/");
+    expect(a.domain).toBe("rival-a.com");
+    const again = await addCompetitor(t.db, p.id, "rival-a.com"); // dedupe
+    expect(again.id).toBe(a.id);
+    expect((await listCompetitors(t.db, p.id)).length).toBe(1);
+
+    for (const d of ["b.com", "c.com", "d.com", "e.com"]) await addCompetitor(t.db, p.id, d);
+    expect((await listCompetitors(t.db, p.id)).length).toBe(MAX_COMPETITORS);
+    await expect(addCompetitor(t.db, p.id, "f.com")).rejects.toBeInstanceOf(CompetitorCapError);
+
+    await updateCompetitorDomain(t.db, a.id, "rival-a-new.com");
+    expect((await listCompetitors(t.db, p.id)).find((c) => c.id === a.id)!.domain).toBe("rival-a-new.com");
+
+    await removeCompetitor(t.db, p.id, a.id);
+    expect((await listCompetitors(t.db, p.id)).some((c) => c.id === a.id)).toBe(false);
+  });
+
+  it("orders competitors by creation time", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    await addCompetitor(t.db, p.id, "first.com");
+    await addCompetitor(t.db, p.id, "second.com");
+    expect((await listCompetitors(t.db, p.id)).map((c) => c.domain)).toEqual(["first.com", "second.com"]);
   });
 });

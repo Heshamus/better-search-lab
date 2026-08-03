@@ -28,6 +28,7 @@ export const competitors = pgTable("competitors", {
   id: uuid("id").defaultRandom().primaryKey(),
   projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   domain: text("domain").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const keywords = pgTable("keywords", {
