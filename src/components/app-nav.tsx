@@ -1,17 +1,20 @@
-// The dashboard's left-nav — the tool's map. Exact 8 sections, in order
-// (validated Hybrid design, spec §8). Deliberately a plain, prop-driven,
-// server-renderable component (no hooks, no "use client") so it stays cheap
-// to unit-test with @testing-library/react and cheap to render from the
-// (app) layout. `NAV` is exported so the layout can derive the set of valid
-// slugs (e.g. for pathname -> active-section matching) without duplicating
-// this list.
+// The dashboard's left-nav — the tool's map. Deliberately a plain,
+// prop-driven, server-renderable component (no hooks, no "use client") so it
+// stays cheap to unit-test with @testing-library/react and cheap to render
+// from the (app) layout. `NAV` is exported so the layout can derive the set of
+// valid slugs (e.g. for pathname -> active-section matching) without
+// duplicating this list.
+//
+// Task 18 folded the "Content" item: its page was only a `gap`-filtered slice
+// of Opportunities with no data of its own (full content briefs are Phase 5),
+// so a standalone nav item over-promised. The gap signals it showed already
+// live under Opportunities' "Gaps" section.
 export const NAV = [
   ["opportunities", "Opportunities"],
   ["rankings", "Rankings"],
   ["keywords", "Keywords"],
   ["research", "Research"],
   ["competitors", "Competitors"],
-  ["content", "Content"],
   ["usage", "Usage & cost"],
   ["settings", "Settings"],
 ] as const;

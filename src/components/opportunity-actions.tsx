@@ -21,10 +21,12 @@ const actionButtonClass =
  * convention rather than being the one exception.
  *
  * SERP is a plain external link to a Google search for the keyword — no
- * fetch, no mutation. Brief is visibly disabled pending Phase 5 (deferred,
- * per the plan). Once `status` is `tracked` or `dismissed`, both action
- * buttons settle into a muted, disabled label reflecting that state instead
- * of continuing to offer an action that no longer applies.
+ * fetch, no mutation. (The disabled "Brief" button was retired in Task 18 —
+ * content-brief generation is Phase 5, and a permanently-disabled button is a
+ * dead affordance, so it's gone rather than greyed-out here.) Once `status` is
+ * `tracked` or `dismissed`, both action buttons settle into a muted, disabled
+ * label reflecting that state instead of continuing to offer an action that no
+ * longer applies.
  */
 export function OpportunityActions({
   id,
@@ -99,10 +101,6 @@ export function OpportunityActions({
         <a href={serpUrl} target="_blank" rel="noopener" className={actionButtonClass}>
           SERP
         </a>
-
-        <button type="button" disabled title="Coming in Phase 5" className={actionButtonClass}>
-          Brief
-        </button>
       </div>
 
       {error ? (

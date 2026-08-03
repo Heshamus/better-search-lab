@@ -60,15 +60,23 @@ const promptBoxClass =
  * Honesty guardrail (brief): a failed or network-erroring `/api/research`
  * call NEVER renders fabricated ideas — it clears any prior results and
  * shows an inline amber error instead.
+ *
+ * Task 18: `recentSeeds` (this project's most-recent distinct seeds, read
+ * server-side via listRecentSearches) render as clickable chips that re-run
+ * the search — so a seed searched before navigating away isn't lost. They're
+ * live buttons, not a dead "history" affordance: a click re-invokes the exact
+ * same `runSearch` the form's Research button does.
  */
 export function ResearchExplorer({
   projectId,
   locationCode,
   languageCode,
+  recentSeeds = [],
 }: {
   projectId: string;
   locationCode: number;
   languageCode: string;
+  recentSeeds?: string[];
 }) {
   const router = useRouter();
   const [seed, setSeed] = useState("");
@@ -78,11 +86,14 @@ export function ResearchExplorer({
 
   const items = search.status === "results" ? search.items : [];
 
-  async function handleResearch(event: FormEvent) {
-    event.preventDefault();
-    const trimmed = seed.trim();
+  // Extracted so both the form's Research button and each Recent-searches chip
+  // (Task 18) run the exact same path. Takes the term explicitly rather than
+  // reading `seed` state, so a chip click never races the input's own state.
+  async function runSearch(term: string) {
+    const trimmed = term.trim();
     if (!trimmed || search.status === "loading") return;
 
+    setSeed(trimmed); // reflect the seed being searched in the input
     setSearch({ status: "loading" });
     setSelected(new Set());
     setAddState({ status: "idle" });
@@ -104,6 +115,11 @@ export function ResearchExplorer({
       // never fabricated ideas.
       setSearch({ status: "error" });
     }
+  }
+
+  function handleResearch(event: FormEvent) {
+    event.preventDefault();
+    runSearch(seed);
   }
 
   function toggleRow(keyword: string) {
@@ -170,6 +186,27 @@ export function ResearchExplorer({
           {search.status === "loading" ? "Researching…" : "Research"}
         </button>
       </form>
+
+      {recentSeeds.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+            Recent searches
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {recentSeeds.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => runSearch(s)}
+                disabled={search.status === "loading"}
+                className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-600 transition-colors hover:border-accent hover:text-neutral-900 disabled:cursor-default disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:text-white"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {search.status === "idle" ? (
         <p className={promptBoxClass}>Enter a seed keyword to explore ideas, volume, and difficulty.</p>
