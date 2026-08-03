@@ -66,6 +66,16 @@ describe("competitor CRUD", () => {
 
     for (const d of ["b.com", "c.com", "d.com", "e.com"]) await addCompetitor(t.db, p.id, d);
     expect((await listCompetitors(t.db, p.id)).length).toBe(MAX_COMPETITORS);
+
+    // Dedupe-before-cap guarantee: the project is now at 5/5. Re-adding an
+    // ALREADY-TRACKED domain ("rival-a.com", added as `a` above) must return
+    // the existing row rather than throwing CompetitorCapError, and must not
+    // insert a duplicate. Awaiting it directly (no .rejects/try-catch) means
+    // this assertion itself fails loudly if addCompetitor throws here.
+    const dedupeAtCap = await addCompetitor(t.db, p.id, "rival-a.com");
+    expect(dedupeAtCap.id).toBe(a.id);
+    expect((await listCompetitors(t.db, p.id)).length).toBe(MAX_COMPETITORS);
+
     await expect(addCompetitor(t.db, p.id, "f.com")).rejects.toBeInstanceOf(CompetitorCapError);
 
     await updateCompetitorDomain(t.db, a.id, "rival-a-new.com");
@@ -81,5 +91,18 @@ describe("competitor CRUD", () => {
     await addCompetitor(t.db, p.id, "first.com");
     await addCompetitor(t.db, p.id, "second.com");
     expect((await listCompetitors(t.db, p.id)).map((c) => c.domain)).toEqual(["first.com", "second.com"]);
+  });
+
+  it("removeCompetitor is project-scoped — a cross-project id is a no-op", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p1 = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p2 = await createProject(t.db, { name: "Other", domain: "other.io" });
+    const c1 = await addCompetitor(t.db, p1.id, "rival-a.com");
+    const c2 = await addCompetitor(t.db, p2.id, "rival-b.com");
+
+    await removeCompetitor(t.db, p1.id, c2.id); // p1 tries to delete p2's competitor by id
+
+    expect((await listCompetitors(t.db, p2.id)).some((c) => c.id === c2.id)).toBe(true);
+    expect((await listCompetitors(t.db, p1.id)).some((c) => c.id === c1.id)).toBe(true);
   });
 });
