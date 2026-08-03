@@ -1,0 +1,84 @@
+{
+  "version": "0.1.20260115",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "0.8456 sec.",
+  "cost": 0.0121,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "08031535-1535-0066-0000-b2c3d4e5f6a7",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "0.8234 sec.",
+      "cost": 0.0121,
+      "result_count": 1,
+      "path": ["v3", "dataforseo_labs", "google", "keyword_overview", "live"],
+      "data": {
+        "api": "dataforseo_labs",
+        "function": "keyword_overview",
+        "se_type": "google",
+        "keywords": ["seo reporting software"],
+        "location_code": 2840,
+        "language_code": "en"
+      },
+      "result": [
+        {
+          "keywords": ["seo reporting software"],
+          "location_code": 2840,
+          "language_code": "en",
+          "items_count": 2,
+          "items": [
+            {
+              "se_type": "google",
+              "keyword": "seo reporting software",
+              "location_code": 2840,
+              "language_code": "en",
+              "keyword_info": {
+                "se_type": "google",
+                "last_updated_time": "2026-07-15 00:00:00 +00:00",
+                "competition": 0.42,
+                "competition_level": "MEDIUM",
+                "cpc": 12.5,
+                "search_volume": 2400,
+                "low_top_of_page_bid": 8.2,
+                "high_top_of_page_bid": 18.7
+              },
+              "keyword_properties": {
+                "se_type": "google",
+                "core_keyword": null,
+                "keyword_difficulty": 34,
+                "detected_language": "en",
+                "is_another_language": false
+              }
+            },
+            {
+              "se_type": "google",
+              "keyword": "seo reporting tool",
+              "location_code": 2840,
+              "language_code": "en",
+              "keyword_info": {
+                "se_type": "google",
+                "last_updated_time": "2026-07-15 00:00:00 +00:00",
+                "competition": 0.38,
+                "competition_level": "MEDIUM",
+                "cpc": 10.8,
+                "search_volume": 1900,
+                "low_top_of_page_bid": 6.9,
+                "high_top_of_page_bid": 16.4
+              },
+              "keyword_properties": {
+                "se_type": "google",
+                "core_keyword": "seo reporting software",
+                "keyword_difficulty": 29,
+                "detected_language": "en",
+                "is_another_language": false
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

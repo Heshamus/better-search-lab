@@ -3,6 +3,8 @@ import { apiUsage } from "@/db/schema";
 const PRICES: Record<string, number> = {
   "/v3/serp/google/organic/live/advanced": 0.002,
   "/v3/dataforseo_labs/google/keyword_ideas/live": 0.012,
+  "/v3/dataforseo_labs/google/ranked_keywords/live": 0.012,
+  "/v3/dataforseo_labs/google/keyword_overview/live": 0.012,
   "/v3/dataforseo_labs/google/domain_intersection/live": 0.012,
 };
 export function estimateCost(endpoint: string, _rows: number): number {

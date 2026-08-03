@@ -49,3 +49,17 @@ export async function domainIntersection(client: DataForSeoClient, p: { competit
   }));
   return { items, rows: items.length };
 }
+
+export async function keywordOverview(client: DataForSeoClient, p: { keywords: string[]; locationCode: number; languageCode: string; }): Promise<{ items: KeywordIdea[]; rows: number }> {
+  const body = [{ keywords: p.keywords, location_code: p.locationCode, language_code: p.languageCode }];
+  const resp = await client.post<any>("/v3/dataforseo_labs/google/keyword_overview/live", body);
+  const raw = resp?.tasks?.[0]?.result?.[0]?.items ?? [];
+  const items: KeywordIdea[] = raw.map((i: any) => ({
+    keyword: i.keyword,
+    searchVolume: num(i.keyword_info?.search_volume),
+    cpc: num(i.keyword_info?.cpc),
+    competition: num(i.keyword_info?.competition),
+    difficulty: num(i.keyword_properties?.keyword_difficulty),
+  }));
+  return { items, rows: items.length };
+}
