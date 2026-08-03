@@ -32,6 +32,6 @@ describe("competitorIntelHandler", () => {
 
     const kws = await listCompetitorKeywords(t.db, p.id, "rival.com");
     expect(kws).toHaveLength(1);
-    expect(kws[0]).toMatchObject({ keyword: "their kw", rankAbsolute: 4, url: "https://rival.com/post" });
+    expect(kws[0]).toMatchObject({ keyword: "their kw", rankAbsolute: 4, url: "https://rival.com/post", volume: 200, difficulty: 15 });
   });
 });
