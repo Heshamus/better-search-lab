@@ -1,10 +1,28 @@
+import { cookies } from "next/headers";
+import { db } from "@/db/client";
+import { getCurrentProject } from "@/lib/current-project";
+import { usageSummary } from "@/lib/usage";
 import { EmptyState } from "@/components/empty-state";
+import { UsageReport } from "@/components/usage-report";
 
-export default function UsagePage() {
-  return (
-    <EmptyState
-      title="Usage & cost"
-      description="No API usage yet — cost and call volume will appear here once runs start."
-    />
-  );
+// Server component (Task 9, mirrors Tasks 4-8): resolves the current
+// project directly — no /api fetch, (app)/* is already middleware-guarded
+// — then reads this project's api_usage aggregate straight from src/lib.
+// Pure read/display page: UsageReport is presentational-only, so there is
+// no client mutation half to wire up here.
+export default async function UsagePage() {
+  const project = await getCurrentProject(db, (await cookies()).get("sp_project")?.value);
+
+  if (!project) {
+    return (
+      <EmptyState
+        title="Create your first project in Settings"
+        description="Add your site's domain in Settings to start tracking usage and cost."
+      />
+    );
+  }
+
+  const summary = await usageSummary(db, project.id);
+
+  return <UsageReport summary={summary} />;
 }
