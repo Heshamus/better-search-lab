@@ -104,7 +104,7 @@ export interface EngineResult {
 
 **Files:**
 - Modify: `src/db/schema.ts`
-- Create: `drizzle/0002_opportunity_signals.sql` (confirm the next migration number by listing `drizzle/`)
+- Create: the next Drizzle migration — generated via `pnpm db:generate` (drizzle-kit auto-names it `drizzle/0001_<slug>.sql`; the repo currently has only `0000_watery_wrecker.sql`). Do NOT hand-number it.
 - Test: `tests/db/opportunity-signals-schema.test.ts`
 
 **Interfaces:**
@@ -175,7 +175,7 @@ And add `ownUrls` to the existing `rankSnapshots` table definition:
   ownUrls: jsonb("own_urls").$type<string[]>().notNull().default([]),
 ```
 
-- [ ] **Step 4: Generate/author the migration.** Run `pnpm drizzle-kit generate` if that's the repo's workflow (check `package.json` scripts + existing `drizzle/*.sql` style); otherwise hand-author `drizzle/0002_opportunity_signals.sql` mirroring the existing files' format: `CREATE TABLE "competitor_gaps" (…)` + `ALTER TABLE "rank_snapshots" ADD COLUMN "own_urls" jsonb DEFAULT '[]'::jsonb NOT NULL;`. Verify the migration number is the next free one.
+- [ ] **Step 4: Generate the migration** with `pnpm db:generate` (the repo's workflow — `drizzle-kit generate`). It emits `drizzle/0001_<slug>.sql` from your `schema.ts` edits (a `CREATE TABLE "competitor_gaps"` + an `ALTER TABLE "rank_snapshots" ADD COLUMN "own_urls" …`) and updates `drizzle/meta`. Commit the generated file as-is; don't rename it.
 - [ ] **Step 5: Run test → PASS** (pglite pushes the schema from Drizzle definitions via `createTestDb`, so the test passes on the schema change; the `.sql` is for prod parity). Full suite + `pnpm build` green.
 - [ ] **Step 6: Commit** `feat: add competitor_gaps table and rank_snapshots.own_urls for opportunity signals`.
 
