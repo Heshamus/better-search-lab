@@ -14,6 +14,7 @@ import { projects as projectsTable } from "../src/db/schema";
 import { dueProjects } from "../src/lib/schedule";
 import { rankRefreshHandler } from "../src/lib/jobs/handlers/rank-refresh";
 import { metricsRefreshHandler } from "../src/lib/jobs/handlers/metrics-refresh";
+import { weeklyOpportunitiesHandler } from "../src/lib/jobs/handlers/weekly-opportunities";
 import { DataForSeoClient } from "../src/lib/dataforseo/client";
 import { loadEnv } from "../src/config/env";
 
@@ -30,6 +31,9 @@ async function run() {
   }
   for (const pid of due.metricsRefresh) {
     await runJob(db, { type: "keyword_metrics_refresh", projectId: pid, date: today, handler: metricsRefreshHandler(client) });
+  }
+  for (const pid of due.opportunities) {
+    await runJob(db, { type: "weekly_opportunities", projectId: pid, date: today, handler: weeklyOpportunitiesHandler() });
   }
 }
 registerSchedules({ schedule: (c, fn) => cron.schedule(c, fn), run });

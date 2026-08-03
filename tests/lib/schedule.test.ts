@@ -15,4 +15,11 @@ describe("dueProjects", () => {
     expect(tuesday.rankRefresh).toEqual(["d"]);
     expect(tuesday.metricsRefresh).toEqual([]);
   });
+
+  it("opportunities are due for all projects on Mondays only", () => {
+    const monday = dueProjects([{ id: "d", refreshCadence: "daily" }], "2026-08-03");
+    expect(monday.opportunities).toEqual(["d"]);
+    const tuesday = dueProjects([{ id: "d", refreshCadence: "daily" }], "2026-08-04");
+    expect(tuesday.opportunities).toEqual([]);
+  });
 });
