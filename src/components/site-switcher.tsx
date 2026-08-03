@@ -55,7 +55,12 @@ export function SiteSwitcher() {
     fetch("/api/projects")
       .then((res) => res.json())
       .then((rows: ProjectOption[]) => {
-        if (!cancelled) setProjects(rows);
+        // Guard the shape: this component lives in the shared app-shell layout,
+        // so if `/api/projects` ever answers with a non-array (an error object,
+        // an auth body), an unguarded `setProjects` would later throw in
+        // `.some`/`.map` and take down EVERY page. A non-array is treated as
+        // "no projects" (the honest placeholder), never a crash.
+        if (!cancelled && Array.isArray(rows)) setProjects(rows);
       })
       .catch(() => {
         // Network/parse failure: stay on the honest disabled placeholder
