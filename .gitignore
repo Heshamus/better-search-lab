@@ -32,3 +32,5 @@ next-env.d.ts
 
 # Superpowers scratch (brainstorm mockups, SDD ledger/briefs/reports)
 .superpowers/
+
+.worktrees/
