@@ -10,7 +10,7 @@ const page = {
     <meta property="og:title" content="AI content autopilot">
   </head><body>
     <h1>Programmatic SEO for agencies</h1>
-    <h2>Webflow publishing</h2><h2>GEO optimization</h2>
+    <h2>Webflow publishing</h2><h2>GEO optimization</h2><h2>the and for</h2>
     <a href="/x">the and for with</a>
   </body></html>`,
 };
@@ -22,8 +22,10 @@ describe("extractSeeds", () => {
     expect(phrases).toContain("webflow publishing");
     expect(phrases).toContain("geo optimization");
     expect(phrases.some((p) => p.includes("seo automation"))).toBe(true);
-    // pure-stopword anchor text yields nothing
-    expect(phrases).not.toContain("the and for with");
+    // an all-stopword <h2> IS a genuinely-parsed candidate (would otherwise be
+    // a weight-3 seed) — this proves isAllStop/STOP actually drops it, unlike
+    // asserting on unparsed anchor text (which is never a candidate at all)
+    expect(phrases).not.toContain("the and for");
   });
 
   it("weights title/h1 above h2 above meta, and dedupes across pages", () => {
@@ -36,6 +38,8 @@ describe("extractSeeds", () => {
   });
 
   it("returns at most `limit` seeds", () => {
-    expect(extractSeeds([page], 2).length).toBeLessThanOrEqual(2);
+    // fixture yields >2 distinct candidates, so this must hit the cap exactly
+    // (toBeLessThanOrEqual would silently pass on an under-return bug too)
+    expect(extractSeeds([page], 2).length).toBe(2);
   });
 });
