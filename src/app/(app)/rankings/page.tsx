@@ -4,6 +4,7 @@ import { getCurrentProject } from "@/lib/current-project";
 import { listRankings } from "@/lib/rankings";
 import { EmptyState } from "@/components/empty-state";
 import { RankingsTable } from "@/components/rankings-table";
+import { RefreshRankingsButton } from "@/components/refresh-rankings-button";
 
 // This page reads the DB (getCurrentProject/listRankings) via cookies() on
 // every request — force-dynamic skips the build-time static-generation pass
@@ -16,6 +17,13 @@ export const dynamic = "force-dynamic";
 // middleware-guarded — then reads this run's ranking rows straight from
 // `src/lib`. All interactivity (sort, per-keyword history drill-in) lives in
 // the client `RankingsTable`.
+//
+// Task 17: rankings only populated via the Monday cron until now, so a
+// freshly-tracked keyword sat at "not yet checked" with no way to force a
+// fetch. `RefreshRankingsButton` (single-route rank_refresh) fixes that —
+// gated on `rows.length > 0` because rank_refresh iterates tracked
+// keywords, so with zero tracked it would be a pointless no-op (mirrors the
+// competitors page gating `RefreshGapsButton` on `competitorRows.length`).
 export default async function RankingsPage() {
   const project = await getCurrentProject(db, (await cookies()).get("sp_project")?.value);
 
@@ -39,5 +47,12 @@ export default async function RankingsPage() {
     );
   }
 
-  return <RankingsTable rows={rows} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-end">
+        <RefreshRankingsButton projectId={project.id} />
+      </div>
+      <RankingsTable rows={rows} />
+    </div>
+  );
 }

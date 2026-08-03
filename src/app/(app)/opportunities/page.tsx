@@ -6,6 +6,7 @@ import { computeHealthMetrics } from "@/lib/dashboard-metrics";
 import { HealthStrip, type Metric } from "@/components/health-strip";
 import { EmptyState } from "@/components/empty-state";
 import { OpportunityCard, type OpportunityRow } from "@/components/opportunity-card";
+import { RefreshDataButton } from "@/components/refresh-data-button";
 
 // This page reads the DB (getCurrentProject/listOpportunities) via cookies()
 // on every request — force-dynamic skips the build-time static-generation
@@ -31,6 +32,14 @@ const SECTIONS: { type: string; title: string }[] = [
 // reads this week's shortlist straight from `src/lib`, then groups it into
 // calm, scannable advisor-card sections. All mutation (Track/Dismiss) lives
 // in the nested client `OpportunityActions`.
+//
+// Task 17: opportunities only populated via the Monday cron until now, so
+// a project with fresh keywords/competitors saw an empty shortlist with no
+// way to force one. `RefreshDataButton` chains all three on-demand jobs
+// (rank_refresh -> gap_refresh -> weekly_opportunities, the same order and
+// dependency weekly_opportunities' loadDetectorInput reads) — always
+// rendered, including the empty state, mirroring competitor-intel-panel.tsx's
+// "first fetch still needs a trigger" rule.
 export default async function OpportunitiesPage() {
   const project = await getCurrentProject(db, (await cookies()).get("sp_project")?.value);
 
@@ -66,12 +75,17 @@ export default async function OpportunitiesPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <HealthStrip metrics={metrics} />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <HealthStrip metrics={metrics} />
+        </div>
+        <RefreshDataButton projectId={project.id} />
+      </div>
 
       {opportunityRows.length === 0 ? (
         <EmptyState
           title="No opportunities yet"
-          description="Run a refresh to generate this week's shortlist."
+          description="Use the Refresh data button above to generate this week's shortlist."
         />
       ) : (
         SECTIONS.map(({ type, title }) => {
