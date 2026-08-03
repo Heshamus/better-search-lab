@@ -32,6 +32,9 @@ importers:
       react-dom:
         specifier: ^19.2.8
         version: 19.2.8(react@19.2.8)
+      tsx:
+        specifier: ^4.23.5
+        version: 4.23.5
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -75,9 +78,6 @@ importers:
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
-      tsx:
-        specifier: ^4.23.5
-        version: 4.23.5
       typescript:
         specifier: ^5.9.3
         version: 5.9.3

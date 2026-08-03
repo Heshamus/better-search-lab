@@ -10,7 +10,9 @@
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
-    "worker": "tsx worker/index.ts"
+    "worker": "tsx worker/index.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts"
   },
   "license": "UNLICENSED",
   "packageManager": "pnpm@10.32.1",
@@ -23,6 +25,7 @@
     "postgres": "^3.4.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "tsx": "^4.23.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -39,7 +42,6 @@
     "jsdom": "^30.0.1",
     "postcss": "^8.5.25",
     "tailwindcss": "^4.3.3",
-    "tsx": "^4.23.5",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.10"
