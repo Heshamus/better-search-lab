@@ -2,6 +2,15 @@ import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { signIn } from "@/auth";
 
+// This page hosts a Server Action (`authenticate`). Left static, Next.js
+// prerenders + full-route-caches it (s-maxage=31536000), and the Server Action
+// POST then gets served a CACHED response — a corrupted mix of the stale page
+// and partial action headers — which the client rejects with the opaque
+// "An unexpected response was received from the server." Forcing dynamic keeps
+// the route (and its action) out of the cache so every login POST is handled
+// live. (The 8 dashboard pages are already force-dynamic for the same reason.)
+export const dynamic = "force-dynamic";
+
 const DEFAULT_CALLBACK_URL = "/opportunities";
 
 async function authenticate(formData: FormData) {
