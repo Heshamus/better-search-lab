@@ -1,0 +1,152 @@
+{
+  "version": "0.1.20260115",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "1.3842 sec.",
+  "cost": 0.0121,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "08031535-1535-0066-0000-b2c3d4e5f6a7",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "1.3601 sec.",
+      "cost": 0.0121,
+      "result_count": 1,
+      "path": ["v3", "dataforseo_labs", "google", "keyword_ideas", "live"],
+      "data": {
+        "api": "dataforseo_labs",
+        "function": "keyword_ideas",
+        "se_type": "google",
+        "keywords": ["seo reporting"],
+        "location_code": 2840,
+        "language_code": "en",
+        "limit": 100
+      },
+      "result": [
+        {
+          "seed_keywords": ["seo reporting"],
+          "location_code": 2840,
+          "language_code": "en",
+          "total_count": 4,
+          "items_count": 4,
+          "items": [
+            {
+              "se_type": "google",
+              "keyword": "seo reporting software",
+              "location_code": 2840,
+              "language_code": "en",
+              "keyword_info": {
+                "se_type": "google",
+                "last_updated_time": "2026-07-15 00:00:00 +00:00",
+                "competition": 0.42,
+                "competition_level": "MEDIUM",
+                "cpc": 12.5,
+                "search_volume": 2400,
+                "low_top_of_page_bid": 8.2,
+                "high_top_of_page_bid": 18.7
+              },
+              "keyword_properties": {
+                "se_type": "google",
+                "core_keyword": null,
+                "keyword_difficulty": 34,
+                "detected_language": "en",
+                "is_another_language": false
+              },
+              "search_intent_info": {
+                "se_type": "google",
+                "main_intent": "commercial",
+                "foreign_intent": null
+              }
+            },
+            {
+              "se_type": "google",
+              "keyword": "seo reporting tool",
+              "location_code": 2840,
+              "language_code": "en",
+              "keyword_info": {
+                "se_type": "google",
+                "last_updated_time": "2026-07-15 00:00:00 +00:00",
+                "competition": 0.38,
+                "competition_level": "MEDIUM",
+                "cpc": 10.8,
+                "search_volume": 1900,
+                "low_top_of_page_bid": 6.9,
+                "high_top_of_page_bid": 16.4
+              },
+              "keyword_properties": {
+                "se_type": "google",
+                "core_keyword": "seo reporting software",
+                "keyword_difficulty": 29,
+                "detected_language": "en",
+                "is_another_language": false
+              },
+              "search_intent_info": {
+                "se_type": "google",
+                "main_intent": "commercial",
+                "foreign_intent": null
+              }
+            },
+            {
+              "se_type": "google",
+              "keyword": "white label seo reports",
+              "location_code": 2840,
+              "language_code": "en",
+              "keyword_info": {
+                "se_type": "google",
+                "last_updated_time": "2026-07-15 00:00:00 +00:00",
+                "competition": 0.55,
+                "competition_level": "HIGH",
+                "cpc": 15.2,
+                "search_volume": 320,
+                "low_top_of_page_bid": 9.4,
+                "high_top_of_page_bid": 22.1
+              },
+              "keyword_properties": {
+                "se_type": "google",
+                "core_keyword": "seo reporting software",
+                "keyword_difficulty": 41,
+                "detected_language": "en",
+                "is_another_language": false
+              },
+              "search_intent_info": {
+                "se_type": "google",
+                "main_intent": "commercial",
+                "foreign_intent": null
+              }
+            },
+            {
+              "se_type": "google",
+              "keyword": "seo report template",
+              "location_code": 2840,
+              "language_code": "en",
+              "keyword_info": {
+                "se_type": "google",
+                "last_updated_time": "2026-07-15 00:00:00 +00:00",
+                "competition": null,
+                "competition_level": null,
+                "cpc": null,
+                "search_volume": 590,
+                "low_top_of_page_bid": null,
+                "high_top_of_page_bid": null
+              },
+              "keyword_properties": {
+                "se_type": "google",
+                "core_keyword": "seo reporting software",
+                "keyword_difficulty": 22,
+                "detected_language": "en",
+                "is_another_language": false
+              },
+              "search_intent_info": {
+                "se_type": "google",
+                "main_intent": "informational",
+                "foreign_intent": null
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
