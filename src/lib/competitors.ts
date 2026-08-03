@@ -1,7 +1,18 @@
-import { competitorGaps } from "@/db/schema";
+import { competitors, competitorGaps } from "@/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import type { IntersectionRow } from "@/lib/dataforseo/labs";
 import type { GapSignal } from "@/lib/core/detectors/types";
+
+// Task 8 (Competitors view): the roster of tracked competitor domains for a
+// project, used to render the chip row above the gap table. Deliberately
+// projected to just {id, domain} — the gap table itself joins on keyword via
+// listGapSignals below, never on this row's id.
+export async function listCompetitors(db: any, projectId: string): Promise<{ id: string; domain: string }[]> {
+  return db
+    .select({ id: competitors.id, domain: competitors.domain })
+    .from(competitors)
+    .where(eq(competitors.projectId, projectId));
+}
 
 export async function saveGapRows(db: any, projectId: string, competitorDomain: string, rows: IntersectionRow[]) {
   await db.delete(competitorGaps).where(
