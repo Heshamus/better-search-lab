@@ -18,5 +18,18 @@ export default defineConfig({
     // current-correct per-file mechanism) — see tests/components/*.
     environment: "node",
     setupFiles: ["./tests/setup/vitest-setup.ts"],
+    server: {
+      deps: {
+        // next-auth (reached via `@/auth` from every guarded API route) is
+        // SSR-externalized by default, so vitest hands it to Node's native
+        // ESM loader — which can't resolve its bare `next/server` /
+        // `next/headers` imports (no extension probing) and throws
+        // "Cannot find module .../next/server". Inlining processes next-auth
+        // in-graph through Vite's resolver, which resolves those correctly.
+        // Required so a test can `import` any guarded route module (the
+        // competitor routes here, and the competitor-intel route later).
+        inline: ["next-auth"],
+      },
+    },
   },
 });
