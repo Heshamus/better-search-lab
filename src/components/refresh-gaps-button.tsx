@@ -6,7 +6,9 @@ import { useState } from "react";
 type RefreshState = "idle" | "busy" | "error";
 
 /**
- * The Competitors view's "Refresh gaps" control (Task 8). Posts the guarded
+ * The Competitors view's "Find keyword gaps" control (Task 8, relabeled
+ * Task 14 for legibility — the action finds new gap rows, it does not
+ * merely "refresh" an existing table). Posts the guarded
  * `POST /api/projects/[id]/gaps/refresh` route (runs the gap_refresh job,
  * re-collecting keyword-gap rows from DataForSEO for every tracked
  * competitor on this project), checks `res.ok` explicitly (a failed request
@@ -43,10 +45,10 @@ export function RefreshGapsButton({ projectId }: { projectId: string }) {
         disabled={state === "busy"}
         className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
       >
-        {state === "busy" ? "Refreshing…" : "Refresh gaps"}
+        {state === "busy" ? "Finding gaps…" : "Find keyword gaps"}
       </button>
       {state === "error" ? (
-        <span className="text-xs text-at-risk">Couldn&rsquo;t refresh gaps — try again.</span>
+        <span className="text-xs text-at-risk">Couldn&rsquo;t find gaps — try again.</span>
       ) : null}
     </div>
   );

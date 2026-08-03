@@ -11,26 +11,27 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { GapTable } from "@/components/gap-table";
-import type { GapSignal } from "@/lib/core/detectors/types";
+import type { GapRow } from "@/lib/competitors";
 
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
 });
 
-function makeGap(overrides: Partial<GapSignal> = {}): GapSignal {
+function makeGap(overrides: Partial<GapRow> = {}): GapRow {
   return {
     keyword: "seo reporting software",
     volume: 500,
     difficulty: 20,
     competitorCount: 1,
+    competitorDomains: [],
     ...overrides,
   };
 }
 
 describe("GapTable", () => {
   it("renders a row per gap with keyword + competitorCount + volume, sorted by volume desc", () => {
-    const rows: GapSignal[] = [
+    const rows: GapRow[] = [
       makeGap({ keyword: "low volume gap", volume: 100, competitorCount: 3 }),
       makeGap({ keyword: "high volume gap", volume: 900, competitorCount: 1 }),
     ];
@@ -47,8 +48,20 @@ describe("GapTable", () => {
     expect(order).toEqual(["gap-row-high volume gap", "gap-row-low volume gap"]);
   });
 
+  it("renders which competitors rank in the 'Competitors ranking' column", () => {
+    const rows: GapRow[] = [
+      makeGap({ keyword: "webflow seo", competitorDomains: ["rival-b.com", "rival-a.com"] }),
+    ];
+
+    render(<GapTable rows={rows} projectId="proj-1" defaultLocationCode={2840} defaultLanguageCode="en" />);
+
+    expect(screen.getByTestId("gap-competitor-domains-webflow seo").textContent).toBe(
+      "rival-b.com, rival-a.com",
+    );
+  });
+
   it("tie-breaks equal volume by competitorCount desc, and sorts null volume last", () => {
-    const rows: GapSignal[] = [
+    const rows: GapRow[] = [
       makeGap({ keyword: "no volume yet", volume: null, competitorCount: 9 }),
       makeGap({ keyword: "tie low competitors", volume: 400, competitorCount: 1 }),
       makeGap({ keyword: "tie high competitors", volume: 400, competitorCount: 4 }),

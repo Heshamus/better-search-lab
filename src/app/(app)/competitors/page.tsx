@@ -16,9 +16,15 @@ export const dynamic = "force-dynamic";
 // Server component (Task 8, mirrors Tasks 4-7): resolves the current project
 // directly — no /api fetch, (app)/* is already middleware-guarded — then
 // reads the competitor roster + this project's keyword-gap rows straight
-// from src/lib. All mutation (Refresh gaps, per-row Add to tracking) lives
-// in the nested client RefreshGapsButton / GapTable, which fetch a guarded
-// /api/* route and then router.refresh() this page.
+// from src/lib. All mutation (Find keyword gaps, per-row Add to tracking)
+// lives in the nested client RefreshGapsButton / GapTable, which fetch a
+// guarded /api/* route and then router.refresh() this page.
+//
+// Task 14 (legibility): the gaps action only makes sense once there's at
+// least one tracked competitor to diff against, so RefreshGapsButton is
+// gated on `competitorRows.length >= 1` — with zero competitors we show an
+// honest "add one first" prompt in its place rather than a button that
+// would find nothing.
 //
 // Share-of-voice is DEFERRED (competitor-rank-per-tracked-keyword is not
 // captured — rank_snapshots stores only OUR rank, so there is no honest SoV
@@ -60,8 +66,16 @@ export default async function CompetitorsPage() {
             ))}
           </div>
         )}
-        <RefreshGapsButton projectId={project.id} />
+        {competitorRows.length >= 1 ? (
+          <RefreshGapsButton projectId={project.id} />
+        ) : (
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">Add a competitor to find keyword gaps.</p>
+        )}
       </div>
+
+      <p className="text-sm text-neutral-500 dark:text-neutral-400">
+        Keywords your competitors rank for and you don&rsquo;t.
+      </p>
 
       <GapTable
         rows={gapRows}

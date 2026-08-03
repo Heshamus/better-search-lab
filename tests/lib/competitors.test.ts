@@ -8,6 +8,8 @@ import {
   removeCompetitor,
   updateCompetitorDomain,
   normalizeDomain,
+  saveGapRows,
+  listGapSignals,
   MAX_COMPETITORS,
   CompetitorCapError,
 } from "@/lib/competitors";
@@ -104,5 +106,22 @@ describe("competitor CRUD", () => {
 
     expect((await listCompetitors(t.db, p2.id)).some((c) => c.id === c2.id)).toBe(true);
     expect((await listCompetitors(t.db, p1.id)).some((c) => c.id === c1.id)).toBe(true);
+  });
+});
+
+describe("listGapSignals competitor domains", () => {
+  it("returns which competitors rank for each gap keyword", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    await saveGapRows(t.db, p.id, "rival-a.com", [
+      { keyword: "webflow seo", searchVolume: 300, difficulty: 20, competitorRank: 5, ourRank: null },
+    ]);
+    await saveGapRows(t.db, p.id, "rival-b.com", [
+      { keyword: "webflow seo", searchVolume: 300, difficulty: 20, competitorRank: 8, ourRank: null },
+    ]);
+    const rows = await listGapSignals(t.db, p.id);
+    const row = rows.find((r) => r.keyword === "webflow seo")!;
+    expect(row.competitorCount).toBe(2);
+    expect((row as any).competitorDomains.sort()).toEqual(["rival-a.com", "rival-b.com"]);
   });
 });

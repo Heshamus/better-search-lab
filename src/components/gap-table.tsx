@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { GapSignal } from "@/lib/core/detectors/types";
+import type { GapRow } from "@/lib/competitors";
 
 // Sort rule (brief §Task 8): opportunity-first — bigger search volume, then
 // more competitors already ranking for it, is the strongest signal a gap is
@@ -17,7 +17,7 @@ function compareNullsLastDesc(a: number | null, b: number | null): number {
   return b - a;
 }
 
-function sortGapRows(rows: GapSignal[]): GapSignal[] {
+function sortGapRows(rows: GapRow[]): GapRow[] {
   return [...rows].sort((a, b) => {
     const byVolume = compareNullsLastDesc(a.volume, b.volume);
     if (byVolume !== 0) return byVolume;
@@ -102,11 +102,13 @@ function AddToTrackingButton({
 }
 
 /**
- * The Competitors view's keyword-gap table (Task 8): keywords at least one
- * tracked competitor ranks for that we don't, sorted by opportunity (volume
- * desc, tie-broken by how many competitors already rank for it). Each row
- * offers a one-click "Add to tracking" so a gap can become a tracked keyword
- * without leaving the page.
+ * The Competitors view's keyword-gap table (Task 8, Task 14 adds the
+ * "Competitors ranking" column): keywords at least one tracked competitor
+ * ranks for that we don't, sorted by opportunity (volume desc, tie-broken by
+ * how many competitors already rank for it). Each row shows WHICH tracked
+ * competitors rank for that keyword (not just how many) and offers a
+ * one-click "Add to tracking" so a gap can become a tracked keyword without
+ * leaving the page.
  *
  * `rows` is a plain read supplied by the server-component Competitors page
  * via `listGapSignals` — this component never re-fetches the list itself,
@@ -120,7 +122,7 @@ export function GapTable({
   defaultLocationCode,
   defaultLanguageCode,
 }: {
-  rows: GapSignal[];
+  rows: GapRow[];
   projectId: string;
   defaultLocationCode: number;
   defaultLanguageCode: string;
@@ -147,6 +149,9 @@ export function GapTable({
               Competitors
             </th>
             <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              Competitors ranking
+            </th>
+            <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
               Volume
             </th>
             <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
@@ -168,6 +173,12 @@ export function GapTable({
                 data-testid={`gap-competitors-${row.keyword}`}
               >
                 {row.competitorCount}
+              </td>
+              <td
+                className="px-4 py-2 text-neutral-600 dark:text-neutral-300"
+                data-testid={`gap-competitor-domains-${row.keyword}`}
+              >
+                {row.competitorDomains.join(", ")}
               </td>
               <td
                 className="px-4 py-2 text-neutral-600 dark:text-neutral-300"

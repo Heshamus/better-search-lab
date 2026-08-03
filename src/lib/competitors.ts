@@ -80,7 +80,15 @@ export async function saveGapRows(db: any, projectId: string, competitorDomain: 
   })));
 }
 
-export async function listGapSignals(db: any, projectId: string): Promise<GapSignal[]> {
+// Task 14 (Gaps UI): the read helper's return type only — detectors still
+// consume plain GapSignal (src/lib/core/detectors/types.ts is untouched).
+// GapRow extends GapSignal, so a GapRow[] remains assignable wherever a
+// GapSignal[] is expected (see loadDetectorInput in src/lib/opportunities.ts).
+export interface GapRow extends GapSignal {
+  competitorDomains: string[];
+}
+
+export async function listGapSignals(db: any, projectId: string): Promise<GapRow[]> {
   const rows = await db.select().from(competitorGaps)
     .where(and(eq(competitorGaps.projectId, projectId), isNull(competitorGaps.ourRank)));
   const byKeyword = new Map<string, GapSignal & { _competitors: Set<string> }>();
@@ -92,5 +100,5 @@ export async function listGapSignals(db: any, projectId: string): Promise<GapSig
     if ((r.volume ?? 0) > (g.volume ?? 0)) g.volume = r.volume;
     if (r.difficulty != null && (g.difficulty == null || r.difficulty < g.difficulty)) g.difficulty = r.difficulty;
   }
-  return [...byKeyword.values()].map(({ _competitors, ...g }) => g);
+  return [...byKeyword.values()].map(({ _competitors, ...g }) => ({ ...g, competitorDomains: [..._competitors] }));
 }
