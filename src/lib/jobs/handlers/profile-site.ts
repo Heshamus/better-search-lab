@@ -37,12 +37,22 @@ export function profileSiteHandler(client: DataForSeoClient, opts?: { fetchImpl?
     let cost = 0, rows = 0;
 
     // 2. Our own rankings (works even when the crawl failed → the new-site path).
+    // NOTE: rankedKeywords does NOT throw for a domain that simply isn't ranked yet —
+    // that's a normal 20000/20000 response with an empty items[], handled above the
+    // catch with no error. The only thing that reaches this catch is a genuine
+    // rankedKeywords FAILURE (a DataForSEO task-level error — bad location_code, an
+    // account billing lapse — or an HTTP failure after retries). Keep it best-effort
+    // (don't fail the whole job over a rankings-only outage — crawl/expansion can
+    // still carry it), but surface it: swallowing a real provider failure silently
+    // has previously masked a billing-lapse outage in production for 24h undetected.
     try {
       const { items, rows: n } = await rankedKeywords(client, { target: project.domain, locationCode: loc, languageCode: lang, limit: MAX_CANDIDATES });
       for (const it of items) if (it.keyword) put({ keyword: it.keyword, source: "ranking", volume: it.searchVolume, difficulty: it.difficulty });
       await logApiUsage(db, { endpoint: RANKED_ENDPOINT, rows: n, projectId });
       cost += estimateCost(RANKED_ENDPOINT, n); rows += n;
-    } catch { /* no rankings yet (brand-new site) — fine, seeds+expansion carry it */ }
+    } catch (e) {
+      console.warn(`profile_site: rankedKeywords failed for ${project.domain}, continuing without rankings: ${String((e as { message?: unknown })?.message ?? e)}`);
+    }
 
     // 3. Expand the top seeds via keyword_ideas.
     if (seeds.length) {

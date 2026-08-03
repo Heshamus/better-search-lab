@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { createTestDb } from "@/db/test-db";
 import { createProject } from "@/lib/projects";
 import { DataForSeoClient } from "@/lib/dataforseo/client";
@@ -66,5 +66,45 @@ describe("profileSiteHandler", () => {
     // crawl failed AND no rankings → handler throws → job 'failed', no candidates
     expect(status).toBe("failed");
     expect(await listProfileCandidates(t.db, p.id)).toEqual([]);
+  });
+
+  it("degrades gracefully (and visibly) when the rankings call fails with a task-level error", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const fetchImpl = (async (url: string) => {
+      const u = String(url);
+      if (u.includes("api.dataforseo.com")) {
+        if (u.includes("ranked_keywords")) {
+          // Task-level failure: HTTP 200 but a non-20000 task status_code — e.g. a
+          // billing lapse or bad location_code. assertTasksOk throws for this, unlike
+          // a genuinely unranked domain, which returns 20000/20000 with an empty items[].
+          return new Response(JSON.stringify({
+            status_code: 20000,
+            tasks: [{ status_code: 40501, status_message: "Invalid Field: 'location_code'.", result: null }],
+          }), { status: 200 });
+        }
+        const items = [{ keyword: "webflow seo automation", keyword_info: { search_volume: 500 }, keyword_properties: { keyword_difficulty: 25 } }];
+        return new Response(JSON.stringify({ status_code: 20000, tasks: [{ status_code: 20000, result: [{ items }] }] }), { status: 200 });
+      }
+      return new Response(`<html><head><title>Webflow SEO Automation</title></head><body><h1>GEO optimization</h1></body></html>`,
+        { status: 200, headers: { "content-type": "text/html" } });
+    }) as unknown as typeof fetch;
+    const client = new DataForSeoClient({ login: "x", password: "y", fetchImpl });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const status = await runJob(t.db, {
+      type: "profile_site", projectId: p.id, date: "2026-08-03-rankfail",
+      handler: profileSiteHandler(client, { fetchImpl }),
+    });
+    // rankings failure is best-effort — crawl + expansion still carry the job to 'done'.
+    expect(status).toBe("done");
+
+    const rows = await listProfileCandidates(t.db, p.id);
+    expect(rows.length).toBeGreaterThan(0);
+    const sources = new Set(rows.map((r) => r.source));
+    expect(sources.has("ranking")).toBe(false); // rankings were skipped, not fabricated
+    expect(warn).toHaveBeenCalled(); // but the failure must be visible, not silent
+
+    warn.mockRestore();
   });
 });
