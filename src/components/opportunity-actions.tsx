@@ -5,23 +5,20 @@ import { useState } from "react";
 
 type MutableStatus = "tracked" | "dismissed";
 
-async function postStatus(id: string, status: MutableStatus): Promise<void> {
-  await fetch(`/api/opportunities/${id}/status`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ status }),
-  });
-}
-
 const actionButtonClass =
   "rounded-lg border border-neutral-200 px-3 py-1 font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800";
 
 /**
  * The mutation half of an opportunity card (§8). Track/Dismiss `fetch` the
- * guarded `POST /api/opportunities/[id]/status` route, then `router.refresh()`
- * so the server-rendered list re-fetches with the new status — this
- * component itself never re-reads `/lib` data, matching the read/mutation
- * split (server components read, client components mutate-then-refresh).
+ * guarded `POST /api/opportunities/[id]/status` route, check `res.ok`
+ * explicitly, and only call `router.refresh()` once the mutation is
+ * confirmed to have landed — a failed request (`!res.ok`) OR a network
+ * throw (fetch rejects) both surface as a small inline error instead of a
+ * silent no-op, and skip the refresh. This mirrors every other client
+ * mutation in the app (keyword-manager.tsx's TrackToggle,
+ * gap-table.tsx's AddToTrackingButton, refresh-gaps-button.tsx) — this is
+ * the flagship landing view's primary action, so it follows the same
+ * convention rather than being the one exception.
  *
  * SERP is a plain external link to a Google search for the keyword — no
  * fetch, no mutation. Brief is visibly disabled pending Phase 5 (deferred,
@@ -40,6 +37,7 @@ export function OpportunityActions({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<MutableStatus | null>(null);
+  const [error, setError] = useState(false);
 
   const isTracked = status === "tracked";
   const isDismissed = status === "dismissed";
@@ -47,9 +45,21 @@ export function OpportunityActions({
 
   async function handle(next: MutableStatus) {
     setPending(next);
+    setError(false); // clear any previous failure on a new attempt
     try {
-      await postStatus(id, next);
+      const res = await fetch(`/api/opportunities/${id}/status`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status: next }),
+      });
+      if (!res.ok) {
+        setError(true);
+        return; // do NOT refresh on failure
+      }
       router.refresh();
+    } catch {
+      // Network error (fetch rejected) — same honest error as !res.ok.
+      setError(true);
     } finally {
       setPending(null);
     }
@@ -58,40 +68,46 @@ export function OpportunityActions({
   const serpUrl = `https://www.google.com/search?q=${encodeURIComponent(keyword)}`;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 text-sm">
-      <button
-        type="button"
-        onClick={() => handle("tracked")}
-        disabled={isSettled || pending !== null}
-        className={
-          isTracked
-            ? "rounded-lg bg-accent/20 px-3 py-1 font-medium text-accent"
-            : actionButtonClass
-        }
-      >
-        {isTracked ? "Tracked" : "Track"}
-      </button>
+    <div className="flex flex-col items-start gap-1">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <button
+          type="button"
+          onClick={() => handle("tracked")}
+          disabled={isSettled || pending !== null}
+          className={
+            isTracked
+              ? "rounded-lg bg-accent/20 px-3 py-1 font-medium text-accent"
+              : actionButtonClass
+          }
+        >
+          {isTracked ? "Tracked" : "Track"}
+        </button>
 
-      <button
-        type="button"
-        onClick={() => handle("dismissed")}
-        disabled={isSettled || pending !== null}
-        className={
-          isDismissed
-            ? "rounded-lg bg-neutral-200 px-3 py-1 font-medium text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
-            : actionButtonClass
-        }
-      >
-        {isDismissed ? "Dismissed" : "Dismiss"}
-      </button>
+        <button
+          type="button"
+          onClick={() => handle("dismissed")}
+          disabled={isSettled || pending !== null}
+          className={
+            isDismissed
+              ? "rounded-lg bg-neutral-200 px-3 py-1 font-medium text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
+              : actionButtonClass
+          }
+        >
+          {isDismissed ? "Dismissed" : "Dismiss"}
+        </button>
 
-      <a href={serpUrl} target="_blank" rel="noopener" className={actionButtonClass}>
-        SERP
-      </a>
+        <a href={serpUrl} target="_blank" rel="noopener" className={actionButtonClass}>
+          SERP
+        </a>
 
-      <button type="button" disabled title="Coming in Phase 5" className={actionButtonClass}>
-        Brief
-      </button>
+        <button type="button" disabled title="Coming in Phase 5" className={actionButtonClass}>
+          Brief
+        </button>
+      </div>
+
+      {error ? (
+        <span className="text-xs text-at-risk">Couldn&rsquo;t update — try again.</span>
+      ) : null}
     </div>
   );
 }
