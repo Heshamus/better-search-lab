@@ -15,6 +15,13 @@
       "when": 1785734716062,
       "tag": "0001_bouncy_human_fly",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785742732757,
+      "tag": "0002_wise_nightmare",
+      "breakpoints": true
     }
   ]
 }

@@ -85,6 +85,7 @@ export async function upsertOpportunities(db: any, projectId: string, weekOf: st
   await db.insert(opportunities).values(results.map((r) => ({
     projectId,
     keywordId: r.keywordId,
+    keyword: r.keyword,
     type: r.type,
     score: r.score,
     scoreBreakdown: r.scoreBreakdown,

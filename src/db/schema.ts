@@ -75,6 +75,7 @@ export const opportunities = pgTable("opportunities", {
   id: uuid("id").defaultRandom().primaryKey(),
   projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   keywordId: uuid("keyword_id").references(() => keywords.id, { onDelete: "set null" }),
+  keyword: text("keyword").notNull().default(""), // always present (EngineResult.keyword) — the only structured way to recover a gap row's keyword, since gap candidates have keywordId: null
   type: text("type").notNull(),
   score: real("score").notNull(),
   scoreBreakdown: jsonb("score_breakdown").$type<Record<string, number>>().notNull().default({}),
