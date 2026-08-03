@@ -88,6 +88,18 @@ export const profileCandidates = pgTable("profile_candidates", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const competitorKeywords = pgTable("competitor_keywords", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  competitorDomain: text("competitor_domain").notNull(),
+  keyword: text("keyword").notNull(),
+  rankAbsolute: integer("rank_absolute"),
+  url: text("url"),
+  volume: integer("volume"),
+  difficulty: integer("difficulty"),
+  fetchedAt: timestamp("fetched_at").defaultNow().notNull(),
+});
+
 export const opportunities = pgTable("opportunities", {
   id: uuid("id").defaultRandom().primaryKey(),
   projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
