@@ -1,0 +1,63 @@
+import { describe, it, expect } from "vitest";
+import { strikingDistance } from "@/lib/core/detectors/striking-distance";
+import { decay } from "@/lib/core/detectors/decay";
+import { momentum } from "@/lib/core/detectors/momentum";
+import type { DetectorInput, KeywordSignal } from "@/lib/core/detectors/types";
+
+const d = (s: string) => new Date(s + "T00:00:00Z");
+// serpFeatures/ownUrls are part of the real DetectorSnap shape (added after
+// this brief was sliced, for the gap/serp-feature/cannibalization detectors
+// in Task 5) but unused by the position detectors under test here.
+const snap = (date: string, rank: number | null) => ({
+  keywordId: "k",
+  capturedAt: d(date),
+  rankAbsolute: rank,
+  fetchStatus: "ok",
+  serpFeatures: [],
+  ownUrls: [],
+});
+const ks = (over: Partial<KeywordSignal>): KeywordSignal => ({
+  keywordId: "k", keyword: "seo reporting", tags: [], snapshots: [], ownUrls: [], volume: 1200, difficulty: 30, ...over,
+});
+const input = (signals: KeywordSignal[], asOf = d("2026-08-10")): DetectorInput => ({ keywordSignals: signals, gapSignals: [], asOf });
+
+describe("strikingDistance", () => {
+  it("flags a keyword sitting at #5–20", () => {
+    const out = strikingDistance(input([ks({ snapshots: [snap("2026-08-10", 11)] })]));
+    expect(out).toHaveLength(1);
+    expect(out[0].type).toBe("striking_distance");
+    expect(out[0].currentPosition).toBe(11);
+  });
+  it("ignores page-1 top-4 and beyond-20", () => {
+    expect(strikingDistance(input([ks({ snapshots: [snap("2026-08-10", 3)] })]))).toHaveLength(0);
+    expect(strikingDistance(input([ks({ snapshots: [snap("2026-08-10", 40)] })]))).toHaveLength(0);
+  });
+  it("never fabricates from a failed/empty history", () => {
+    expect(strikingDistance(input([ks({ snapshots: [] })]))).toHaveLength(0);
+  });
+});
+
+describe("decay", () => {
+  it("flags a page-1 keyword that lost positions WoW", () => {
+    const out = decay(input([ks({ snapshots: [snap("2026-08-03", 4), snap("2026-08-10", 9)] })]));
+    expect(out).toHaveLength(1);
+    expect(out[0].type).toBe("decay");
+    expect(out[0].trend).toBe(-5); // previous 4 - current 9
+  });
+  it("does not flag improvement or a never-page-1 keyword", () => {
+    expect(decay(input([ks({ snapshots: [snap("2026-08-03", 4), snap("2026-08-10", 2)] })]))).toHaveLength(0);
+    expect(decay(input([ks({ snapshots: [snap("2026-08-03", 30), snap("2026-08-10", 40)] })]))).toHaveLength(0);
+  });
+});
+
+describe("momentum", () => {
+  it("flags a keyword gaining positions WoW", () => {
+    const out = momentum(input([ks({ snapshots: [snap("2026-08-03", 18), snap("2026-08-10", 9)] })]));
+    expect(out).toHaveLength(1);
+    expect(out[0].type).toBe("momentum");
+    expect(out[0].trend).toBe(9);
+  });
+  it("does not flag a flat or declining keyword", () => {
+    expect(momentum(input([ks({ snapshots: [snap("2026-08-03", 9), snap("2026-08-10", 9)] })]))).toHaveLength(0);
+  });
+});
