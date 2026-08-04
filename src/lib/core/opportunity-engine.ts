@@ -43,6 +43,7 @@ export interface EngineResult {
  */
 const UPSIDE_CTR_FACTOR: Record<OpportunityType, number> = {
   striking_distance: 0.08,
+  ctr_gap: 0.06,
   serp_feature: 0.05,
   gap: 0.03,
   momentum: 0.02,
@@ -75,6 +76,8 @@ function explain(c: Candidate): string {
       const urls = c.evidence.urls as string[];
       return `${urls.length} of your URLs compete for “${c.keyword}” — consolidate them.`;
     }
+    case "ctr_gap":
+      return `You rank #${naNum(c.currentPosition)} for “${c.keyword}” with ${naNum(c.volume)} impressions but click-through is below par — a sharper title/meta wins clicks you're already earning.`;
     default: {
       const exhaustive: never = c.type;
       throw new Error(`opportunity-engine: no why-template for type ${exhaustive as string}`);
