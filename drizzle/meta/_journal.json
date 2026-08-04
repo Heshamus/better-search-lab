@@ -64,6 +64,13 @@
       "when": 1785798213344,
       "tag": "0008_brave_serpent_society",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1785874509372,
+      "tag": "0009_chubby_venus",
+      "breakpoints": true
     }
   ]
 }

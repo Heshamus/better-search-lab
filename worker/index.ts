@@ -23,6 +23,7 @@ import { gapRefreshHandler } from "../src/lib/jobs/handlers/gap-refresh";
 import { weeklyOpportunitiesHandler } from "../src/lib/jobs/handlers/weekly-opportunities";
 import { competitorIntelHandler } from "../src/lib/jobs/handlers/competitor-intel";
 import { profileSiteHandler } from "../src/lib/jobs/handlers/profile-site";
+import { siteAuditHandler } from "../src/lib/jobs/handlers/site-audit";
 import { DataForSeoClient } from "../src/lib/dataforseo/client";
 import { DeepSeekClient } from "../src/lib/llm/deepseek";
 import { loadEnv } from "../src/config/env";
@@ -57,6 +58,7 @@ function resolveHandler(type: string): JobHandler | null {
     case "gap_refresh": return gapRefreshHandler(client);
     case "weekly_opportunities": return weeklyOpportunitiesHandler();
     case "competitor_intel": return competitorIntelHandler(client);
+    case "site_audit": return siteAuditHandler();
     case "refresh_all": return refreshAllHandler();
     default: return null;
   }

@@ -1,4 +1,5 @@
 import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, numeric, real } from "drizzle-orm/pg-core";
+import type { AuditIssue } from "@/lib/audit/checks";
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -149,4 +150,15 @@ export const apiUsage = pgTable("api_usage", {
   endpoint: text("endpoint").notNull(),
   rows: integer("rows").notNull().default(0),
   estCost: numeric("est_cost").notNull().default("0"),
+});
+
+// One row per completed site audit — the aggregated on-page issues (with sample
+// URLs) + a 0–100 score. Runs on our own crawler, so audits are free to re-run.
+export const siteAudits = pgTable("site_audits", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  score: integer("score").notNull().default(0),
+  pagesCrawled: integer("pages_crawled").notNull().default(0),
+  issues: jsonb("issues").$type<AuditIssue[]>().notNull().default([]),
 });
