@@ -175,12 +175,14 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
           </button>
         </div>
 
-        {saveState === "error" ? (
-          <span aria-live="polite" className="text-xs text-at-risk">Couldn&rsquo;t save — try again.</span>
-        ) : null}
-        {profileState === "error" ? (
-          <span aria-live="polite" className="text-xs text-at-risk">Couldn&rsquo;t profile the site — try again.</span>
-        ) : null}
+        {/* Always-mounted live regions: text toggles so the AT is already
+            watching each region before its error lands. */}
+        <span role="status" aria-live="polite" className="text-xs text-at-risk">
+          {saveState === "error" ? "Couldn’t save — try again." : null}
+        </span>
+        <span role="status" aria-live="polite" className="text-xs text-at-risk">
+          {profileState === "error" ? "Couldn’t profile the site — try again." : null}
+        </span>
       </form>
 
       <div className="flex flex-col gap-1 border-t border-neutral-100 pt-4 dark:border-neutral-800/60">
@@ -200,14 +202,16 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
             </button>
           ) : null}
         </div>
-        {deleteState === "confirm" ? (
-          <span aria-live="polite" className="text-xs text-neutral-500 dark:text-neutral-400">
-            This permanently deletes the project and all its keywords, competitors, and opportunities.
-          </span>
-        ) : null}
-        {deleteState === "error" ? (
-          <span aria-live="polite" className="text-xs text-at-risk">Couldn&rsquo;t delete — try again.</span>
-        ) : null}
+        {/* Always-mounted live regions: text toggles so the AT is already
+            watching before the confirm/error copy lands. */}
+        <span role="status" aria-live="polite" className="text-xs text-neutral-500 dark:text-neutral-400">
+          {deleteState === "confirm"
+            ? "This permanently deletes the project and all its keywords, competitors, and opportunities."
+            : null}
+        </span>
+        <span role="status" aria-live="polite" className="text-xs text-at-risk">
+          {deleteState === "error" ? "Couldn’t delete — try again." : null}
+        </span>
       </div>
     </div>
   );

@@ -26,9 +26,11 @@ export function RefreshRankingsButton({ projectId }: { projectId: string }) {
       >
         {state === "busy" ? "Refreshing rankings…" : "Refresh rankings"}
       </button>
-      {state === "error" ? (
-        <span aria-live="polite" className="text-xs text-at-risk">Couldn&rsquo;t refresh — try again.</span>
-      ) : null}
+      {/* Always-mounted live region: text toggles, element stays in the DOM so
+          the AT is already watching it when the error lands. */}
+      <span role="status" aria-live="polite" className="text-xs text-at-risk">
+        {state === "error" ? "Couldn’t refresh — try again." : null}
+      </span>
     </div>
   );
 }

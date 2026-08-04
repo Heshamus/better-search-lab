@@ -5,7 +5,7 @@ import { createProject } from "@/lib/projects";
 import { addKeywords } from "@/lib/keywords";
 import { rankSnapshots, keywordMetrics, competitorGaps, opportunities, projects } from "@/db/schema";
 import { weeklyOpportunitiesHandler } from "@/lib/jobs/handlers/weekly-opportunities";
-import { listOpportunities, mondayOf, setOpportunityStatus } from "@/lib/opportunities";
+import { listOpportunities, mondayOf, setOpportunityStatus, upsertOpportunities } from "@/lib/opportunities";
 
 let close: () => Promise<void>;
 afterEach(() => close?.());
@@ -134,5 +134,37 @@ describe("weeklyOpportunitiesHandler", () => {
     expect(rows).toHaveLength(2);
     expect(rows[0].keyword).toBe("email marketing quick win"); // winnability-heavy weights promoted it to #1
     expect(rows[1].keyword).toBe("email marketing big bet");
+  });
+});
+
+describe("upsertOpportunities transaction safety", () => {
+  const weekOf = "2026-08-10";
+  const base = {
+    keywordId: null,
+    volume: 100,
+    difficulty: 10,
+    currentPosition: 5,
+    trend: null,
+    scoreBreakdown: {},
+    upsideEstimate: null,
+  };
+
+  it("rolls back the delete when the insert fails — the prior shortlist survives", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+
+    // Seed one status='new' shortlist row via the real API.
+    await upsertOpportunities(t.db, p.id, weekOf, [
+      { ...base, keyword: "keep me", type: "gap", score: 42, why: "kept" } as any,
+    ]);
+
+    // A row whose NOT NULL `why` is null makes the INSERT throw *after* the
+    // status='new' delete. Without the transaction the delete commits and the
+    // week's shortlist is wiped; with it, the whole upsert rolls back.
+    const bad = [{ ...base, keyword: "boom", type: "gap", score: 1, why: null } as any];
+    await expect(upsertOpportunities(t.db, p.id, weekOf, bad)).rejects.toThrow();
+
+    const rows = await t.db.select().from(opportunities);
+    expect(rows.map((r: any) => r.keyword)).toEqual(["keep me"]);
   });
 });

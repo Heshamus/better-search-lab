@@ -46,9 +46,12 @@ export function RefreshDataButton({ projectId }: { projectId: string }) {
       >
         {stepLabel ?? "Refresh data"}
       </button>
-      {state === "error" ? (
-        <span aria-live="polite" className="text-xs text-at-risk">Couldn&rsquo;t refresh — try again.</span>
-      ) : null}
+      {/* Always-mounted live region: the AT must already be watching it before
+          the error text lands, so its TEXT toggles rather than the element
+          mounting with content. */}
+      <span role="status" aria-live="polite" className="text-xs text-at-risk">
+        {state === "error" ? "Couldn’t refresh — try again." : null}
+      </span>
     </div>
   );
 }

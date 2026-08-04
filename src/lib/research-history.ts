@@ -23,9 +23,11 @@ export async function saveResearchSearch(
     .select({ id: researchSearches.id })
     .from(researchSearches)
     .where(eq(researchSearches.projectId, projectId))
-    // id is the tiebreaker so rows written in the same tick (identical
-    // createdAt) get a deterministic newest-first order — without it their
-    // relative order is undefined and the KEEP-th cut could drop the wrong row.
+    // id (a random UUID — NOT chronological) is only a STABLE tiebreaker: it
+    // pins same-tick rows (identical createdAt) into one fixed order that
+    // listRecentSearches shares, so the prune-select here and the read there
+    // AGREE on which rows fall past the KEEP cut. Without it a tie's order is
+    // undefined and the two queries could disagree about which row to drop.
     .orderBy(desc(researchSearches.createdAt), desc(researchSearches.id));
   const stale = rows.slice(KEEP).map((r: { id: string }) => r.id);
   if (stale.length) await db.delete(researchSearches).where(inArray(researchSearches.id, stale));
@@ -45,8 +47,9 @@ export async function listRecentSearches(
     .select()
     .from(researchSearches)
     .where(eq(researchSearches.projectId, projectId))
-    // id tiebreaks same-tick rows so the newest-first order (and the `limit`
-    // cut) is deterministic — matches the prune ordering in saveResearchSearch.
+    // id (a random UUID, not chronological) tiebreaks same-tick rows into one
+    // fixed order that MATCHES saveResearchSearch's prune ordering, so the
+    // `limit` cut here and the prune there agree at a same-timestamp tie.
     .orderBy(desc(researchSearches.createdAt), desc(researchSearches.id))
     .limit(limit);
 }

@@ -80,38 +80,47 @@ export async function loadDetectorInput(db: any, projectId: string, asOf: Date):
  * are filtered to skip any `(keyword, type)` already present among those
  * survivors. Genuinely-new candidates still insert; a re-run with no status
  * changes nets the same rows either way (nothing survives to filter against).
+ *
+ * The whole delete -> select -> insert sequence runs in one transaction so a
+ * crash between the delete and the insert can't leave the week's shortlist
+ * wiped — either the refreshed shortlist lands whole or the prior `new` rows
+ * survive. The survivor select MUST be inside the tx so it reads-your-writes
+ * (sees the post-delete state); an early return still commits the delete,
+ * matching the original "empty shortlist this week" outcome.
  */
 export async function upsertOpportunities(db: any, projectId: string, weekOf: string, results: EngineResult[]): Promise<void> {
-  await db.delete(opportunities).where(and(
-    eq(opportunities.projectId, projectId),
-    eq(opportunities.weekOf, weekOf),
-    eq(opportunities.status, "new"),
-  ));
+  await db.transaction(async (tx: any) => {
+    await tx.delete(opportunities).where(and(
+      eq(opportunities.projectId, projectId),
+      eq(opportunities.weekOf, weekOf),
+      eq(opportunities.status, "new"),
+    ));
 
-  if (!results.length) return;
+    if (!results.length) return;
 
-  const surviving = await db.select({ keyword: opportunities.keyword, type: opportunities.type }).from(opportunities)
-    .where(and(eq(opportunities.projectId, projectId), eq(opportunities.weekOf, weekOf)));
-  const actioned = new Set(surviving.map((s: any) => `${s.keyword}|${s.type}`));
-  const toInsert = results.filter((r) => !actioned.has(`${r.keyword}|${r.type}`));
+    const surviving = await tx.select({ keyword: opportunities.keyword, type: opportunities.type }).from(opportunities)
+      .where(and(eq(opportunities.projectId, projectId), eq(opportunities.weekOf, weekOf)));
+    const actioned = new Set(surviving.map((s: any) => `${s.keyword}|${s.type}`));
+    const toInsert = results.filter((r) => !actioned.has(`${r.keyword}|${r.type}`));
 
-  if (!toInsert.length) return;
+    if (!toInsert.length) return;
 
-  await db.insert(opportunities).values(toInsert.map((r) => ({
-    projectId,
-    keywordId: r.keywordId,
-    keyword: r.keyword,
-    volume: r.volume,
-    difficulty: r.difficulty,
-    currentPosition: r.currentPosition,
-    trend: r.trend,
-    type: r.type,
-    score: r.score,
-    scoreBreakdown: r.scoreBreakdown,
-    why: r.why,
-    upsideEstimate: r.upsideEstimate,
-    weekOf,
-  })));
+    await tx.insert(opportunities).values(toInsert.map((r) => ({
+      projectId,
+      keywordId: r.keywordId,
+      keyword: r.keyword,
+      volume: r.volume,
+      difficulty: r.difficulty,
+      currentPosition: r.currentPosition,
+      trend: r.trend,
+      type: r.type,
+      score: r.score,
+      scoreBreakdown: r.scoreBreakdown,
+      why: r.why,
+      upsideEstimate: r.upsideEstimate,
+      weekOf,
+    })));
+  });
 }
 
 /** Rows for the project, filtered to `weekOf` when given, else the latest week — highest score first. */

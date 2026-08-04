@@ -146,9 +146,11 @@ export function ProfileReview({
         >
           {addState === "busy" ? "Adding…" : "Add selected to tracking"}
         </button>
-        {addState === "error" ? (
-          <span aria-live="polite" className="text-xs text-at-risk">Couldn&rsquo;t add keywords — try again.</span>
-        ) : null}
+        {/* Always-mounted live region: text toggles, element stays in the DOM so
+            the AT is already watching it when the error lands. */}
+        <span role="status" aria-live="polite" className="text-xs text-at-risk">
+          {addState === "error" ? "Couldn’t add keywords — try again." : null}
+        </span>
       </div>
     </div>
   );

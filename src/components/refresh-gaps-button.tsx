@@ -27,9 +27,11 @@ export function RefreshGapsButton({ projectId }: { projectId: string }) {
       >
         {state === "busy" ? "Finding gaps…" : "Find keyword gaps"}
       </button>
-      {state === "error" ? (
-        <span aria-live="polite" className="text-xs text-at-risk">Couldn&rsquo;t find gaps — try again.</span>
-      ) : null}
+      {/* Always-mounted live region: text toggles, element stays in the DOM so
+          the AT is already watching it when the error lands. */}
+      <span role="status" aria-live="polite" className="text-xs text-at-risk">
+        {state === "error" ? "Couldn’t find gaps — try again." : null}
+      </span>
     </div>
   );
 }

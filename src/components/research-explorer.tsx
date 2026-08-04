@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { formatMetric } from "@/lib/format";
 
 export interface ResearchIdea {
   keyword: string;
@@ -27,12 +28,8 @@ type AddState =
   | { status: "error" }
   | { status: "done"; count: number };
 
-// Honesty rule (mirrors rankings-table.tsx/opportunity-card.tsx): a null
-// metric renders "—", never a fabricated 0.
-function fmt(n: number | null): string {
-  return n == null ? "—" : `${n}`;
-}
-
+// Plain metrics render "—" for null via the shared formatMetric (@/lib/format).
+// fmtCpc stays local — its "$x.xx" shape differs from the shared helper.
 function fmtCpc(n: number | null): string {
   return n == null ? "—" : `$${n.toFixed(2)}`;
 }
@@ -268,10 +265,10 @@ export function ResearchExplorer({
                       />
                     </td>
                     <td className="px-4 py-2 font-medium text-neutral-900 dark:text-white">{item.keyword}</td>
-                    <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{fmt(item.searchVolume)}</td>
-                    <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{fmt(item.difficulty)}</td>
+                    <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(item.searchVolume)}</td>
+                    <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(item.difficulty)}</td>
                     <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{fmtCpc(item.cpc)}</td>
-                    <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{fmt(item.competition)}</td>
+                    <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(item.competition)}</td>
                   </tr>
                 ))}
               </tbody>
