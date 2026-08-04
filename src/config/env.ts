@@ -5,6 +5,9 @@ const Schema = z.object({
   DATAFORSEO_PASSWORD: z.string().min(1),
   AUTH_SECRET: z.string().min(16),
   ALLOWLIST: z.string().transform((s) => s.split(",").map((e) => e.trim()).filter(Boolean)),
+  // Optional: enables LLM niche extraction during auto-profiling. Absent → profiling
+  // degrades gracefully to heuristic seeds with no relevance gate (existing behavior).
+  DEEPSEEK_API_KEY: z.string().optional(),
 });
 export type Env = z.infer<typeof Schema>;
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {
