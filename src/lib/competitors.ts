@@ -100,5 +100,5 @@ export async function listGapSignals(db: any, projectId: string): Promise<GapRow
     if ((r.volume ?? 0) > (g.volume ?? 0)) g.volume = r.volume;
     if (r.difficulty != null && (g.difficulty == null || r.difficulty < g.difficulty)) g.difficulty = r.difficulty;
   }
-  return [...byKeyword.values()].map(({ _competitors, ...g }) => ({ ...g, competitorDomains: [..._competitors] }));
+  return [...byKeyword.values()].map(({ _competitors, ...g }) => ({ ...g, competitorDomains: [..._competitors].sort() }));
 }

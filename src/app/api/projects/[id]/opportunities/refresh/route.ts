@@ -9,5 +9,5 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const { id } = await params;
   const date = `${new Date().toISOString().slice(0, 10)}-manual-${Date.now()}`;
   const result = await runJob(db, { type: "weekly_opportunities", projectId: id, date, handler: weeklyOpportunitiesHandler() });
-  return NextResponse.json({ result });
+  return NextResponse.json({ result }, { status: result === "failed" ? 502 : 200 });
 }

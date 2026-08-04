@@ -122,6 +122,8 @@ describe("listGapSignals competitor domains", () => {
     const rows = await listGapSignals(t.db, p.id);
     const row = rows.find((r) => r.keyword === "webflow seo")!;
     expect(row.competitorCount).toBe(2);
-    expect((row as any).competitorDomains.sort()).toEqual(["rival-a.com", "rival-b.com"]);
+    // Asserted WITHOUT sorting here — listGapSignals must return the array
+    // already sorted (deterministic across refreshes), not merely sortable.
+    expect((row as any).competitorDomains).toEqual(["rival-a.com", "rival-b.com"]);
   });
 });

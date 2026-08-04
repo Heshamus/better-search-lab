@@ -13,5 +13,5 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const client = new DataForSeoClient({ login: env.DATAFORSEO_LOGIN, password: env.DATAFORSEO_PASSWORD });
   const date = `${new Date().toISOString().slice(0, 10)}-manual-${Date.now()}`;
   const result = await runJob(db, { type: "profile_site", projectId: id, date, handler: profileSiteHandler(client) });
-  return NextResponse.json({ result });
+  return NextResponse.json({ result }, { status: result === "failed" ? 502 : 200 });
 }
