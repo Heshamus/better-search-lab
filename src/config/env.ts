@@ -13,6 +13,12 @@ const Schema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_REDIRECT_URI: z.string().optional(),
+  // Optional: enables the AI-Visibility scan (Perplexity/ChatGPT/Gemini via Eden
+  // AI). Absent → the AI Visibility page shows a "not configured" note.
+  EDENAI_API_KEY: z.string().optional(),
+  EDEN_SONAR_MODEL: z.string().optional(),
+  EDEN_CHATGPT_MODEL: z.string().optional(),
+  EDEN_GEMINI_MODEL: z.string().optional(),
 });
 export type Env = z.infer<typeof Schema>;
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {
