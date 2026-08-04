@@ -30,7 +30,10 @@ describe("ProjectEditForm", () => {
     );
   });
 
-  it("triggers profiling", async () => {
+  it("enqueues an async profile job and shows a running state", async () => {
+    // Pending fetch: the enqueue POST fires and the button parks in its running
+    // label — no poll timer scheduled, so nothing leaks past the test.
+    (global.fetch as any) = vi.fn(() => new Promise(() => {}));
     render(<ProjectEditForm project={project} />);
     fireEvent.click(screen.getByRole("button", { name: /profile site/i }));
     await waitFor(() =>
@@ -39,6 +42,7 @@ describe("ProjectEditForm", () => {
         expect.objectContaining({ method: "POST" }),
       ),
     );
+    expect(screen.getByRole("button", { name: /profiling/i })).toBeTruthy();
   });
 
   it("requires a second click to confirm before DELETEing", async () => {

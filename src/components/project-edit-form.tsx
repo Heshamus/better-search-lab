@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useJob } from "@/components/use-job";
 
 type SaveState = "idle" | "busy" | "error";
-type ProfileState = "idle" | "busy" | "error";
 // Two-click delete instead of window.confirm: "confirm" is the armed state
 // after the first click (the button relabels to "Click again to confirm"),
 // so the flow stays fully testable without stubbing a browser dialog.
@@ -52,7 +52,10 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
   const [name, setName] = useState(project.name);
   const [domain, setDomain] = useState(project.domain);
   const [saveState, setSaveState] = useState<SaveState>("idle");
-  const [profileState, setProfileState] = useState<ProfileState>("idle");
+  // Profiling is a long async job (crawl + DataForSEO + DeepSeek, ~1–3 min): the
+  // button enqueues it and polls to completion instead of holding one long POST
+  // open (which timed out at the auth proxy and showed a false failure).
+  const profile = useJob();
   const [deleteState, setDeleteState] = useState<DeleteState>("idle");
 
   async function handleSave(event: React.FormEvent) {
@@ -78,21 +81,8 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
     }
   }
 
-  async function handleProfile() {
-    if (profileState === "busy") return;
-
-    setProfileState("busy");
-    try {
-      const res = await fetch(`/api/projects/${project.id}/profile`, { method: "POST" });
-      if (!res.ok) {
-        setProfileState("error");
-        return;
-      }
-      setProfileState("idle");
-      router.refresh();
-    } catch {
-      setProfileState("error");
-    }
+  function handleProfile() {
+    void profile.run(`/api/projects/${project.id}/profile`);
   }
 
   async function handleDelete() {
@@ -167,13 +157,19 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
           <button
             type="button"
             onClick={handleProfile}
-            disabled={profileState === "busy"}
+            disabled={profile.state === "running"}
             aria-live="polite"
             className={secondaryButtonClass}
           >
-            {profileState === "busy" ? "Profiling…" : "Profile site"}
+            {profile.state === "running" ? "Profiling… (~1–3 min)" : "Profile site"}
           </button>
         </div>
+
+        {profile.state === "running" ? (
+          <span role="status" aria-live="polite" className="text-xs text-neutral-500 dark:text-neutral-400">
+            Crawling the site and finding keywords — this runs in the background and can take a minute or two.
+          </span>
+        ) : null}
 
         {/* Always-mounted live regions: text toggles so the AT is already
             watching each region before its error lands. */}
@@ -181,7 +177,7 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
           {saveState === "error" ? "Couldn’t save — try again." : null}
         </span>
         <span role="status" aria-live="polite" className="text-xs text-at-risk">
-          {profileState === "error" ? "Couldn’t profile the site — try again." : null}
+          {profile.error ?? null}
         </span>
       </form>
 

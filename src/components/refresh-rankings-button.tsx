@@ -1,35 +1,29 @@
 "use client";
 
-import { useRefreshAction } from "@/components/use-refresh-action";
+import { useJob } from "@/components/use-job";
 
 /**
- * Task 17: the Rankings page's lightweight, single-route refresh trigger —
- * posts only `POST /api/projects/[id]/refresh` (the rank_refresh job that
- * re-fetches SERP position for every tracked keyword), not the whole
- * pipeline. Reach for `RefreshDataButton` instead wherever the WHOLE chain
- * (rankings + gaps + opportunities) is wanted, e.g. the Opportunities page,
- * whose weekly shortlist needs all three. The fetch -> !res.ok/catch ->
- * router.refresh() flow lives in the shared `useRefreshAction` hook; this
- * component only owns its route, labels, and error copy.
+ * The Rankings page's single-job refresh: enqueues `rank_refresh` (re-fetches
+ * SERP position for every tracked keyword) and polls it to completion. Reach for
+ * `RefreshDataButton` where the WHOLE chain (rankings + gaps + opportunities) is
+ * wanted. Async job + poll — see use-job.ts for why this can't be a sync POST.
  */
 export function RefreshRankingsButton({ projectId }: { projectId: string }) {
-  const { state, run } = useRefreshAction([`/api/projects/${projectId}/refresh`]);
+  const job = useJob();
 
   return (
     <div className="flex flex-col items-end gap-1">
       <button
         type="button"
-        onClick={run}
-        disabled={state === "busy"}
+        onClick={() => void job.run(`/api/projects/${projectId}/refresh`)}
+        disabled={job.state === "running"}
         aria-live="polite"
         className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
       >
-        {state === "busy" ? "Refreshing rankings…" : "Refresh rankings"}
+        {job.state === "running" ? "Refreshing rankings…" : "Refresh rankings"}
       </button>
-      {/* Always-mounted live region: text toggles, element stays in the DOM so
-          the AT is already watching it when the error lands. */}
       <span role="status" aria-live="polite" className="text-xs text-at-risk">
-        {state === "error" ? "Couldn’t refresh — try again." : null}
+        {job.error ?? null}
       </span>
     </div>
   );

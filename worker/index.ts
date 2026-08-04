@@ -1,14 +1,19 @@
-// Standalone worker process (runs as a separate Railway "worker" service in production).
+// Standalone worker process (runs as the seo-worker container / a separate Railway "worker" service).
 //
 // Uses RELATIVE imports (not the `@/` tsconfig alias) on purpose: `tsx worker/index.ts` does
 // not resolve tsconfig `paths` at runtime, so `@/...` imports would crash with
 // "Cannot find module '@/...'" the moment this file is executed directly. The rest of the
 // app (Next.js, Vitest via vite-tsconfig-paths) resolves `@/` fine — only this entrypoint
 // needs to route around it.
+//
+// Two responsibilities: (1) run scheduled jobs on a cron (registerSchedules), and (2) drain
+// the on-demand job QUEUE — the pending jobs that HTTP routes enqueue instead of running
+// inline (which timed out at the auth proxy). See src/lib/jobs/queue.ts.
 import cron from "node-cron";
 import { registerSchedules } from "../src/lib/jobs/scheduler";
 import { db } from "../src/db/client";
 import { runJob } from "../src/lib/jobs/runner";
+import { drainOnce, reapStuckJobs, type JobHandler } from "../src/lib/jobs/queue";
 import { healthHandler } from "../src/lib/jobs/handlers/health";
 import { projects as projectsTable } from "../src/db/schema";
 import { dueProjects } from "../src/lib/schedule";
@@ -16,15 +21,51 @@ import { rankRefreshHandler } from "../src/lib/jobs/handlers/rank-refresh";
 import { metricsRefreshHandler } from "../src/lib/jobs/handlers/metrics-refresh";
 import { gapRefreshHandler } from "../src/lib/jobs/handlers/gap-refresh";
 import { weeklyOpportunitiesHandler } from "../src/lib/jobs/handlers/weekly-opportunities";
+import { competitorIntelHandler } from "../src/lib/jobs/handlers/competitor-intel";
+import { profileSiteHandler } from "../src/lib/jobs/handlers/profile-site";
 import { DataForSeoClient } from "../src/lib/dataforseo/client";
+import { DeepSeekClient } from "../src/lib/llm/deepseek";
 import { loadEnv } from "../src/config/env";
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Clients built once at module scope — shared by the cron run() and the queue drain.
+const env = loadEnv();
+const client = new DataForSeoClient({ login: env.DATAFORSEO_LOGIN, password: env.DATAFORSEO_PASSWORD });
+const llm = env.DEEPSEEK_API_KEY ? new DeepSeekClient({ apiKey: env.DEEPSEEK_API_KEY }) : null;
+
+// Composite refresh: the "Refresh data" button enqueues ONE job that runs
+// rankings → gaps → opportunities in order (opportunities reads the fresh gaps).
+function refreshAllHandler(): JobHandler {
+  const rank = rankRefreshHandler(client);
+  const gaps = gapRefreshHandler(client);
+  const opps = weeklyOpportunitiesHandler();
+  return async (ctx) => {
+    const a = await rank(ctx);
+    const b = await gaps(ctx);
+    const c = await opps(ctx);
+    return { rows: a.rows + b.rows + c.rows, cost: a.cost + b.cost + c.cost };
+  };
+}
+
+// Maps an enqueued job's `type` to the handler that runs it. Any type not listed
+// here is failed with a clear "no handler" error by drainOnce.
+function resolveHandler(type: string): JobHandler | null {
+  switch (type) {
+    case "profile_site": return profileSiteHandler(client, { llm });
+    case "rank_refresh": return rankRefreshHandler(client);
+    case "gap_refresh": return gapRefreshHandler(client);
+    case "weekly_opportunities": return weeklyOpportunitiesHandler();
+    case "competitor_intel": return competitorIntelHandler(client);
+    case "refresh_all": return refreshAllHandler();
+    default: return null;
+  }
+}
 
 async function run() {
   const today = new Date().toISOString().slice(0, 10);
   await runJob(db, { type: "health", date: today, handler: healthHandler });
 
-  const env = loadEnv();
-  const client = new DataForSeoClient({ login: env.DATAFORSEO_LOGIN, password: env.DATAFORSEO_PASSWORD });
   const allProjects = await db.select().from(projectsTable);
   const due = dueProjects(allProjects, today);
   for (const pid of due.rankRefresh) {
@@ -42,5 +83,27 @@ async function run() {
     await runJob(db, { type: "weekly_opportunities", projectId: pid, date: today, handler: weeklyOpportunitiesHandler() });
   }
 }
+
+// Drain the on-demand queue continuously: run one job to completion, immediately
+// look for the next; when the queue is empty, reap any stalled job and idle 2s.
+// Single-consumer (one job at a time) — a slow job briefly delays the next, which
+// for this single-tenant tool is fine and also paces external API usage.
+async function queueLoop() {
+  for (;;) {
+    try {
+      const outcome = await drainOnce(db, resolveHandler);
+      if (outcome === "empty") {
+        await reapStuckJobs(db);
+        await sleep(2000);
+      }
+    } catch (e) {
+      console.error("[worker] queue drain error:", e);
+      await sleep(2000);
+    }
+  }
+}
+
 registerSchedules({ schedule: (c, fn) => cron.schedule(c, fn), run });
 console.log("[worker] schedules registered");
+void queueLoop();
+console.log("[worker] queue drain started");

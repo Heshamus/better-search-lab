@@ -1,11 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import type { CompetitorKeywordRow, TopPage } from "@/lib/competitor-intel";
 import { formatMetric } from "@/lib/format";
-
-type RefreshState = "idle" | "busy" | "error";
+import { useJob } from "@/components/use-job";
 
 const emptyStateClass =
   "rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400";
@@ -57,24 +54,9 @@ export function CompetitorIntelPanel({
   keywords: CompetitorKeywordRow[];
   topPages: TopPage[];
 }) {
-  const router = useRouter();
-  const [state, setState] = useState<RefreshState>("idle");
-
-  async function handleRefresh() {
-    setState("busy");
-    try {
-      const res = await fetch(`/api/projects/${projectId}/competitors/intel/refresh`, { method: "POST" });
-      if (!res.ok) {
-        setState("error");
-        return;
-      }
-      setState("idle");
-      router.refresh();
-    } catch {
-      // Network error (fetch rejected) — same honest error as !res.ok.
-      setState("error");
-    }
-  }
+  // Competitor intel calls DataForSEO ranked-keywords per competitor and can run
+  // for a minute — enqueue the job and poll it, don't hold a sync POST open.
+  const job = useJob();
 
   const isEmpty = keywords.length === 0 && topPages.length === 0;
 
@@ -85,17 +67,15 @@ export function CompetitorIntelPanel({
         <div className="flex flex-col items-end gap-1">
           <button
             type="button"
-            onClick={handleRefresh}
-            disabled={state === "busy"}
+            onClick={() => void job.run(`/api/projects/${projectId}/competitors/intel/refresh`)}
+            disabled={job.state === "running"}
             aria-live="polite"
             className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
           >
-            {state === "busy" ? "Refreshing…" : "Refresh"}
+            {job.state === "running" ? "Refreshing…" : "Refresh"}
           </button>
-          {/* Always-mounted live region: text toggles, element stays in the DOM
-              so the AT is already watching it when the error lands. */}
           <span role="status" aria-live="polite" className="text-xs text-at-risk">
-            {state === "error" ? "Couldn’t refresh — try again." : null}
+            {job.error ?? null}
           </span>
         </div>
       </div>
