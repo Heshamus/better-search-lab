@@ -3,10 +3,13 @@ import { db } from "@/db/client";
 import { getCurrentProject } from "@/lib/current-project";
 import { listOpportunities } from "@/lib/opportunities";
 import { computeHealthMetrics } from "@/lib/dashboard-metrics";
+import { computeDashboard } from "@/lib/dashboard";
 import { HealthStrip, type Metric } from "@/components/health-strip";
+import { DashboardCharts } from "@/components/dashboard-charts";
 import { EmptyState } from "@/components/empty-state";
 import { OpportunityCard, type OpportunityRow } from "@/components/opportunity-card";
 import { RefreshDataButton } from "@/components/refresh-data-button";
+import { formatCompact } from "@/lib/format";
 
 // This page reads the DB (getCurrentProject/listOpportunities) via cookies()
 // on every request — force-dynamic skips the build-time static-generation
@@ -53,18 +56,23 @@ export default async function OpportunitiesPage() {
   }
 
   const asOf = new Date();
-  const [healthMetrics, opportunityRows] = await Promise.all([
+  const [healthMetrics, dashboard, opportunityRows] = await Promise.all([
     computeHealthMetrics(db, project.id, asOf),
+    computeDashboard(db, project.id),
     listOpportunities(db, project.id) as Promise<OpportunityRow[]>,
   ]);
 
+  // Portfolio metrics that are populated the moment a project is profiled +
+  // refreshed (unlike visibility/position, which stay empty until the site
+  // actually ranks — those live in the Ranking-distribution chart instead).
   const metrics: Metric[] = [
-    { label: "Visibility", value: healthMetrics.visibility },
-    { label: "Est. traffic", value: healthMetrics.estTraffic },
-    { label: "Avg position", value: healthMetrics.avgPosition },
-    { label: "Keywords", value: healthMetrics.keywordsTracked },
+    { label: "Keywords", value: String(dashboard.keywordsTracked), hint: "tracked" },
+    { label: "Opportunities", value: String(dashboard.opportunityCount), hint: "this week" },
+    { label: "Addressable volume", value: formatCompact(dashboard.addressableVolume), hint: "monthly searches" },
+    { label: "Avg difficulty", value: dashboard.avgDifficulty != null ? String(dashboard.avgDifficulty) : "—", hint: "across opportunities" },
     { label: "Spend this month", value: healthMetrics.spend },
   ];
+  const hasData = dashboard.keywordsTracked > 0 || dashboard.opportunityCount > 0;
 
   const byType = new Map<string, OpportunityRow[]>();
   for (const row of opportunityRows) {
@@ -88,6 +96,13 @@ export default async function OpportunitiesPage() {
       </div>
 
       <HealthStrip metrics={metrics} />
+
+      {hasData ? (
+        <section className="flex flex-col gap-3.5">
+          <h2 className="text-sm font-semibold text-white">Overview</h2>
+          <DashboardCharts data={dashboard} />
+        </section>
+      ) : null}
 
       {opportunityRows.length === 0 ? (
         <EmptyState

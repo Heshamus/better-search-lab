@@ -4,9 +4,11 @@
 export type Metric = {
   label: string;
   value: string;
+  hint?: string;
 };
 
-// One line of plain-language context per tile, so a number is never naked.
+// Fallback context per tile, so a number is never naked. A metric may override
+// with its own `hint`.
 const HINTS: Record<string, string> = {
   Visibility: "share of tracked SERPs",
   "Est. traffic": "monthly organic clicks",
@@ -26,7 +28,7 @@ export function HealthStrip({ metrics }: { metrics: Metric[] }) {
             <dd className={`num text-[1.7rem] font-semibold leading-none tracking-tight ${empty ? "text-neutral-600" : "text-white"}`}>
               {empty ? "—" : metric.value}
             </dd>
-            <dd className="text-[0.7rem] text-neutral-500">{empty ? "No data yet" : HINTS[metric.label]}</dd>
+            <dd className="text-[0.7rem] text-neutral-500">{empty ? "No data yet" : (metric.hint ?? HINTS[metric.label] ?? "")}</dd>
           </div>
         );
       })}
