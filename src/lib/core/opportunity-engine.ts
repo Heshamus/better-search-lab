@@ -49,9 +49,17 @@ const UPSIDE_CTR_FACTOR: Record<OpportunityType, number> = {
   momentum: 0.02,
   decay: 0.02,
   cannibalization: 0.02,
+  content_vs_ranking: 0.02,
 };
 
 const naNum = (n: number | null): string => (n == null ? "n/a" : `${n}`);
+const shortPath = (u: string): string => {
+  try {
+    return new URL(u).pathname || u;
+  } catch {
+    return u;
+  }
+};
 
 /** One-line, human, numbers-grounded explanation of why a candidate made the shortlist. */
 function explain(c: Candidate): string {
@@ -78,6 +86,10 @@ function explain(c: Candidate): string {
     }
     case "ctr_gap":
       return `You rank #${naNum(c.currentPosition)} for “${c.keyword}” with ${naNum(c.volume)} impressions but click-through is below par — a sharper title/meta wins clicks you're already earning.`;
+    case "content_vs_ranking": {
+      const rate = Math.round((c.evidence.gaEngagementRate as number) * 100);
+      return `“${shortPath(c.keyword)}” ranks and pulls ${naNum(c.volume)} clicks, but only ${rate}% engage — the ranking's fine, the page needs work.`;
+    }
     default: {
       const exhaustive: never = c.type;
       throw new Error(`opportunity-engine: no why-template for type ${exhaustive as string}`);
@@ -115,12 +127,16 @@ export function assembleOpportunities(
     input.keywordSignals.map((k) => ({ keyword: k.keyword, tags: k.tags })),
   );
 
-  const relevant = candidates.filter((c) => isRelevant(c.keyword, profile, opts?.relevanceThreshold));
+  // Page-quality candidates (content_vs_ranking) key on a URL, not a search term,
+  // and the page is already ours — the keyword-relevance gate doesn't apply, and
+  // they carry full relevance.
+  const isPageCandidate = (c: Candidate) => c.type === "content_vs_ranking";
+  const relevant = candidates.filter((c) => isPageCandidate(c) || isRelevant(c.keyword, profile, opts?.relevanceThreshold));
 
   const scoredCandidates = relevant
     .map((candidate) => ({
       candidate,
-      scored: scoreOpportunity(candidate, relevanceScore(candidate.keyword, profile), opts?.weights),
+      scored: scoreOpportunity(candidate, isPageCandidate(candidate) ? 1 : relevanceScore(candidate.keyword, profile), opts?.weights),
     }))
     .sort((a, b) => b.scored.score - a.scored.score);
 

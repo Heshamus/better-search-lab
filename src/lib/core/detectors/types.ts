@@ -4,9 +4,7 @@ import type { Snap } from "@/lib/core/history";
 export type OpportunityType =
   | "striking_distance" | "decay" | "momentum"
   | "gap" | "serp_feature" | "cannibalization"
-  | "ctr_gap";
-// "content_vs_ranking" is added by its detector (Task 4), alongside its
-// UPSIDE_CTR_FACTOR + explain handling so the switches stay exhaustive.
+  | "ctr_gap" | "content_vs_ranking";
 
 /** A rank snapshot enriched with the fields detectors read. */
 export type DetectorSnap = Snap & { serpFeatures: string[]; ownUrls: string[] };

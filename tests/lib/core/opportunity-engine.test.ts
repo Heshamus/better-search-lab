@@ -28,6 +28,19 @@ describe("assembleOpportunities", () => {
     expect(Object.keys(out[0].scoreBreakdown).length).toBeGreaterThan(0);
   });
 
+  it("surfaces a content_vs_ranking opportunity (URL keyword) past the relevance gate", () => {
+    const out = assembleOpportunities({
+      asOf: d("2026-08-10"),
+      keywordSignals: [],
+      gapSignals: [],
+      pageSignals: [{ url: "https://x.io/blog", gscClicks: 120, gscImpressions: 3000, gscPosition: 4, gaSessions: 110, gaEngagementRate: 0.18, gaConversions: 0 }],
+    });
+    const cvr = out.find((o) => o.type === "content_vs_ranking");
+    expect(cvr).toBeDefined();
+    expect(cvr!.keyword).toBe("https://x.io/blog");
+    expect(cvr!.why).toContain("the page needs work");
+  });
+
   it("respects topN", () => {
     // NOTE: snap()'s keywordId is hardcoded "k" (brief fixture, kept verbatim
     // above); per-signal snapshots must carry a matching keywordId or
