@@ -63,13 +63,21 @@
     background-attachment: fixed;
   }
 
-  /* Every number renders as an aligned tabular figure — the instrument feel.
-     Tightened so mono punctuation (e.g. the decimal in "$0.37") sits close. */
+  /* Mono tabular figures for dense table cells — the instrument feel. */
   .tnum {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.02em;
+  }
+
+  /* Big display metrics use SANS tabular figures: aligned like mono, but with
+     proportional punctuation so currency like "$0.37" reads naturally (mono
+     centres the period in a full cell and looks spaced out). */
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: -0.02em;
   }
 
   ::selection {

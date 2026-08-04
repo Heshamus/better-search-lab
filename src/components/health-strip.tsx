@@ -23,7 +23,7 @@ export function HealthStrip({ metrics }: { metrics: Metric[] }) {
         return (
           <div key={metric.label} className="panel flex flex-col gap-1.5 px-4 py-3.5">
             <dt className="eyebrow">{metric.label}</dt>
-            <dd className={`tnum text-[1.6rem] font-semibold leading-none tracking-tight ${empty ? "text-neutral-600" : "text-white"}`}>
+            <dd className={`num text-[1.7rem] font-semibold leading-none tracking-tight ${empty ? "text-neutral-600" : "text-white"}`}>
               {empty ? "—" : metric.value}
             </dd>
             <dd className="text-[0.7rem] text-neutral-500">{empty ? "No data yet" : HINTS[metric.label]}</dd>
