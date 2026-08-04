@@ -13,6 +13,9 @@ const PRICES: Record<string, number> = {
   "/v3/dataforseo_labs/google/ranked_keywords/live": 0.012,
   "/v3/dataforseo_labs/google/keyword_overview/live": 0.012,
   "/v3/dataforseo_labs/google/domain_intersection/live": 0.012,
+  "/v3/backlinks/summary/live": 0.02,
+  "/v3/backlinks/referring_domains/live": 0.02,
+  "/v3/backlinks/anchors/live": 0.02,
   [DEEPSEEK_CHAT_ENDPOINT]: 0.003, // ~one reasoning chat call at current DeepSeek pricing
 };
 export function estimateCost(endpoint: string, _rows: number): number {

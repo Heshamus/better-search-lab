@@ -71,6 +71,13 @@
       "when": 1785874509372,
       "tag": "0009_chubby_venus",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1785875187275,
+      "tag": "0010_narrow_sentinel",
+      "breakpoints": true
     }
   ]
 }

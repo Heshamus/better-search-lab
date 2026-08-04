@@ -1,5 +1,6 @@
 import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, numeric, real } from "drizzle-orm/pg-core";
 import type { AuditIssue } from "@/lib/audit/checks";
+import type { BacklinkSummary, ReferringDomain, Anchor } from "@/lib/dataforseo/backlinks";
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -161,4 +162,15 @@ export const siteAudits = pgTable("site_audits", {
   score: integer("score").notNull().default(0),
   pagesCrawled: integer("pages_crawled").notNull().default(0),
   issues: jsonb("issues").$type<AuditIssue[]>().notNull().default([]),
+});
+
+// One row per backlinks refresh — the DataForSEO summary + top referring domains
+// + anchor distribution, snapshotted so repeat views don't re-spend.
+export const backlinkSnapshots = pgTable("backlink_snapshots", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  summary: jsonb("summary").$type<BacklinkSummary | null>(),
+  referringDomains: jsonb("referring_domains").$type<ReferringDomain[]>().notNull().default([]),
+  anchors: jsonb("anchors").$type<Anchor[]>().notNull().default([]),
 });
