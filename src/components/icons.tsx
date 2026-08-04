@@ -21,6 +21,14 @@ function Base({ size = 18, children, ...rest }: SVGProps<SVGSVGElement> & { size
   );
 }
 
+export const IconOverview = (p: SVGProps<SVGSVGElement>) => (
+  <Base {...p}>
+    <rect x="4" y="4" width="7" height="7" rx="1.5" />
+    <rect x="13" y="4" width="7" height="7" rx="1.5" />
+    <rect x="4" y="13" width="7" height="7" rx="1.5" />
+    <rect x="13" y="13" width="7" height="7" rx="1.5" />
+  </Base>
+);
 export const IconOpportunities = (p: SVGProps<SVGSVGElement>) => (
   <Base {...p}>
     <circle cx="12" cy="12" r="8" />
@@ -92,6 +100,7 @@ export const IconGa = (p: SVGProps<SVGSVGElement>) => (
 );
 
 export const NAV_ICONS: Record<string, (p: SVGProps<SVGSVGElement>) => React.ReactElement> = {
+  overview: IconOverview,
   opportunities: IconOpportunities,
   rankings: IconRankings,
   keywords: IconKeywords,

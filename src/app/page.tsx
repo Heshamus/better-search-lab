@@ -6,5 +6,5 @@ import { redirect } from "next/navigation";
 // login's `callbackUrl=/` redirect lands users on that 404. An unauthenticated
 // hit is caught by `src/middleware.ts` before it ever reaches this component.
 export default function RootPage() {
-  redirect("/opportunities");
+  redirect("/overview");
 }

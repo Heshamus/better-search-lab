@@ -21,7 +21,7 @@ const VALID_SLUGS: Set<string> = new Set(NAV.map(([slug]) => slug));
 
 function activeSlugFromPathname(pathname: string | null): string {
   const firstSegment = pathname?.split("/").filter(Boolean)[0] ?? "";
-  return VALID_SLUGS.has(firstSegment) ? firstSegment : "opportunities";
+  return VALID_SLUGS.has(firstSegment) ? firstSegment : "overview";
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

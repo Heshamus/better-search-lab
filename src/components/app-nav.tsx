@@ -4,6 +4,7 @@ import { NAV_ICONS } from "@/components/icons";
 // stays cheap to render and unit-test. `NAV` is exported so the layout derives
 // valid slugs + the active label without duplicating this list.
 export const NAV = [
+  ["overview", "Overview"],
   ["opportunities", "Opportunities"],
   ["rankings", "Rankings"],
   ["keywords", "Keywords"],
@@ -20,7 +21,7 @@ export const NAV = [
 // Rendering groups: the analysis views, then the account views. Grouping encodes
 // what the sections are FOR, not just an alphabetical list.
 const GROUPS: { heading: string; slugs: string[] }[] = [
-  { heading: "Analyze", slugs: ["opportunities", "rankings", "keywords", "research", "competitors", "audit", "backlinks", "gsc", "ga"] },
+  { heading: "Analyze", slugs: ["overview", "opportunities", "rankings", "keywords", "research", "competitors", "audit", "backlinks", "gsc", "ga"] },
   { heading: "Account", slugs: ["usage", "settings"] },
 ];
 const LABELS: Record<string, string> = Object.fromEntries(NAV);

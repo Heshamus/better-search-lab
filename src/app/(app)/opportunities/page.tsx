@@ -22,8 +22,10 @@ export const dynamic = "force-dynamic";
 // follow, then rising momentum, then the two more structural types.
 const SECTIONS: { type: string; title: string }[] = [
   { type: "striking_distance", title: "Striking distance" },
+  { type: "ctr_gap", title: "Click-through gaps" },
   { type: "gap", title: "Gaps" },
   { type: "decay", title: "At-risk" },
+  { type: "content_vs_ranking", title: "Page fixes" },
   { type: "momentum", title: "Rising" },
   { type: "serp_feature", title: "SERP features" },
   { type: "cannibalization", title: "Cannibalization" },
