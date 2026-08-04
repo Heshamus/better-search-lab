@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { keywords } from "@/db/schema";
+import { locationLabel } from "@/lib/format";
 
 export type KeywordManagerRow = typeof keywords.$inferSelect;
 
@@ -64,23 +65,15 @@ function TrackToggle({ id, isTracked }: { id: string; isTracked: boolean }) {
 
 function KeywordTable({ rows }: { rows: KeywordManagerRow[] }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="panel overflow-x-auto">
       <table className="w-full min-w-[640px] border-collapse text-left text-sm">
         <thead>
-          <tr className="border-b border-neutral-200 dark:border-neutral-800">
-            <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-              Keyword
-            </th>
-            <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-              Location
-            </th>
-            <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-              Device
-            </th>
-            <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-              Tags
-            </th>
-            <th className="px-4 py-2" />
+          <tr className="border-b border-neutral-800">
+            <th className="eyebrow px-4 py-2.5">Keyword</th>
+            <th className="eyebrow px-4 py-2.5">Location</th>
+            <th className="eyebrow px-4 py-2.5">Device</th>
+            <th className="eyebrow px-4 py-2.5">Tags</th>
+            <th className="px-4 py-2.5" />
           </tr>
         </thead>
         <tbody>
@@ -88,26 +81,26 @@ function KeywordTable({ rows }: { rows: KeywordManagerRow[] }) {
             <tr
               key={row.id}
               data-testid={`keyword-row-${row.id}`}
-              className="border-b border-neutral-100 last:border-0 dark:border-neutral-800/60"
+              className="border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20"
             >
-              <td className="px-4 py-2 font-medium text-neutral-900 dark:text-white">{row.keyword}</td>
-              <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">
-                {row.locationCode} · {row.languageCode}
+              <td className="px-4 py-2.5 font-medium text-white">{row.keyword}</td>
+              <td className="px-4 py-2.5">
+                <span className="tnum text-xs text-neutral-400">{locationLabel(row.locationCode, row.languageCode)}</span>
               </td>
-              <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{row.device}</td>
-              <td className="px-4 py-2">
+              <td className="px-4 py-2.5 text-neutral-400 capitalize">{row.device}</td>
+              <td className="px-4 py-2.5">
                 <div className="flex flex-wrap gap-1">
                   {(row.tags ?? []).map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
+                      className="rounded-md bg-neutral-800/70 px-1.5 py-0.5 text-[10px] font-medium text-neutral-400"
                     >
                       {tag}
                     </span>
                   ))}
                 </div>
               </td>
-              <td className="px-4 py-2">
+              <td className="px-4 py-2.5">
                 <TrackToggle id={row.id} isTracked={row.isTracked} />
               </td>
             </tr>

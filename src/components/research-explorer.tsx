@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { formatMetric } from "@/lib/format";
+import { formatCompact } from "@/lib/format";
+import { KdMeter } from "@/components/viz";
 
 export interface ResearchIdea {
   keyword: string;
@@ -227,26 +228,16 @@ export function ResearchExplorer({
 
       {search.status === "results" && search.items.length > 0 ? (
         <>
-          <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="panel overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-left text-sm">
               <thead>
-                <tr className="border-b border-neutral-200 dark:border-neutral-800">
-                  <th className="px-4 py-2" />
-                  <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                    Keyword
-                  </th>
-                  <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                    Volume
-                  </th>
-                  <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                    KD
-                  </th>
-                  <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                    CPC
-                  </th>
-                  <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                    Competition
-                  </th>
+                <tr className="border-b border-neutral-800">
+                  <th className="w-10 px-4 py-2.5" />
+                  <th className="eyebrow px-4 py-2.5">Keyword</th>
+                  <th className="eyebrow px-4 py-2.5">Volume</th>
+                  <th className="eyebrow px-4 py-2.5">Difficulty</th>
+                  <th className="eyebrow px-4 py-2.5">CPC</th>
+                  <th className="eyebrow px-4 py-2.5">Competition</th>
                 </tr>
               </thead>
               <tbody>
@@ -254,21 +245,22 @@ export function ResearchExplorer({
                   <tr
                     key={item.keyword}
                     data-testid={`idea-row-${item.keyword}`}
-                    className="border-b border-neutral-100 last:border-0 dark:border-neutral-800/60"
+                    className="border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20"
                   >
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2.5">
                       <input
                         type="checkbox"
                         aria-label={`Select ${item.keyword}`}
+                        className="h-3.5 w-3.5 accent-[var(--color-accent)]"
                         checked={selected.has(item.keyword)}
                         onChange={() => toggleRow(item.keyword)}
                       />
                     </td>
-                    <td className="px-4 py-2 font-medium text-neutral-900 dark:text-white">{item.keyword}</td>
-                    <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(item.searchVolume)}</td>
-                    <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(item.difficulty)}</td>
-                    <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{fmtCpc(item.cpc)}</td>
-                    <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(item.competition)}</td>
+                    <td className="px-4 py-2.5 font-medium text-white">{item.keyword}</td>
+                    <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(item.searchVolume)}</span></td>
+                    <td className="px-4 py-2.5"><KdMeter kd={item.difficulty} /></td>
+                    <td className="px-4 py-2.5"><span className="tnum text-neutral-300">{fmtCpc(item.cpc)}</span></td>
+                    <td className="px-4 py-2.5"><span className="tnum text-neutral-400">{item.competition == null ? "—" : item.competition.toFixed(2)}</span></td>
                   </tr>
                 ))}
               </tbody>

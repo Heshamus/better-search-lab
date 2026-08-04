@@ -79,8 +79,8 @@ describe("ResearchExplorer", () => {
     expect(await screen.findByText("alpha keyword")).toBeTruthy();
     expect(screen.getByText("beta keyword")).toBeTruthy();
     expect(screen.getAllByTestId(/^idea-row-/)).toHaveLength(2);
-    expect(screen.getByText("1200")).toBeTruthy();
-    expect(screen.getByText("35")).toBeTruthy();
+    expect(screen.getByText("1.2K")).toBeTruthy(); // volume renders compact now
+    expect(screen.getByText("35")).toBeTruthy(); // KD from the heat meter
     expect(screen.getByText("800")).toBeTruthy();
     expect(screen.getByText("20")).toBeTruthy();
   });

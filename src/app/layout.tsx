@@ -1,17 +1,18 @@
 import "./globals.css";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 
-// The App Router's true root layout. Required as of this task, which adds
-// the first real page (`(auth)/login/page.tsx`) — without a root layout
-// rendering <html>/<body>, Next.js fails the build once any page exists.
-// The `(app)/layout.tsx` route-group layout stays a separate, nested layout
-// (dashboard chrome, filled in by Task 12) that renders inside this one.
+// The App Router's true root layout. Loads Geist (UI) + Geist Mono (data/numerals)
+// as the --font-geist-sans / --font-geist-mono CSS variables the design system in
+// globals.css maps to --font-sans / --font-mono. Bundled locally via the `geist`
+// package, so the Docker build never fetches fonts over the network.
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body>{children}</body>
     </html>
   );

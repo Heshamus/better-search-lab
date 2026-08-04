@@ -1,78 +1,70 @@
 import type { opportunities } from "@/db/schema";
 import { OpportunityActions } from "@/components/opportunity-actions";
-import { formatMetric } from "@/lib/format";
+import { KdMeter, PositionBadge, VolumeBar, Delta } from "@/components/viz";
 
 export type OpportunityRow = typeof opportunities.$inferSelect;
 
-// Human label + color per OpportunityType (spec §8): striking distance/gap/
-// momentum read as positive, forward-leaning moves (accent green); decay is
-// the one type that means "you're losing ground" (at-risk amber); the two
-// more mechanical/structural types (a SERP feature to capture, duplicate
-// URLs to consolidate) stay neutral rather than reading as good or bad news.
-const TYPE_LABELS: Record<string, string> = {
-  striking_distance: "Striking distance",
-  gap: "Gap",
-  momentum: "Rising",
-  decay: "At-risk",
-  serp_feature: "SERP feature",
-  cannibalization: "Cannibalization",
+// Label + tone per OpportunityType: striking distance / gap / momentum are
+// forward-leaning moves (accent); decay means losing ground (at-risk amber); the
+// structural types (SERP feature, duplicate URLs) stay neutral.
+const TYPE_META: Record<string, { label: string; tone: "good" | "risk" | "neutral" }> = {
+  striking_distance: { label: "Striking distance", tone: "good" },
+  gap: { label: "Gap", tone: "good" },
+  momentum: { label: "Rising", tone: "good" },
+  decay: { label: "At-risk", tone: "risk" },
+  serp_feature: { label: "SERP feature", tone: "neutral" },
+  cannibalization: { label: "Cannibalization", tone: "neutral" },
 };
 
-const NEUTRAL_CHIP = "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300";
-
-const TYPE_CHIP_CLASSES: Record<string, string> = {
-  striking_distance: "bg-accent/20 text-accent",
-  gap: "bg-accent/20 text-accent",
-  momentum: "bg-accent/20 text-accent",
-  decay: "bg-at-risk/20 text-at-risk",
-  serp_feature: NEUTRAL_CHIP,
-  cannibalization: NEUTRAL_CHIP,
+const CHIP: Record<string, string> = {
+  good: "bg-accent/12 text-accent",
+  risk: "bg-at-risk/15 text-at-risk",
+  neutral: "bg-neutral-800 text-neutral-300",
 };
 
-// Like formatMetric (shared "—"-for-null rule), but with a +/- sign on real
-// values so the direction of movement reads at a glance (trend is already
-// signed: positive = climbed). Kept local — the signed shape is unique to Δ.
-function fmtDelta(n: number | null): string {
-  if (n == null) return "—";
-  return n > 0 ? `+${n}` : `${n}`;
+function Cell({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="eyebrow text-[0.6rem]">{label}</span>
+      <span className="flex h-5 items-center">{children}</span>
+    </div>
+  );
 }
 
 /**
- * One advisor card in the opportunities feed (§8): type chip, keyword, a
- * one-line "why", a Vol/Pos/KD/Δ metrics row (each null field honestly "—"),
- * an optional upside estimate, and the Track/Dismiss/SERP/Brief action row.
- * Presentational only — a server component with no data fetching of its
- * own; `listOpportunities` rows feed straight into `opp` from the page.
- * A tracked/dismissed opportunity visually mutes (dimmed card + settled
- * action labels, both driven by `opp.status` inside OpportunityActions).
+ * One advisor card in the opportunities feed: type chip + the projected-traffic
+ * headline, the keyword, a one-line "why", then a four-metric row that shows —
+ * not just tells — volume (bar), position (tier badge), difficulty (heat meter),
+ * and trend (signed arrow), and the Track/Dismiss/SERP action row. Presentational
+ * server component; a tracked/dismissed card mutes via `opp.status`.
  */
-export function OpportunityCard({ opp }: { opp: OpportunityRow }) {
+export function OpportunityCard({ opp, maxVolume = 0 }: { opp: OpportunityRow; maxVolume?: number }) {
   const isResolved = opp.status === "tracked" || opp.status === "dismissed";
+  const meta = TYPE_META[opp.type] ?? { label: opp.type, tone: "neutral" as const };
 
   return (
-    <article
-      className={`rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900 ${
-        isResolved ? "opacity-60" : ""
-      }`}
-    >
-      <span
-        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-          TYPE_CHIP_CLASSES[opp.type] ?? NEUTRAL_CHIP
-        }`}
-      >
-        {TYPE_LABELS[opp.type] ?? opp.type}
-      </span>
+    <article className={`panel flex flex-col p-4 transition-colors hover:border-neutral-700 ${isResolved ? "opacity-55" : ""}`}>
+      <div className="flex items-start justify-between gap-2">
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[0.7rem] font-medium ${CHIP[meta.tone]}`}>
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
+          {meta.label}
+        </span>
+        {opp.upsideEstimate ? (
+          <span className="tnum shrink-0 text-xs font-semibold text-accent" title="Projected monthly organic traffic">
+            {opp.upsideEstimate}
+          </span>
+        ) : null}
+      </div>
 
-      <h3 className="mt-2 text-base font-semibold text-neutral-900 dark:text-white">{opp.keyword}</h3>
-      <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">{opp.why}</p>
+      <h3 className="mt-2.5 text-[0.95rem] font-semibold text-white">{opp.keyword}</h3>
+      <p className="mt-1 flex-1 text-sm leading-relaxed text-neutral-400">{opp.why}</p>
 
-      <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-500">
-        Vol {formatMetric(opp.volume)} · Pos {formatMetric(opp.currentPosition)} · KD {formatMetric(opp.difficulty)} · Δ {fmtDelta(opp.trend)}
-      </p>
-
-      {opp.upsideEstimate ? (
-        <p className="mt-2 text-sm font-medium text-accent">{opp.upsideEstimate}</p>
-      ) : null}
+      <div className="mt-4 grid grid-cols-4 gap-3 border-t border-neutral-800/70 pt-3.5">
+        <Cell label="Volume"><VolumeBar value={opp.volume} max={maxVolume || (opp.volume ?? 1)} /></Cell>
+        <Cell label="Position"><PositionBadge pos={opp.currentPosition} /></Cell>
+        <Cell label="Difficulty"><KdMeter kd={opp.difficulty} /></Cell>
+        <Cell label="Trend"><Delta value={opp.trend} /></Cell>
+      </div>
 
       <div className="mt-4">
         <OpportunityActions id={opp.id} status={opp.status} keyword={opp.keyword} />

@@ -72,36 +72,41 @@ export default async function OpportunitiesPage() {
     group.push(row);
     byType.set(row.type, group);
   }
+  // Shared scale so every volume bar across the feed is comparable.
+  const maxVolume = Math.max(0, ...opportunityRows.map((row) => row.volume ?? 0));
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <HealthStrip metrics={metrics} />
+    <div className="flex flex-col gap-7">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <div className="eyebrow">This week&rsquo;s shortlist</div>
+          <p className="mt-1 text-sm text-neutral-400">
+            The highest-leverage moves for <span className="font-medium text-neutral-200">{project.domain}</span>.
+          </p>
         </div>
         <RefreshDataButton projectId={project.id} />
       </div>
 
+      <HealthStrip metrics={metrics} />
+
       {opportunityRows.length === 0 ? (
         <EmptyState
           title="No opportunities yet"
-          description="Use the Refresh data button above to generate this week's shortlist."
+          description="Track some keywords, then use Refresh data to generate this week's shortlist."
         />
       ) : (
         SECTIONS.map(({ type, title }) => {
           const rows = byType.get(type);
           if (!rows?.length) return null;
           return (
-            <section key={type} className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                {title}
-                <span className="ml-2 font-normal normal-case text-neutral-400 dark:text-neutral-600">
-                  {rows.length}
-                </span>
-              </h2>
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <section key={type} className="flex flex-col gap-3.5">
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-sm font-semibold text-white">{title}</h2>
+                <span className="tnum rounded-full bg-neutral-800/80 px-2 py-0.5 text-[0.7rem] text-neutral-400">{rows.length}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-3.5 xl:grid-cols-2">
                 {rows.map((opp) => (
-                  <OpportunityCard key={opp.id} opp={opp} />
+                  <OpportunityCard key={opp.id} opp={opp} maxVolume={maxVolume} />
                 ))}
               </div>
             </section>

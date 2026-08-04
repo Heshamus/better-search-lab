@@ -38,8 +38,8 @@ function makeOpp(overrides: Partial<OpportunityRow> = {}): OpportunityRow {
 }
 
 describe("OpportunityCard", () => {
-  it("renders the keyword, the why, the gap chip, honest '—' for null Pos/Δ, the upside, and a Track button", () => {
-    render(<OpportunityCard opp={makeOpp()} />);
+  it("renders the keyword, the why, the gap chip, the upside, the metric cells, and a Track button", () => {
+    render(<OpportunityCard opp={makeOpp()} maxVolume={3000} />);
 
     expect(screen.getByText("best crm software")).toBeTruthy();
     expect(screen.getByText(/12 competitors rank/)).toBeTruthy();
@@ -47,11 +47,15 @@ describe("OpportunityCard", () => {
     expect(screen.getByText("+~120 visits/mo")).toBeTruthy();
     expect(screen.getByText("Track")).toBeTruthy();
 
-    const metricsRow = screen.getByText(/Vol 3000/);
-    expect(metricsRow.textContent).toContain("Vol 3000");
-    expect(metricsRow.textContent).toContain("Pos —"); // currentPosition: null
-    expect(metricsRow.textContent).toContain("KD 30");
-    expect(metricsRow.textContent).toContain("Δ —"); // trend: null
+    // Metrics now SHOW the data (bar / badge / heat meter) under labelled cells.
+    expect(screen.getByText("Volume")).toBeTruthy();
+    expect(screen.getByText("Position")).toBeTruthy();
+    expect(screen.getByText("Difficulty")).toBeTruthy();
+    expect(screen.getByText("Trend")).toBeTruthy();
+    expect(screen.getByText("3K")).toBeTruthy(); // volume 3000, compact
+    expect(screen.getByText("30")).toBeTruthy(); // KD value from the heat meter
+    // null currentPosition AND null trend both render an honest "—".
+    expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(2);
   });
 
   it("shows a settled, muted state once status is tracked (no bare 'Track' left offering to repeat)", () => {

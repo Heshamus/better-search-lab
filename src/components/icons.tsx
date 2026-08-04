@@ -1,0 +1,102 @@
+// Inline stroke icons (currentColor, 18px default) so the shell has no external
+// icon dependency and every glyph inherits the design-system text colours.
+import type { SVGProps } from "react";
+
+function Base({ size = 18, children, ...rest }: SVGProps<SVGSVGElement> & { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...rest}
+    >
+      {children}
+    </svg>
+  );
+}
+
+export const IconOpportunities = (p: SVGProps<SVGSVGElement>) => (
+  <Base {...p}>
+    <circle cx="12" cy="12" r="8" />
+    <circle cx="12" cy="12" r="3.4" />
+    <path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22" />
+  </Base>
+);
+export const IconRankings = (p: SVGProps<SVGSVGElement>) => (
+  <Base {...p}>
+    <path d="M4 19V5M4 19h16" />
+    <rect x="7.5" y="12" width="2.6" height="4" rx="0.6" />
+    <rect x="12" y="9" width="2.6" height="7" rx="0.6" />
+    <rect x="16.5" y="6" width="2.6" height="10" rx="0.6" />
+  </Base>
+);
+export const IconKeywords = (p: SVGProps<SVGSVGElement>) => (
+  <Base {...p}>
+    <path d="M9 4L7 20M17 4l-2 16M5 9h15M4 15h15" />
+  </Base>
+);
+export const IconResearch = (p: SVGProps<SVGSVGElement>) => (
+  <Base {...p}>
+    <circle cx="11" cy="11" r="6.4" />
+    <path d="M20 20l-3.8-3.8" />
+  </Base>
+);
+export const IconCompetitors = (p: SVGProps<SVGSVGElement>) => (
+  <Base {...p}>
+    <circle cx="8.5" cy="9" r="2.7" />
+    <circle cx="16.5" cy="9" r="2.7" />
+    <path d="M4 19c0-2.5 2-4.2 4.5-4.2S13 16.5 13 19M13.2 15.2c1-.6 2.1-.9 3.3-.9 2.5 0 4.5 1.7 4.5 4.2" />
+  </Base>
+);
+export const IconUsage = (p: SVGProps<SVGSVGElement>) => (
+  <Base {...p}>
+    <path d="M6 3.5h9L18.5 7v13.5H6z" />
+    <path d="M9 11h6M9 14.5h6M9 7.5h3" />
+  </Base>
+);
+export const IconSettings = (p: SVGProps<SVGSVGElement>) => (
+  <Base {...p}>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 2.5v2.2M12 19.3v2.2M4.2 7l1.9 1.1M17.9 15.9l1.9 1.1M4.2 17l1.9-1.1M17.9 8.1l1.9-1.1" />
+  </Base>
+);
+
+export const NAV_ICONS: Record<string, (p: SVGProps<SVGSVGElement>) => React.ReactElement> = {
+  opportunities: IconOpportunities,
+  rankings: IconRankings,
+  keywords: IconKeywords,
+  research: IconResearch,
+  competitors: IconCompetitors,
+  usage: IconUsage,
+  settings: IconSettings,
+};
+
+export const IconArrowUp = (p: SVGProps<SVGSVGElement>) => (
+  <Base size={14} {...p}>
+    <path d="M12 19V6M6 12l6-6 6 6" />
+  </Base>
+);
+export const IconArrowDown = (p: SVGProps<SVGSVGElement>) => (
+  <Base size={14} {...p}>
+    <path d="M12 5v13M6 12l6 6 6-6" />
+  </Base>
+);
+
+// Brand mark — a broadcast/"signal" motif (concentric arcs + source dot): search
+// visibility radiating outward. Accent-filled, sized to the sidebar wordmark.
+export function Logo({ size = 26 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="1" y="1" width="22" height="22" rx="7" fill="var(--color-accent)" fillOpacity="0.12" stroke="var(--color-accent)" strokeOpacity="0.35" />
+      <circle cx="8" cy="16" r="1.7" fill="var(--color-accent)" />
+      <path d="M8 12.5c2 0 3.5 1.5 3.5 3.5" stroke="var(--color-accent)" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M8 9c4 0 7 3 7 7" stroke="var(--color-accent)" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}

@@ -1,28 +1,28 @@
 "use client";
 
 import type { CompetitorKeywordRow, TopPage } from "@/lib/competitor-intel";
-import { formatMetric } from "@/lib/format";
+import { formatCompact } from "@/lib/format";
+import { KdMeter, PositionBadge } from "@/components/viz";
 import { useJob } from "@/components/use-job";
 
 const emptyStateClass =
-  "rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400";
+  "rounded-xl border border-dashed border-neutral-700 bg-neutral-900/40 px-4 py-6 text-center text-sm text-neutral-400";
 
-const sectionHeadingClass = "text-sm font-semibold text-neutral-900 dark:text-white";
+const sectionHeadingClass = "text-sm font-semibold text-white";
 
-const tableWrapperClass =
-  "overflow-x-auto rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900";
+const tableWrapperClass = "panel overflow-x-auto";
 
 const tableClass = "w-full min-w-[560px] border-collapse text-left text-sm";
 
-const theadRowClass = "border-b border-neutral-200 dark:border-neutral-800";
+const theadRowClass = "border-b border-neutral-800";
 
-const thClass = "px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400";
+const thClass = "eyebrow px-4 py-2.5";
 
-const tdClass = "px-4 py-2 text-neutral-600 dark:text-neutral-300";
+const tdClass = "px-4 py-2.5 text-neutral-300";
 
-const tdStrongClass = "px-4 py-2 font-medium text-neutral-900 dark:text-white";
+const tdStrongClass = "px-4 py-2.5 font-medium text-white";
 
-const trClass = "border-b border-neutral-100 last:border-0 dark:border-neutral-800/60";
+const trClass = "border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20";
 
 /**
  * Task 12: the per-competitor "what they rank for" panel — top keywords and
@@ -103,9 +103,9 @@ export function CompetitorIntelPanel({
                     {keywords.map((row) => (
                       <tr key={row.id} data-testid={`intel-keyword-row-${row.id}`} className={trClass}>
                         <td className={tdStrongClass}>{row.keyword}</td>
-                        <td className={tdClass}>{formatMetric(row.rankAbsolute)}</td>
-                        <td className={tdClass}>{formatMetric(row.volume)}</td>
-                        <td className={tdClass}>{formatMetric(row.difficulty)}</td>
+                        <td className="px-4 py-2.5"><PositionBadge pos={row.rankAbsolute} /></td>
+                        <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(row.volume)}</span></td>
+                        <td className="px-4 py-2.5"><KdMeter kd={row.difficulty} /></td>
                       </tr>
                     ))}
                   </tbody>
@@ -132,7 +132,7 @@ export function CompetitorIntelPanel({
                     {topPages.map((page) => (
                       <tr key={page.url} data-testid={`intel-page-row-${page.url}`} className={trClass}>
                         <td className={tdStrongClass}>{page.url}</td>
-                        <td className={tdClass}>{page.keywordCount}</td>
+                        <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(page.keywordCount)}</span></td>
                         <td className={tdClass}>{page.topKeywords.join(", ")}</td>
                       </tr>
                     ))}

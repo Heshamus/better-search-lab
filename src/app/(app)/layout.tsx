@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { AppNav, NAV } from "@/components/app-nav";
 import { SiteSwitcher } from "@/components/site-switcher";
+import { Logo } from "@/components/icons";
 
 // Next.js layouts aren't re-invoked per-route with the current path — a
 // shared layout has no server-side way to know which child page rendered
@@ -28,22 +29,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const activeLabel = NAV.find(([slug]) => slug === active)?.[1] ?? "";
 
   return (
-    <div className="flex min-h-dvh bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
-      <aside className="flex w-56 shrink-0 flex-col border-r border-neutral-200 bg-white px-3 py-5 dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="mb-6 flex items-center gap-2 px-2">
-          <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-accent" />
-          <span className="text-sm font-semibold tracking-tight">SEO Platform</span>
+    <div className="flex min-h-dvh text-neutral-100">
+      <aside className="sticky top-0 flex h-dvh w-60 shrink-0 flex-col border-r border-neutral-800/70 bg-neutral-900/40 px-3 py-5 backdrop-blur-xl">
+        <div className="mb-7 flex items-center gap-2.5 px-2">
+          <Logo />
+          <div className="leading-tight">
+            <div className="text-sm font-semibold tracking-tight text-white">SEO Platform</div>
+            <div className="text-[0.65rem] font-medium tracking-wide text-neutral-500">SEARCH &amp; GEO VISIBILITY</div>
+          </div>
         </div>
+
         <AppNav active={active} />
+
+        <div className="mt-auto flex items-center gap-2 px-3 pt-5 text-[0.7rem] font-medium text-neutral-500">
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-up shadow-[0_0_8px_1px] shadow-up/50" />
+          All systems live
+        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-3 dark:border-neutral-800 dark:bg-neutral-900">
-          <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400">{activeLabel}</span>
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-800/60 bg-neutral-950/70 px-7 py-3.5 backdrop-blur-xl">
+          <h1 className="text-[0.95rem] font-semibold tracking-tight text-white">{activeLabel}</h1>
           <SiteSwitcher />
         </header>
 
-        <main className="flex-1 px-6 py-6">{children}</main>
+        <main className="mx-auto w-full max-w-[1440px] flex-1 px-7 py-7">{children}</main>
       </div>
     </div>
   );

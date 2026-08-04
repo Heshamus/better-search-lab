@@ -3,7 +3,8 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import type { RankingRow } from "@/lib/rankings";
 import { RankSparkline, type RankSparklinePoint } from "@/components/rank-sparkline";
-import { formatMetric } from "@/lib/format";
+import { KdMeter, PositionBadge } from "@/components/viz";
+import { formatCompact } from "@/lib/format";
 
 type SortKey = "rankAbsolute" | "delta7" | "volume" | "difficulty";
 type SortState = { key: SortKey | null; dir: 1 | -1 };
@@ -36,11 +37,11 @@ function DeltaCell({ value }: { value: number | null }) {
 // checked" — never conflated with "failed", and never a bare "—" either,
 // since that would blur "no data" with "a real null metric".
 function PositionCell({ row }: { row: RankingRow }) {
-  if (row.fetchStatus === "failed") return <span className="text-at-risk">not fetched</span>;
+  if (row.fetchStatus === "failed") return <span className="text-xs text-at-risk">not fetched</span>;
   if (row.fetchStatus === "unknown") {
-    return <span className="text-neutral-400 dark:text-neutral-500">not yet checked</span>;
+    return <span className="text-xs text-neutral-500">not yet checked</span>;
   }
-  return <span>{formatMetric(row.rankAbsolute)}</span>;
+  return <PositionBadge pos={row.rankAbsolute} />;
 }
 
 function SortableHeader({
@@ -55,25 +56,21 @@ function SortableHeader({
   onClick: () => void;
 }) {
   return (
-    <th className="px-4 py-2">
+    <th className="px-4 py-2.5">
       <button
         type="button"
         onClick={onClick}
-        className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+        className="eyebrow flex items-center gap-1 transition-colors hover:text-neutral-200"
       >
         {label}
-        {active ? <span aria-hidden>{dir === 1 ? "▲" : "▼"}</span> : null}
+        {active ? <span aria-hidden className="text-accent">{dir === 1 ? "▲" : "▼"}</span> : null}
       </button>
     </th>
   );
 }
 
 function PlainHeader({ label }: { label: string }) {
-  return (
-    <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-      {label}
-    </th>
-  );
+  return <th className="eyebrow px-4 py-2.5">{label}</th>;
 }
 
 /**
@@ -152,10 +149,10 @@ export function RankingsTable({ rows }: { rows: RankingRow[] }) {
   }, [rows, sort]);
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="panel overflow-x-auto">
       <table className="w-full min-w-[720px] border-collapse text-left text-sm">
         <thead>
-          <tr className="border-b border-neutral-200 dark:border-neutral-800">
+          <tr className="border-b border-neutral-800">
             <PlainHeader label="Keyword" />
             <SortableHeader
               label="Position"
@@ -193,38 +190,38 @@ export function RankingsTable({ rows }: { rows: RankingRow[] }) {
                 <tr
                   data-testid={`ranking-row-${row.keywordId}`}
                   data-keyword-id={row.keywordId}
-                  className="border-b border-neutral-100 last:border-0 dark:border-neutral-800/60"
+                  className="border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20"
                 >
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-2.5">
                     <button
                       type="button"
                       onClick={() => toggleExpand(row.keywordId)}
                       aria-expanded={isExpanded}
-                      className="flex items-center gap-1.5 font-medium text-neutral-900 hover:underline dark:text-white"
+                      className="flex items-center gap-1.5 font-medium text-white transition-colors hover:text-accent"
                     >
-                      <span aria-hidden className="text-neutral-400 dark:text-neutral-500">
+                      <span aria-hidden className="text-neutral-500">
                         {isExpanded ? "▾" : "▸"}
                       </span>
                       {row.keyword}
                     </button>
                   </td>
-                  <td className="px-4 py-2" data-testid={`position-${row.keywordId}`}>
+                  <td className="px-4 py-2.5" data-testid={`position-${row.keywordId}`}>
                     <PositionCell row={row} />
                   </td>
-                  <td className="px-4 py-2" data-testid={`delta7-${row.keywordId}`}>
+                  <td className="tnum px-4 py-2.5" data-testid={`delta7-${row.keywordId}`}>
                     <DeltaCell value={row.delta7} />
                   </td>
-                  <td className="px-4 py-2" data-testid={`delta30-${row.keywordId}`}>
+                  <td className="tnum px-4 py-2.5" data-testid={`delta30-${row.keywordId}`}>
                     <DeltaCell value={row.delta30} />
                   </td>
-                  <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(row.volume)}</td>
-                  <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(row.difficulty)}</td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(row.volume)}</span></td>
+                  <td className="px-4 py-2.5"><KdMeter kd={row.difficulty} /></td>
+                  <td className="px-4 py-2.5">
                     <div className="flex flex-wrap gap-1">
                       {row.serpFeatures.map((feature) => (
                         <span
                           key={feature}
-                          className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
+                          className="rounded-md bg-neutral-800/70 px-1.5 py-0.5 text-[10px] font-medium text-neutral-400"
                         >
                           {feature}
                         </span>
@@ -233,7 +230,7 @@ export function RankingsTable({ rows }: { rows: RankingRow[] }) {
                   </td>
                 </tr>
                 {isExpanded ? (
-                  <tr className="border-b border-neutral-100 bg-neutral-50 dark:border-neutral-800/60 dark:bg-neutral-950/40">
+                  <tr className="border-b border-neutral-800/50 bg-neutral-950/40">
                     <td colSpan={7}>
                       <HistoryDrilldown keywordId={row.keywordId} />
                     </td>
