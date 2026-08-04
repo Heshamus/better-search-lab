@@ -40,12 +40,15 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 /**
  * Edits a competitor's domain in place (normalized by `updateCompetitorDomain`)
  * rather than remove+re-add, preserving its createdAt/position in the list.
+ * Project-scoped: the route's `id` is passed as projectId so the update is
+ * `WHERE projectId = :id AND id = :competitorId` — a cross-project
+ * competitorId is a silent no-op rather than renaming another project's row.
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const denied = await requireSession(); if (denied) return denied;
-  await params;
+  const { id } = await params;
   const { competitorId, domain } = await req.json();
   if (!domain || typeof domain !== "string") return NextResponse.json({ error: "domain required" }, { status: 400 });
-  await updateCompetitorDomain(db, competitorId, domain);
+  await updateCompetitorDomain(db, id, competitorId, domain);
   return NextResponse.json({ ok: true });
 }

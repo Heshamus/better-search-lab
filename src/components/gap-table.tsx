@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { GapRow } from "@/lib/competitors";
+import { formatMetric } from "@/lib/format";
 
 // Sort rule (brief §Task 8): opportunity-first — bigger search volume, then
 // more competitors already ranking for it, is the strongest signal a gap is
@@ -23,12 +24,6 @@ function sortGapRows(rows: GapRow[]): GapRow[] {
     if (byVolume !== 0) return byVolume;
     return compareNullsLastDesc(a.competitorCount, b.competitorCount);
   });
-}
-
-// Honesty rule (mirrors rankings-table.tsx/opportunity-card.tsx): a null
-// metric renders "—", never a fabricated 0.
-function fmt(n: number | null): string {
-  return n == null ? "—" : `${n}`;
 }
 
 type AddState = "idle" | "busy" | "done" | "error";
@@ -184,9 +179,9 @@ export function GapTable({
                 className="px-4 py-2 text-neutral-600 dark:text-neutral-300"
                 data-testid={`gap-volume-${row.keyword}`}
               >
-                {fmt(row.volume)}
+                {formatMetric(row.volume)}
               </td>
-              <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{fmt(row.difficulty)}</td>
+              <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(row.difficulty)}</td>
               <td className="px-4 py-2">
                 <AddToTrackingButton
                   projectId={projectId}

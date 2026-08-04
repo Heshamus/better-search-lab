@@ -28,19 +28,25 @@ export async function saveCompetitorKeywords(
   competitorDomain: string,
   rows: CompetitorKeywordInput[],
 ): Promise<void> {
-  await db.delete(competitorKeywords).where(
-    and(eq(competitorKeywords.projectId, projectId), eq(competitorKeywords.competitorDomain, competitorDomain)),
-  );
-  if (rows.length === 0) return;
-  await db.insert(competitorKeywords).values(rows.map((r) => ({
-    projectId,
-    competitorDomain,
-    keyword: r.keyword,
-    rankAbsolute: r.rankAbsolute,
-    url: r.url,
-    volume: r.volume,
-    difficulty: r.difficulty,
-  })));
+  // delete+insert wrapped in one transaction so a crash (or failing insert)
+  // between them can't leave a competitor's keyword set wiped — either the
+  // replacement lands whole or the prior rows survive. Empty `rows` still
+  // clears the set (delete then early-return inside the tx).
+  await db.transaction(async (tx: any) => {
+    await tx.delete(competitorKeywords).where(
+      and(eq(competitorKeywords.projectId, projectId), eq(competitorKeywords.competitorDomain, competitorDomain)),
+    );
+    if (rows.length === 0) return;
+    await tx.insert(competitorKeywords).values(rows.map((r) => ({
+      projectId,
+      competitorDomain,
+      keyword: r.keyword,
+      rankAbsolute: r.rankAbsolute,
+      url: r.url,
+      volume: r.volume,
+      difficulty: r.difficulty,
+    })));
+  });
 }
 
 // NULL ranks sort last (not first) under plain ascending numeric sort, so we

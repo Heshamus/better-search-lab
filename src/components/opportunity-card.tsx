@@ -1,5 +1,6 @@
 import type { opportunities } from "@/db/schema";
 import { OpportunityActions } from "@/components/opportunity-actions";
+import { formatMetric } from "@/lib/format";
 
 export type OpportunityRow = typeof opportunities.$inferSelect;
 
@@ -28,13 +29,9 @@ const TYPE_CHIP_CLASSES: Record<string, string> = {
   cannibalization: NEUTRAL_CHIP,
 };
 
-// Honesty rule (brief): a null metric field renders "—", never a fabricated 0.
-function fmt(n: number | null): string {
-  return n == null ? "—" : `${n}`;
-}
-
-// Same honesty rule, with a +/- sign on real values so the direction of
-// movement reads at a glance (trend is already signed: positive = climbed).
+// Like formatMetric (shared "—"-for-null rule), but with a +/- sign on real
+// values so the direction of movement reads at a glance (trend is already
+// signed: positive = climbed). Kept local — the signed shape is unique to Δ.
 function fmtDelta(n: number | null): string {
   if (n == null) return "—";
   return n > 0 ? `+${n}` : `${n}`;
@@ -70,7 +67,7 @@ export function OpportunityCard({ opp }: { opp: OpportunityRow }) {
       <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">{opp.why}</p>
 
       <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-500">
-        Vol {fmt(opp.volume)} · Pos {fmt(opp.currentPosition)} · KD {fmt(opp.difficulty)} · Δ {fmtDelta(opp.trend)}
+        Vol {formatMetric(opp.volume)} · Pos {formatMetric(opp.currentPosition)} · KD {formatMetric(opp.difficulty)} · Δ {fmtDelta(opp.trend)}
       </p>
 
       {opp.upsideEstimate ? (

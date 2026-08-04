@@ -3,14 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { CompetitorKeywordRow, TopPage } from "@/lib/competitor-intel";
+import { formatMetric } from "@/lib/format";
 
 type RefreshState = "idle" | "busy" | "error";
-
-// Honesty rule (mirrors gap-table.tsx/profile-review.tsx/rankings-table.tsx):
-// a null metric renders "—", never a fabricated 0.
-function fmt(n: number | null): string {
-  return n == null ? "—" : `${n}`;
-}
 
 const emptyStateClass =
   "rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400";
@@ -92,12 +87,13 @@ export function CompetitorIntelPanel({
             type="button"
             onClick={handleRefresh}
             disabled={state === "busy"}
+            aria-live="polite"
             className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
           >
             {state === "busy" ? "Refreshing…" : "Refresh"}
           </button>
           {state === "error" ? (
-            <span className="text-xs text-at-risk">Couldn&rsquo;t refresh — try again.</span>
+            <span aria-live="polite" className="text-xs text-at-risk">Couldn&rsquo;t refresh — try again.</span>
           ) : null}
         </div>
       </div>
@@ -125,9 +121,9 @@ export function CompetitorIntelPanel({
                     {keywords.map((row) => (
                       <tr key={row.id} data-testid={`intel-keyword-row-${row.id}`} className={trClass}>
                         <td className={tdStrongClass}>{row.keyword}</td>
-                        <td className={tdClass}>{fmt(row.rankAbsolute)}</td>
-                        <td className={tdClass}>{fmt(row.volume)}</td>
-                        <td className={tdClass}>{fmt(row.difficulty)}</td>
+                        <td className={tdClass}>{formatMetric(row.rankAbsolute)}</td>
+                        <td className={tdClass}>{formatMetric(row.volume)}</td>
+                        <td className={tdClass}>{formatMetric(row.difficulty)}</td>
                       </tr>
                     ))}
                   </tbody>

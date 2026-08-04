@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import type { RankingRow } from "@/lib/rankings";
 import { RankSparkline, type RankSparklinePoint } from "@/components/rank-sparkline";
+import { formatMetric } from "@/lib/format";
 
 type SortKey = "rankAbsolute" | "delta7" | "volume" | "difficulty";
 type SortState = { key: SortKey | null; dir: 1 | -1 };
@@ -15,10 +16,6 @@ function compareNullsLast(a: number | null, b: number | null, dir: 1 | -1): numb
   if (a == null) return 1;
   if (b == null) return -1;
   return dir * (a - b);
-}
-
-function fmt(n: number | null): string {
-  return n == null ? "—" : `${n}`;
 }
 
 // Honesty rule (brief): deltaForKeyword is previous-minus-current, so a
@@ -43,7 +40,7 @@ function PositionCell({ row }: { row: RankingRow }) {
   if (row.fetchStatus === "unknown") {
     return <span className="text-neutral-400 dark:text-neutral-500">not yet checked</span>;
   }
-  return <span>{fmt(row.rankAbsolute)}</span>;
+  return <span>{formatMetric(row.rankAbsolute)}</span>;
 }
 
 function SortableHeader({
@@ -220,8 +217,8 @@ export function RankingsTable({ rows }: { rows: RankingRow[] }) {
                   <td className="px-4 py-2" data-testid={`delta30-${row.keywordId}`}>
                     <DeltaCell value={row.delta30} />
                   </td>
-                  <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{fmt(row.volume)}</td>
-                  <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{fmt(row.difficulty)}</td>
+                  <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(row.volume)}</td>
+                  <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(row.difficulty)}</td>
                   <td className="px-4 py-2">
                     <div className="flex flex-wrap gap-1">
                       {row.serpFeatures.map((feature) => (

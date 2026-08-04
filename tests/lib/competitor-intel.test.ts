@@ -33,4 +33,18 @@ describe("competitor intel", () => {
     await saveCompetitorKeywords(t.db, p.id, "rival.com", [{ keyword: "z", rankAbsolute: 2, url: "https://rival.com/z", volume: 10, difficulty: 5 }]);
     expect((await listCompetitorKeywords(t.db, p.id, "rival.com")).map((k) => k.keyword)).toEqual(["z"]);
   });
+
+  it("rolls back the delete when the insert fails — prior keywords survive", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    await saveCompetitorKeywords(t.db, p.id, "rival.com", [
+      { keyword: "keep me", rankAbsolute: 3, url: "https://rival.com/x", volume: 500, difficulty: 20 },
+    ]);
+    // `keyword` is NOT NULL, so a null keyword makes the INSERT throw *after*
+    // the delete. Without the transaction the delete commits and the
+    // competitor's keyword set is wiped; with it, the save rolls back.
+    const bad = [{ keyword: null as any, rankAbsolute: 1, url: null, volume: 1, difficulty: 1 }];
+    await expect(saveCompetitorKeywords(t.db, p.id, "rival.com", bad)).rejects.toThrow();
+    expect((await listCompetitorKeywords(t.db, p.id, "rival.com")).map((k) => k.keyword)).toEqual(["keep me"]);
+  });
 });

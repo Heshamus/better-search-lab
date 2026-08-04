@@ -65,19 +65,31 @@ export async function removeCompetitor(db: any, projectId: string, competitorId:
 
 // Edits a competitor's domain in place (normalized) rather than
 // remove+re-add, so its createdAt/position in listCompetitors is preserved.
-export async function updateCompetitorDomain(db: any, competitorId: string, domain: string): Promise<void> {
-  await db.update(competitors).set({ domain: normalizeDomain(domain) }).where(eq(competitors.id, competitorId));
+// Project-scoped like removeCompetitor — one project can't rename another's
+// row by guessing a competitorId.
+export async function updateCompetitorDomain(db: any, projectId: string, competitorId: string, domain: string): Promise<void> {
+  await db
+    .update(competitors)
+    .set({ domain: normalizeDomain(domain) })
+    .where(and(eq(competitors.projectId, projectId), eq(competitors.id, competitorId)));
 }
 
+// Replace-all save for a competitor's gap rows. delete+insert are wrapped in
+// one transaction so a crash (or a failing insert) between them can't leave
+// the snapshot wiped — either the replacement lands whole or the prior rows
+// survive. Empty `rows` still clears the set (delete then early-return inside
+// the tx), preserving the original replace-to-empty semantics.
 export async function saveGapRows(db: any, projectId: string, competitorDomain: string, rows: IntersectionRow[]) {
-  await db.delete(competitorGaps).where(
-    and(eq(competitorGaps.projectId, projectId), eq(competitorGaps.competitorDomain, competitorDomain)),
-  );
-  if (rows.length === 0) return;
-  await db.insert(competitorGaps).values(rows.map((r) => ({
-    projectId, competitorDomain, keyword: r.keyword,
-    competitorRank: r.competitorRank, ourRank: r.ourRank, volume: r.searchVolume, difficulty: r.difficulty,
-  })));
+  await db.transaction(async (tx: any) => {
+    await tx.delete(competitorGaps).where(
+      and(eq(competitorGaps.projectId, projectId), eq(competitorGaps.competitorDomain, competitorDomain)),
+    );
+    if (rows.length === 0) return;
+    await tx.insert(competitorGaps).values(rows.map((r) => ({
+      projectId, competitorDomain, keyword: r.keyword,
+      competitorRank: r.competitorRank, ourRank: r.ourRank, volume: r.searchVolume, difficulty: r.difficulty,
+    })));
+  });
 }
 
 // Task 14 (Gaps UI): the read helper's return type only — detectors still

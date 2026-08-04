@@ -3,21 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ProfileCandidateRow } from "@/lib/profile";
+import { formatMetric } from "@/lib/format";
 
 type AddState = "idle" | "busy" | "error";
-type ReprofileState = "idle" | "busy" | "error";
-
-// Honesty rule (mirrors research-explorer.tsx/rankings-table.tsx): a null
-// metric renders "—", never a fabricated 0.
-function fmt(n: number | null): string {
-  return n == null ? "—" : `${n}`;
-}
 
 const addButtonClass =
   "rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50";
-
-const reprofileButtonClass =
-  "rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800";
 
 const emptyStateClass =
   "rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400";
@@ -32,19 +23,16 @@ const emptyStateClass =
  * row selection seeds from each row's own `selected` flag instead of
  * starting empty.
  *
- * Two independent mutations, each with its own busy/error state so one
- * in-flight action never blocks or gets confused with the other:
- *  - "Add selected to tracking" -> POST /api/keywords with the same body
- *    shape as research-explorer.tsx / keyword-manager.tsx
- *    (`{ projectId, keywords: [{ keyword, locationCode, languageCode }] }`)
- *    -> router.refresh().
- *  - "Re-profile" -> POST /api/projects/[id]/profile (no body; the Task 4
- *    route re-runs the crawl+rankings job and rewrites profile_candidates)
- *    -> router.refresh() so the server re-reads the fresh candidate set.
+ * One mutation here — "Add selected to tracking" -> POST /api/keywords with
+ * the same body shape as research-explorer.tsx / keyword-manager.tsx
+ * (`{ projectId, keywords: [{ keyword, locationCode, languageCode }] }`) ->
+ * router.refresh(). Re-profiling the site is owned by ProjectEditForm's
+ * "Profile site" button (both render on Settings) — this component used to
+ * carry a duplicate "Re-profile" trigger, removed to leave one canonical
+ * re-profile entry point.
  *
- * Honesty guardrail (brief): a failed (!res.ok) or network-erroring request
- * on either action shows an inline text-at-risk error, never a fabricated
- * success.
+ * Honesty guardrail (brief): a failed (!res.ok) or network-erroring add
+ * request shows an inline text-at-risk error, never a fabricated success.
  */
 export function ProfileReview({
   projectId,
@@ -62,7 +50,6 @@ export function ProfileReview({
     () => new Set(candidates.filter((c) => c.selected).map((c) => c.id)),
   );
   const [addState, setAddState] = useState<AddState>("idle");
-  const [reprofileState, setReprofileState] = useState<ReprofileState>("idle");
 
   function toggleRow(id: string) {
     setSelected((prev) => {
@@ -96,23 +83,6 @@ export function ProfileReview({
     } catch {
       // Network error (fetch rejected) — same honest error as !res.ok.
       setAddState("error");
-    }
-  }
-
-  async function handleReprofile() {
-    if (reprofileState === "busy") return;
-
-    setReprofileState("busy");
-    try {
-      const res = await fetch(`/api/projects/${projectId}/profile`, { method: "POST" });
-      if (!res.ok) {
-        setReprofileState("error");
-        return;
-      }
-      setReprofileState("idle");
-      router.refresh();
-    } catch {
-      setReprofileState("error");
     }
   }
 
@@ -158,42 +128,27 @@ export function ProfileReview({
                 </td>
                 <td className="px-4 py-2 font-medium text-neutral-900 dark:text-white">{c.keyword}</td>
                 <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{c.source}</td>
-                <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{fmt(c.volume)}</td>
-                <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{fmt(c.difficulty)}</td>
+                <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(c.volume)}</td>
+                <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(c.difficulty)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <div className="flex flex-wrap items-start gap-4">
-        <div className="flex flex-col items-start gap-1">
-          <button
-            type="button"
-            onClick={handleAddSelected}
-            disabled={selected.size === 0 || addState === "busy"}
-            className={addButtonClass}
-          >
-            {addState === "busy" ? "Adding…" : "Add selected to tracking"}
-          </button>
-          {addState === "error" ? (
-            <span className="text-xs text-at-risk">Couldn&rsquo;t add keywords — try again.</span>
-          ) : null}
-        </div>
-
-        <div className="flex flex-col items-start gap-1">
-          <button
-            type="button"
-            onClick={handleReprofile}
-            disabled={reprofileState === "busy"}
-            className={reprofileButtonClass}
-          >
-            {reprofileState === "busy" ? "Re-profiling…" : "Re-profile"}
-          </button>
-          {reprofileState === "error" ? (
-            <span className="text-xs text-at-risk">Couldn&rsquo;t re-profile — try again.</span>
-          ) : null}
-        </div>
+      <div className="flex flex-col items-start gap-1">
+        <button
+          type="button"
+          onClick={handleAddSelected}
+          disabled={selected.size === 0 || addState === "busy"}
+          aria-live="polite"
+          className={addButtonClass}
+        >
+          {addState === "busy" ? "Adding…" : "Add selected to tracking"}
+        </button>
+        {addState === "error" ? (
+          <span aria-live="polite" className="text-xs text-at-risk">Couldn&rsquo;t add keywords — try again.</span>
+        ) : null}
       </div>
     </div>
   );

@@ -1,9 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-
-type RefreshState = "idle" | "busy" | "error";
+import { useRefreshAction } from "@/components/use-refresh-action";
 
 // The three on-demand jobs, in the SAME dependency order the weekly cron
 // runs them in: gap_refresh's competitor diff and weekly_opportunities'
@@ -22,57 +19,35 @@ const STEPS: { path: string; label: string }[] = [
  * Task 17: the full-pipeline "Refresh data" trigger — today rankings and
  * opportunities only populate via the Monday cron, so a user who adds
  * keywords mid-week sees nothing happen until then. This chains all three
- * on-demand routes (`POST /api/projects/[id]/refresh`,
- * `.../gaps/refresh`, `.../opportunities/refresh`) sequentially — never in
- * parallel, since each later step's job reads data the earlier ones
- * produce — showing a small per-step progress label on the button itself.
- *
- * Honesty rule (mirrors refresh-gaps-button.tsx / competitor-intel-panel.tsx
- * / opportunity-actions.tsx): the chain stops at the FIRST `!res.ok` or
- * thrown fetch and shows an inline text-at-risk error — never a silent or
- * fabricated success. Only a full three-for-three success calls
- * `router.refresh()`, so the server-rendered rankings/gaps/opportunities
- * views re-read fresh rows.
+ * on-demand routes (`POST /api/projects/[id]/refresh`, `.../gaps/refresh`,
+ * `.../opportunities/refresh`) via the shared `useRefreshAction` hook, which
+ * posts them SEQUENTIALLY (each later step's job reads data the earlier ones
+ * produce), stops at the first `!res.ok`/thrown fetch with an inline error,
+ * and only `router.refresh()`s after a full three-for-three success — never a
+ * fabricated success. The per-step progress label is the one thing kept
+ * local: the hook reports which step is in flight via `stepIndex`, and this
+ * component maps that to the STEP copy shown on the button.
  */
 export function RefreshDataButton({ projectId }: { projectId: string }) {
-  const router = useRouter();
-  const [state, setState] = useState<RefreshState>("idle");
-  const [stepLabel, setStepLabel] = useState<string | null>(null);
+  const { state, stepIndex, run } = useRefreshAction(
+    STEPS.map((step) => `/api/projects/${projectId}/${step.path}`),
+  );
 
-  async function handleClick() {
-    setState("busy");
-    try {
-      for (const step of STEPS) {
-        setStepLabel(step.label);
-        const res = await fetch(`/api/projects/${projectId}/${step.path}`, { method: "POST" });
-        if (!res.ok) {
-          setState("error");
-          setStepLabel(null);
-          return;
-        }
-      }
-      setState("idle");
-      setStepLabel(null);
-      router.refresh();
-    } catch {
-      // Network error (fetch rejected) — same honest error as !res.ok.
-      setState("error");
-      setStepLabel(null);
-    }
-  }
+  const stepLabel = state === "busy" && stepIndex != null ? STEPS[stepIndex].label : null;
 
   return (
     <div className="flex flex-col items-end gap-1">
       <button
         type="button"
-        onClick={handleClick}
+        onClick={run}
         disabled={state === "busy"}
+        aria-live="polite"
         className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
       >
-        {state === "busy" && stepLabel ? stepLabel : "Refresh data"}
+        {stepLabel ?? "Refresh data"}
       </button>
       {state === "error" ? (
-        <span className="text-xs text-at-risk">Couldn&rsquo;t refresh — try again.</span>
+        <span aria-live="polite" className="text-xs text-at-risk">Couldn&rsquo;t refresh — try again.</span>
       ) : null}
     </div>
   );

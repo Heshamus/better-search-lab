@@ -80,7 +80,7 @@ describe("competitor CRUD", () => {
 
     await expect(addCompetitor(t.db, p.id, "f.com")).rejects.toBeInstanceOf(CompetitorCapError);
 
-    await updateCompetitorDomain(t.db, a.id, "rival-a-new.com");
+    await updateCompetitorDomain(t.db, p.id, a.id, "rival-a-new.com");
     expect((await listCompetitors(t.db, p.id)).find((c) => c.id === a.id)!.domain).toBe("rival-a-new.com");
 
     await removeCompetitor(t.db, p.id, a.id);
@@ -107,6 +107,20 @@ describe("competitor CRUD", () => {
     expect((await listCompetitors(t.db, p2.id)).some((c) => c.id === c2.id)).toBe(true);
     expect((await listCompetitors(t.db, p1.id)).some((c) => c.id === c1.id)).toBe(true);
   });
+
+  it("updateCompetitorDomain is project-scoped — a cross-project id is a no-op", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p1 = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p2 = await createProject(t.db, { name: "Other", domain: "other.io" });
+    const c1 = await addCompetitor(t.db, p1.id, "rival-a.com");
+
+    // p2 passes its own id as projectId but p1's competitorId — the scoped
+    // WHERE (projectId AND id) matches no row, so p1's competitor is untouched.
+    // Mirrors the removeCompetitor cross-project test above.
+    await updateCompetitorDomain(t.db, p2.id, c1.id, "hacked.com");
+
+    expect((await listCompetitors(t.db, p1.id)).find((c) => c.id === c1.id)!.domain).toBe("rival-a.com");
+  });
 });
 
 describe("listGapSignals competitor domains", () => {
@@ -125,5 +139,33 @@ describe("listGapSignals competitor domains", () => {
     // Asserted WITHOUT sorting here — listGapSignals must return the array
     // already sorted (deterministic across refreshes), not merely sortable.
     expect((row as any).competitorDomains).toEqual(["rival-a.com", "rival-b.com"]);
+  });
+});
+
+describe("saveGapRows replace + transaction safety", () => {
+  it("a replace-save leaves exactly the new rows for that (project, competitor)", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    await saveGapRows(t.db, p.id, "rival.com", [
+      { keyword: "old kw", searchVolume: 100, difficulty: 10, competitorRank: 4, ourRank: null },
+    ]);
+    await saveGapRows(t.db, p.id, "rival.com", [
+      { keyword: "new kw", searchVolume: 200, difficulty: 20, competitorRank: 3, ourRank: null },
+    ]);
+    expect((await listGapSignals(t.db, p.id)).map((r) => r.keyword)).toEqual(["new kw"]);
+  });
+
+  it("rolls back the delete when the insert fails — the prior snapshot survives", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    await saveGapRows(t.db, p.id, "rival.com", [
+      { keyword: "keep me", searchVolume: 100, difficulty: 10, competitorRank: 4, ourRank: null },
+    ]);
+    // `keyword` is NOT NULL, so a null keyword makes the INSERT throw *after*
+    // the delete. Without the transaction the delete commits and wipes the
+    // snapshot; with it, the whole save rolls back and "keep me" survives.
+    const bad = [{ keyword: null as any, searchVolume: 1, difficulty: 1, competitorRank: 1, ourRank: null }];
+    await expect(saveGapRows(t.db, p.id, "rival.com", bad)).rejects.toThrow();
+    expect((await listGapSignals(t.db, p.id)).map((r) => r.keyword)).toEqual(["keep me"]);
   });
 });

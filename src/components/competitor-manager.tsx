@@ -143,7 +143,15 @@ export function CompetitorManager({ projectId, competitors }: { projectId: strin
 
       <form onSubmit={handleAdd} className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
+          {/* Visually-hidden label: the placeholder alone isn't an accessible
+              name, so a screen reader had nothing to announce for this input.
+              sr-only keeps the visual layout unchanged. Mirrors the labelled
+              add box in keyword-manager.tsx. */}
+          <label htmlFor="competitor-domain-input" className="sr-only">
+            Competitor domain
+          </label>
           <input
+            id="competitor-domain-input"
             type="text"
             value={domain}
             onChange={(event) => setDomain(event.target.value)}

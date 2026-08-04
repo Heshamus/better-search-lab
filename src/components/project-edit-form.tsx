@@ -156,13 +156,19 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <button type="submit" disabled={saveState === "busy" || !canSave} className={primaryButtonClass}>
+          <button
+            type="submit"
+            disabled={saveState === "busy" || !canSave}
+            aria-live="polite"
+            className={primaryButtonClass}
+          >
             {saveState === "busy" ? "Saving…" : "Save"}
           </button>
           <button
             type="button"
             onClick={handleProfile}
             disabled={profileState === "busy"}
+            aria-live="polite"
             className={secondaryButtonClass}
           >
             {profileState === "busy" ? "Profiling…" : "Profile site"}
@@ -170,10 +176,10 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
         </div>
 
         {saveState === "error" ? (
-          <span className="text-xs text-at-risk">Couldn&rsquo;t save — try again.</span>
+          <span aria-live="polite" className="text-xs text-at-risk">Couldn&rsquo;t save — try again.</span>
         ) : null}
         {profileState === "error" ? (
-          <span className="text-xs text-at-risk">Couldn&rsquo;t profile the site — try again.</span>
+          <span aria-live="polite" className="text-xs text-at-risk">Couldn&rsquo;t profile the site — try again.</span>
         ) : null}
       </form>
 
@@ -183,6 +189,7 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
             type="button"
             onClick={handleDelete}
             disabled={deleteState === "busy"}
+            aria-live="polite"
             className={dangerButtonClass}
           >
             {deleteLabel}
@@ -194,12 +201,12 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
           ) : null}
         </div>
         {deleteState === "confirm" ? (
-          <span className="text-xs text-neutral-500 dark:text-neutral-400">
+          <span aria-live="polite" className="text-xs text-neutral-500 dark:text-neutral-400">
             This permanently deletes the project and all its keywords, competitors, and opportunities.
           </span>
         ) : null}
         {deleteState === "error" ? (
-          <span className="text-xs text-at-risk">Couldn&rsquo;t delete — try again.</span>
+          <span aria-live="polite" className="text-xs text-at-risk">Couldn&rsquo;t delete — try again.</span>
         ) : null}
       </div>
     </div>

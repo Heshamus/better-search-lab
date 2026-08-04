@@ -27,4 +27,16 @@ describe("profile candidates", () => {
     await clearProfileCandidates(t.db, p.id);
     expect(await listProfileCandidates(t.db, p.id)).toEqual([]);
   });
+
+  it("rolls back the delete when the insert fails — prior candidates survive", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    await saveProfileCandidates(t.db, p.id, [{ keyword: "keep me", source: "crawl", volume: 100, difficulty: 10 }]);
+    // `keyword` is NOT NULL, so a null keyword makes the INSERT throw *after*
+    // the delete. Without the transaction the delete commits and the candidate
+    // set is wiped; with it, the save rolls back and "keep me" survives.
+    const bad = [{ keyword: null as any, source: "crawl" as const, volume: 1, difficulty: 1 }];
+    await expect(saveProfileCandidates(t.db, p.id, bad)).rejects.toThrow();
+    expect((await listProfileCandidates(t.db, p.id)).map((r) => r.keyword)).toEqual(["keep me"]);
+  });
 });

@@ -23,7 +23,10 @@ export async function saveResearchSearch(
     .select({ id: researchSearches.id })
     .from(researchSearches)
     .where(eq(researchSearches.projectId, projectId))
-    .orderBy(desc(researchSearches.createdAt));
+    // id is the tiebreaker so rows written in the same tick (identical
+    // createdAt) get a deterministic newest-first order — without it their
+    // relative order is undefined and the KEEP-th cut could drop the wrong row.
+    .orderBy(desc(researchSearches.createdAt), desc(researchSearches.id));
   const stale = rows.slice(KEEP).map((r: { id: string }) => r.id);
   if (stale.length) await db.delete(researchSearches).where(inArray(researchSearches.id, stale));
 }
@@ -42,6 +45,8 @@ export async function listRecentSearches(
     .select()
     .from(researchSearches)
     .where(eq(researchSearches.projectId, projectId))
-    .orderBy(desc(researchSearches.createdAt))
+    // id tiebreaks same-tick rows so the newest-first order (and the `limit`
+    // cut) is deterministic — matches the prune ordering in saveResearchSearch.
+    .orderBy(desc(researchSearches.createdAt), desc(researchSearches.id))
     .limit(limit);
 }

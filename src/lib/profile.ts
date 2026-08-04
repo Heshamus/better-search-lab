@@ -10,11 +10,17 @@ export interface ProfileCandidateRow extends ProfileCandidateInput { id: string;
 // T6 review UI reads/confirms). Replace-all semantics mirror saveGapRows in
 // src/lib/competitors.ts — a project's candidate set is always the last save.
 export async function saveProfileCandidates(db: any, projectId: string, rows: ProfileCandidateInput[]): Promise<void> {
-  await db.delete(profileCandidates).where(eq(profileCandidates.projectId, projectId));
-  if (rows.length === 0) return;
-  await db.insert(profileCandidates).values(rows.map((r) => ({
-    projectId, keyword: r.keyword, source: r.source, volume: r.volume, difficulty: r.difficulty,
-  })));
+  // delete+insert wrapped in one transaction so a crash (or failing insert)
+  // between them can't leave a project's candidate set wiped — either the
+  // replacement lands whole or the prior candidates survive. Empty `rows`
+  // still clears the set (delete then early-return inside the tx).
+  await db.transaction(async (tx: any) => {
+    await tx.delete(profileCandidates).where(eq(profileCandidates.projectId, projectId));
+    if (rows.length === 0) return;
+    await tx.insert(profileCandidates).values(rows.map((r) => ({
+      projectId, keyword: r.keyword, source: r.source, volume: r.volume, difficulty: r.difficulty,
+    })));
+  });
 }
 
 export async function listProfileCandidates(db: any, projectId: string): Promise<ProfileCandidateRow[]> {
