@@ -199,3 +199,87 @@ export async function extractNicheSeeds(
   }
   return { seeds, nicheTerms };
 }
+
+// --- Semantic relevance judge -------------------------------------------------
+//
+// Token-overlap relevance (lib/core/relevance) cannot distinguish a niche word
+// that is ALSO a generic-universe word: "ai search optimization" puts "search"
+// in the profile, so "people search" / "google search" clear the overlap gate.
+// The judge fixes that by asking the model — which already proved it understands
+// the niche when it produced the seeds — to keep only candidates that are about
+// what THIS business actually does. It returns INDICES (not echoed keyword
+// strings): tiny output that can't be truncated by the reasoning pass, and each
+// index maps back to the exact original candidate (no rewrite/hallucination).
+
+// Judge a bounded slice of candidates per call: small enough that one numbered
+// list stays readable to the model and the prompt stays well under budget;
+// large enough that a ~300-candidate pool is 3-4 calls, not dozens.
+const JUDGE_BATCH = 80;
+
+const JUDGE_SYSTEM_PROMPT =
+  "You are an SEO strategist filtering candidate keywords down to only those genuinely relevant to " +
+  "ONE specific business. A keyword is relevant only if it is about what THIS business actually does, " +
+  "offers, sells, or serves. REJECT keywords that merely share a word with the business's vocabulary " +
+  "but are really about a different topic, product, brand, or a generic search-engine / directory / " +
+  "people-finder / unrelated-tool concept. Prefer precision: when in doubt, reject. You reply with a " +
+  "single JSON object and nothing else.";
+
+function buildJudgePrompt(p: { domain: string; seeds: string[]; nicheTerms: string[]; batch: string[] }): string {
+  return [
+    `Business domain: ${p.domain}`,
+    "This business's niche — what it does, its products/methods/platform/audience/outcomes:",
+    `- seeds: ${p.seeds.join(", ")}`,
+    `- niche terms: ${p.nicheTerms.join(", ")}`,
+    "",
+    "Candidate keywords (numbered):",
+    ...p.batch.map((k, i) => `${i + 1}. ${k}`),
+    "",
+    'Return ONLY a JSON object: { "relevant": number[] } — the NUMBERS of the candidate keywords a ' +
+      "marketer for THIS business would actually target. Include a number only if that keyword is about " +
+      "this business's own products/services/topics/audience; exclude any keyword that just shares a " +
+      "word with the niche but is really about something else. Reply with the JSON object only — no " +
+      "markdown, no commentary.",
+  ].join("\n");
+}
+
+/**
+ * Filter expansion candidates down to those SEMANTICALLY relevant to the niche.
+ * Batches the candidates, asks the model for the relevant indices per batch, and
+ * unions the exact originals those indices point at.
+ *
+ * Per-batch resilient: a batch whose call fails (HTTP error, or truncated /
+ * garbled JSON with no `relevant` array) does NOT abort the run — its candidates
+ * are returned in `unjudged` so the caller decides how to treat them, while every
+ * other batch keeps its verdict. One flaky batch must never nuke the whole judge.
+ *
+ * Returns the kept originals, the number of BILLED calls (a returned chat, even
+ * one whose JSON was garbage), and the `unjudged` candidates from failed batches.
+ * An empty `relevant` array is a valid "nothing here is relevant" (not a failure).
+ */
+export async function judgeRelevance(
+  client: DeepSeekClient,
+  p: { domain: string; seeds: string[]; nicheTerms: string[]; candidates: string[] },
+): Promise<{ kept: Set<string>; calls: number; unjudged: string[] }> {
+  const kept = new Set<string>();
+  const unjudged: string[] = [];
+  let calls = 0;
+  for (let i = 0; i < p.candidates.length; i += JUDGE_BATCH) {
+    const batch = p.candidates.slice(i, i + JUDGE_BATCH);
+    try {
+      const content = await client.chat([
+        { role: "system", content: JUDGE_SYSTEM_PROMPT },
+        { role: "user", content: buildJudgePrompt({ domain: p.domain, seeds: p.seeds, nicheTerms: p.nicheTerms, batch }) },
+      ]);
+      calls += 1; // a returned chat is a billed call, even if its body is unparseable
+      const rel = parseJsonObject(content)?.relevant; // parseJsonObject throws on garbage
+      if (!Array.isArray(rel)) throw new Error("judgeRelevance: model response missing 'relevant' array");
+      for (const n of rel) {
+        const idx = typeof n === "number" ? n : Number(n);
+        if (Number.isInteger(idx) && idx >= 1 && idx <= batch.length) kept.add(batch[idx - 1]);
+      }
+    } catch {
+      for (const kw of batch) unjudged.push(kw);
+    }
+  }
+  return { kept, calls, unjudged };
+}

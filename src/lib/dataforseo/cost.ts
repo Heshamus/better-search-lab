@@ -1,4 +1,10 @@
 import { apiUsage } from "@/db/schema";
+
+// Synthetic endpoint for a DeepSeek reasoning-model chat call (niche extraction /
+// relevance judge). Logged through the same apiUsage ledger as DataForSEO so LLM
+// spend is never silent — a lesson paid for by a prior 24h billing-lapse outage.
+export const DEEPSEEK_CHAT_ENDPOINT = "deepseek/v4-pro/chat";
+
 // Pricing per request (approx, 2026-08); refine against live pricing later.
 const PRICES: Record<string, number> = {
   "/v3/serp/google/organic/live/advanced": 0.002,
@@ -6,6 +12,7 @@ const PRICES: Record<string, number> = {
   "/v3/dataforseo_labs/google/ranked_keywords/live": 0.012,
   "/v3/dataforseo_labs/google/keyword_overview/live": 0.012,
   "/v3/dataforseo_labs/google/domain_intersection/live": 0.012,
+  [DEEPSEEK_CHAT_ENDPOINT]: 0.003, // ~one reasoning chat call at current DeepSeek pricing
 };
 export function estimateCost(endpoint: string, _rows: number): number {
   return PRICES[endpoint] ?? 0.012;
