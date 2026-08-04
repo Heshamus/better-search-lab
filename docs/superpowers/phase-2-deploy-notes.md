@@ -4,7 +4,7 @@
 
 **Verification at branch tip (all green, controller-run 2026-08-04):**
 - `pnpm exec tsc --noEmit` — clean.
-- `pnpm exec vitest run` — **194/194 across 64 files**, confirmed stable across consecutive runs (the earlier `pushSchema` parallel-load flake was fixed by raising the vitest timeout to 30s — commit `5dabbd4`).
+- `pnpm exec vitest run` — **198/198 across 65 files**, confirmed stable across consecutive runs (the earlier `pushSchema` parallel-load flake was fixed by raising the vitest timeout to 30s — commit `5dabbd4`).
 - `pnpm build` — compiles, 9 static pages, no `/content` route (Content tab folded).
 
 ## New migrations (must be applied before the new features work)
