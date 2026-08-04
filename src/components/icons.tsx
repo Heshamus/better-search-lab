@@ -84,6 +84,12 @@ export const IconGsc = (p: SVGProps<SVGSVGElement>) => (
     <path d="M3 12h3l2.4-6.5L13 18l2.6-6H21" />
   </Base>
 );
+export const IconGa = (p: SVGProps<SVGSVGElement>) => (
+  <Base {...p}>
+    <path d="M4 4v16h16" />
+    <path d="M8 16v-3M12 16v-6M16 16v-9" />
+  </Base>
+);
 
 export const NAV_ICONS: Record<string, (p: SVGProps<SVGSVGElement>) => React.ReactElement> = {
   opportunities: IconOpportunities,
@@ -94,6 +100,7 @@ export const NAV_ICONS: Record<string, (p: SVGProps<SVGSVGElement>) => React.Rea
   audit: IconAudit,
   backlinks: IconBacklinks,
   gsc: IconGsc,
+  ga: IconGa,
   usage: IconUsage,
   settings: IconSettings,
 };

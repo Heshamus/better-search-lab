@@ -26,6 +26,7 @@ import { profileSiteHandler } from "../src/lib/jobs/handlers/profile-site";
 import { siteAuditHandler } from "../src/lib/jobs/handlers/site-audit";
 import { backlinksRefreshHandler } from "../src/lib/jobs/handlers/backlinks-refresh";
 import { gscSyncHandler } from "../src/lib/jobs/handlers/gsc-sync";
+import { gaSyncHandler } from "../src/lib/jobs/handlers/ga-sync";
 import { DataForSeoClient } from "../src/lib/dataforseo/client";
 import { DeepSeekClient } from "../src/lib/llm/deepseek";
 import { loadEnv } from "../src/config/env";
@@ -63,6 +64,7 @@ function resolveHandler(type: string): JobHandler | null {
     case "site_audit": return siteAuditHandler();
     case "backlinks_refresh": return backlinksRefreshHandler(client);
     case "gsc_sync": return gscSyncHandler();
+    case "ga_sync": return gaSyncHandler();
     case "refresh_all": return refreshAllHandler();
     default: return null;
   }

@@ -2,6 +2,7 @@ import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, numeric, real 
 import type { AuditIssue } from "@/lib/audit/checks";
 import type { BacklinkSummary, ReferringDomain, Anchor } from "@/lib/dataforseo/backlinks";
 import type { GscTotals, GscTopRow } from "@/lib/google/gsc";
+import type { GaTotals, GaChannelRow, GaPageRow } from "@/lib/google/analytics";
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -176,13 +177,15 @@ export const backlinkSnapshots = pgTable("backlink_snapshots", {
   anchors: jsonb("anchors").$type<Anchor[]>().notNull().default([]),
 });
 
-// A project's Google Search Console connection: the OAuth refresh token + the
-// chosen GSC property. One per project (unique).
+// A project's Google connection: one OAuth refresh token (scopes cover both
+// Search Console + Analytics) plus the chosen GSC property and GA4 property.
+// One per project (unique).
 export const googleConnections = pgTable("google_connections", {
   id: uuid("id").defaultRandom().primaryKey(),
   projectId: uuid("project_id").notNull().unique().references(() => projects.id, { onDelete: "cascade" }),
   refreshToken: text("refresh_token").notNull(),
-  propertyUrl: text("property_url"),
+  propertyUrl: text("property_url"), // GSC property, e.g. "sc-domain:example.com"
+  gaPropertyId: text("ga_property_id"), // GA4 numeric property id (user-picked)
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -206,4 +209,25 @@ export const gscSnapshots = pgTable("gsc_snapshots", {
   totals: jsonb("totals").$type<GscTotals | null>(),
   topQueries: jsonb("top_queries").$type<GscTopRow[]>().notNull().default([]),
   topPages: jsonb("top_pages").$type<GscTopRow[]>().notNull().default([]),
+});
+
+// Daily GA4 sessions/users series — powers the traffic trend chart. Sessions is
+// additive across days; user totals for the window come from the snapshot (GA4
+// deduplicates users, so a daily sum would overcount). Replace-all per sync.
+export const gaDaily = pgTable("ga_daily", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  date: text("date").notNull(),
+  sessions: integer("sessions").notNull().default(0),
+  users: integer("users").notNull().default(0),
+});
+
+// Latest GA4 snapshot: window totals (deduplicated) + channel mix + top landing pages.
+export const gaSnapshots = pgTable("ga_snapshots", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  totals: jsonb("totals").$type<GaTotals | null>(),
+  channels: jsonb("channels").$type<GaChannelRow[]>().notNull().default([]),
+  topPages: jsonb("top_pages").$type<GaPageRow[]>().notNull().default([]),
 });

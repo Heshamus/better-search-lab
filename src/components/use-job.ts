@@ -35,7 +35,7 @@ async function readError(res: Response, fallback: string): Promise<string> {
 export function useJob(): {
   state: JobState;
   error: string | null;
-  run: (enqueueUrl: string, opts?: { onDone?: () => void | Promise<void> }) => Promise<void>;
+  run: (enqueueUrl: string, opts?: { onDone?: () => void | Promise<void>; body?: unknown }) => Promise<void>;
 } {
   const router = useRouter();
   const [state, setState] = useState<JobState>("idle");
@@ -43,13 +43,18 @@ export function useJob(): {
   const activeRef = useRef(false);
 
   const run = useCallback(
-    async (enqueueUrl: string, opts?: { onDone?: () => void | Promise<void> }) => {
+    async (enqueueUrl: string, opts?: { onDone?: () => void | Promise<void>; body?: unknown }) => {
       if (activeRef.current) return; // ignore double-clicks while a job is in flight
       activeRef.current = true;
       setState("running");
       setError(null);
       try {
-        const res = await fetch(enqueueUrl, { method: "POST" });
+        const res = await fetch(
+          enqueueUrl,
+          opts?.body !== undefined
+            ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(opts.body) }
+            : { method: "POST" },
+        );
         if (!res.ok) throw new Error(await readError(res, "Couldn’t start the job — please try again."));
         const { jobId } = (await res.json()) as { jobId?: string };
         if (!jobId) throw new Error("The server did not return a job id.");

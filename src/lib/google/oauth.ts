@@ -4,13 +4,17 @@
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 export const GSC_SCOPE = "https://www.googleapis.com/auth/webmasters.readonly";
+export const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
+// One consent grants both Search Console + Analytics, so the single "Connect
+// Google" button lights up both dashboards.
+export const GOOGLE_SCOPES = `${GSC_SCOPE} ${GA_SCOPE}`;
 
 export function buildAuthUrl(p: { clientId: string; redirectUri: string; state: string }): string {
   const u = new URL(AUTH_URL);
   u.searchParams.set("client_id", p.clientId);
   u.searchParams.set("redirect_uri", p.redirectUri);
   u.searchParams.set("response_type", "code");
-  u.searchParams.set("scope", GSC_SCOPE);
+  u.searchParams.set("scope", GOOGLE_SCOPES);
   u.searchParams.set("access_type", "offline");
   u.searchParams.set("prompt", "consent"); // always return a refresh_token
   u.searchParams.set("include_granted_scopes", "true");
