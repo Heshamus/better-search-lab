@@ -9,7 +9,7 @@ afterEach(() => {
 });
 
 describe("UsageReport", () => {
-  it("renders the total, a row per day, and a row per endpoint", () => {
+  it("renders the total, a spend-over-time section, and a readable row per endpoint", () => {
     render(
       <UsageReport
         summary={{
@@ -23,18 +23,12 @@ describe("UsageReport", () => {
       />,
     );
 
-    expect(screen.getByText("$0.85")).toBeTruthy();
+    expect(screen.getByText("$0.85")).toBeTruthy(); // total tile (unique)
+    expect(screen.getByText(/spend over time/i)).toBeTruthy();
 
-    const day1 = screen.getByTestId("usage-day-2026-08-01");
-    expect(within(day1).getByText("2026-08-01")).toBeTruthy();
-    expect(within(day1).getByText("$0.50")).toBeTruthy();
-
-    const day2 = screen.getByTestId("usage-day-2026-08-02");
-    expect(within(day2).getByText("2026-08-02")).toBeTruthy();
-    expect(within(day2).getByText("$0.35")).toBeTruthy();
-
+    // Endpoint row now shows the readable short label + mono cost/rows.
     const endpointRow = screen.getByTestId("usage-endpoint-…/keyword_ideas/live");
-    expect(within(endpointRow).getByText("…/keyword_ideas/live")).toBeTruthy();
+    expect(within(endpointRow).getByText("keyword_ideas")).toBeTruthy();
     expect(within(endpointRow).getByText("$0.50")).toBeTruthy();
     expect(within(endpointRow).getByText("100")).toBeTruthy();
   });

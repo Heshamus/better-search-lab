@@ -4,6 +4,7 @@ import { getCurrentProject } from "@/lib/current-project";
 import { listRankings } from "@/lib/rankings";
 import { EmptyState } from "@/components/empty-state";
 import { RankingsTable } from "@/components/rankings-table";
+import { RankingsSummary } from "@/components/rankings-summary";
 import { RefreshRankingsButton } from "@/components/refresh-rankings-button";
 
 // This page reads the DB (getCurrentProject/listRankings) via cookies() on
@@ -48,11 +49,21 @@ export default async function RankingsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
+    <div className="flex flex-col gap-7">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div className="eyebrow">Rank tracking</div>
+          <p className="mt-1 text-sm text-neutral-400">Where your tracked keywords sit in Google.</p>
+        </div>
         <RefreshRankingsButton projectId={project.id} />
       </div>
-      <RankingsTable rows={rows} />
+
+      <RankingsSummary rows={rows} />
+
+      <section className="flex flex-col gap-3.5">
+        <h2 className="text-sm font-semibold text-white">All keywords</h2>
+        <RankingsTable rows={rows} />
+      </section>
     </div>
   );
 }

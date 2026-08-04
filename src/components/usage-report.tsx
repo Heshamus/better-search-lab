@@ -1,94 +1,101 @@
 import type { UsageSummary } from "@/lib/usage";
+import { AreaTrend, HBars } from "@/components/charts";
 
-// Same "$X.XX" convention already used by dashboard-metrics.ts's health-strip
-// spend tile and research-explorer.tsx's CPC column — kept as a local
-// private helper here too (no shared currency util exists yet in this repo).
-function formatUsd(n: number): string {
+function usd(n: number): string {
   return `$${n.toFixed(2)}`;
 }
 
+// "/v3/dataforseo_labs/google/keyword_ideas/live" → "keyword_ideas";
+// "deepseek/v4-pro/chat" → "deepseek chat" — a readable label for the chart.
+function shortEndpoint(ep: string): string {
+  if (ep.startsWith("deepseek")) return "deepseek chat";
+  const parts = ep.split("/").filter(Boolean);
+  const i = parts.indexOf("google");
+  return (i >= 0 ? parts[i + 1] : parts[parts.length - 2]) ?? ep;
+}
+
+function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="panel flex flex-col gap-1.5 px-4 py-3.5">
+      <span className="eyebrow">{label}</span>
+      <span className="num text-[1.7rem] font-semibold leading-none tracking-tight text-white">{value}</span>
+      <span className="text-[0.7rem] text-neutral-500">{hint}</span>
+    </div>
+  );
+}
+
 /**
- * Usage & cost view's presentational body (Task 9): total spend this month, a
- * by-day cost list, and a by-endpoint cost+rows table. Pure display over
- * `usageSummary`'s output (`@/lib/usage`) — the Usage page's server component
- * does the actual `api_usage` read; this component only knows how to lay the
- * numbers out, mirroring health-strip.tsx/opportunity-card.tsx's
- * presentational-only role.
- *
- * Honesty rule (brief): a genuinely empty summary (no api_usage rows this
- * month) still renders "$0.00" — a real, known zero — plus a gentle inline
- * note, never a blank page and never a fabricated non-zero number.
+ * Usage & cost dashboard: headline totals, spend-over-time trend, and a
+ * cost-by-endpoint breakdown (bars + detail table). Pure display over
+ * `usageSummary`. A genuinely empty month renders a real "$0.00", never a blank
+ * page or a fabricated number.
  */
 export function UsageReport({ summary }: { summary: UsageSummary }) {
   const isEmpty = summary.byDay.length === 0 && summary.byEndpoint.length === 0;
+  const totalRows = summary.byEndpoint.reduce((s, e) => s + e.rows, 0);
+  const days = summary.byDay.length;
+  const byEndpoint = [...summary.byEndpoint].sort((a, b) => b.cost - a.cost);
+
+  if (isEmpty) {
+    return (
+      <div className="panel px-6 py-16 text-center">
+        <p className="num text-2xl font-semibold text-white">$0.00</p>
+        <p className="mt-1.5 text-sm text-neutral-400">No usage yet this month.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-6">
-      <section className="rounded-xl border border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
-        <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Total spend this month</p>
-        <p className="mt-1 text-2xl font-semibold text-neutral-900 dark:text-white">{formatUsd(summary.total)}</p>
-        {isEmpty ? (
-          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">No usage yet this month.</p>
-        ) : null}
-      </section>
+    <div className="flex flex-col gap-7">
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Tile label="Total spend" value={usd(summary.total)} hint="this month" />
+        <Tile label="Days active" value={String(days)} hint="with usage" />
+        <Tile label="API calls" value={Intl.NumberFormat("en", { notation: "compact" }).format(totalRows)} hint="rows billed" />
+        <Tile label="Avg / day" value={usd(days ? summary.total / days : 0)} hint="mean daily spend" />
+      </dl>
 
-      {summary.byDay.length > 0 ? (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-            By day
-          </h2>
-          <ul className="flex flex-col gap-0 rounded-xl border border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-900">
-            {summary.byDay.map((d) => (
-              <li
-                key={d.day}
-                data-testid={`usage-day-${d.day}`}
-                className="flex items-center justify-between border-b border-neutral-100 py-2 text-sm last:border-0 dark:border-neutral-800/60"
-              >
-                <span className="text-neutral-600 dark:text-neutral-300">{d.day}</span>
-                <span className="font-medium text-neutral-900 dark:text-white">{formatUsd(d.cost)}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      <div className="panel flex flex-col gap-4 p-5">
+        <div className="flex items-baseline justify-between gap-2">
+          <h3 className="text-sm font-semibold text-white">Spend over time</h3>
+          <span className="eyebrow">{days === 1 ? "1 day" : `${days} days`}</span>
+        </div>
+        <AreaTrend
+          points={summary.byDay.map((d) => d.cost)}
+          labels={days ? [summary.byDay[0].day, summary.byDay[days - 1].day] : []}
+          yFormat={usd}
+          color="var(--color-series-2)"
+          height={200}
+          emptyLabel="Only one day of usage so far — the trend fills in daily"
+        />
+      </div>
 
-      {summary.byEndpoint.length > 0 ? (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-            By endpoint
-          </h2>
-          <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-            <table className="w-full min-w-[480px] border-collapse text-left text-sm">
-              <thead>
-                <tr className="border-b border-neutral-200 dark:border-neutral-800">
-                  <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                    Endpoint
-                  </th>
-                  <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                    Cost
-                  </th>
-                  <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                    Rows
-                  </th>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="panel flex flex-col gap-4 p-5">
+          <h3 className="text-sm font-semibold text-white">Cost by endpoint</h3>
+          <HBars items={byEndpoint.map((e) => ({ label: shortEndpoint(e.endpoint), value: e.cost }))} valueFormat={usd} color="var(--color-series-4)" />
+        </div>
+
+        <div className="panel overflow-x-auto">
+          <table className="w-full min-w-[420px] border-collapse text-left text-sm">
+            <thead>
+              <tr className="border-b border-neutral-800">
+                <th className="eyebrow px-4 py-2.5">Endpoint</th>
+                <th className="eyebrow px-4 py-2.5">Cost</th>
+                <th className="eyebrow px-4 py-2.5">Rows</th>
+              </tr>
+            </thead>
+            <tbody>
+              {byEndpoint.map((e) => (
+                <tr key={e.endpoint} data-testid={`usage-endpoint-${e.endpoint}`} className="border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20">
+                  <td className="px-4 py-2.5 font-medium text-neutral-200">{shortEndpoint(e.endpoint)}</td>
+                  <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{usd(e.cost)}</span></td>
+                  <td className="px-4 py-2.5"><span className="tnum text-neutral-400">{Intl.NumberFormat("en", { notation: "compact" }).format(e.rows)}</span></td>
                 </tr>
-              </thead>
-              <tbody>
-                {summary.byEndpoint.map((e) => (
-                  <tr
-                    key={e.endpoint}
-                    data-testid={`usage-endpoint-${e.endpoint}`}
-                    className="border-b border-neutral-100 last:border-0 dark:border-neutral-800/60"
-                  >
-                    <td className="px-4 py-2 font-medium text-neutral-900 dark:text-white">{e.endpoint}</td>
-                    <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatUsd(e.cost)}</td>
-                    <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{e.rows}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      ) : null}
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

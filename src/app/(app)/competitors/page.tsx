@@ -8,6 +8,7 @@ import { GapTable } from "@/components/gap-table";
 import { RefreshGapsButton } from "@/components/refresh-gaps-button";
 import { CompetitorManager } from "@/components/competitor-manager";
 import { CompetitorIntelPanel } from "@/components/competitor-intel-panel";
+import { CompetitorDashboard } from "@/components/competitor-dashboard";
 
 // This page reads the DB (getCurrentProject/listCompetitors/listGapSignals/
 // listCompetitorKeywords/listCompetitorTopPages) via cookies() on every
@@ -64,8 +65,21 @@ export default async function CompetitorsPage() {
     })),
   );
 
+  // Per-competitor reach, derived from the collected ranked keywords.
+  const compStats = intel.map(({ competitor, keywords }) => {
+    const ranks = keywords.map((k) => k.rankAbsolute).filter((r): r is number => r != null);
+    return {
+      domain: competitor.domain,
+      keywords: keywords.length,
+      avgPosition: ranks.length ? Math.round(ranks.reduce((a, b) => a + b, 0) / ranks.length) : null,
+      volume: keywords.reduce((a, k) => a + (k.volume ?? 0), 0),
+    };
+  });
+
   return (
     <div className="flex flex-col gap-8">
+      {competitorRows.length > 0 ? <CompetitorDashboard stats={compStats} gapCount={gapRows.length} /> : null}
+
       <section className="flex flex-col gap-2">
         <h2 className={sectionHeadingClass}>Competitors</h2>
         <CompetitorManager projectId={project.id} competitors={competitorRows} />
@@ -110,8 +124,6 @@ export default async function CompetitorsPage() {
           defaultLanguageCode={project.defaultLanguageCode}
         />
       </section>
-
-      <p className="text-xs text-neutral-400 dark:text-neutral-600">Share of voice — coming soon.</p>
     </div>
   );
 }
