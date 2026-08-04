@@ -29,6 +29,14 @@ export interface EngineResult {
   difficulty: number | null;
   currentPosition: number | null;
   trend: number | null;
+  /** "gsc" when this opportunity is grounded in first-party Search Console/GA
+   *  data, "estimate" when it comes from DataForSEO estimates — badged in the UI. */
+  dataSource: "gsc" | "estimate";
+}
+
+/** Whether a candidate is grounded in first-party data (GSC/GA) or an estimate. */
+function dataSourceOf(c: Candidate): "gsc" | "estimate" {
+  return c.evidence.source === "gsc" || c.type === "ctr_gap" || c.type === "content_vs_ranking" ? "gsc" : "estimate";
 }
 
 /**
@@ -154,5 +162,6 @@ export function assembleOpportunities(
     difficulty: candidate.difficulty,
     currentPosition: candidate.currentPosition,
     trend: candidate.trend,
+    dataSource: dataSourceOf(candidate),
   }));
 }

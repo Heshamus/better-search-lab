@@ -28,6 +28,22 @@ describe("assembleOpportunities", () => {
     expect(Object.keys(out[0].scoreBreakdown).length).toBeGreaterThan(0);
   });
 
+  it("labels each opportunity's dataSource (grounded gsc vs estimate)", () => {
+    const gscBacked = assembleOpportunities({
+      asOf: d("2026-08-10"),
+      keywordSignals: [ks({ keyword: "seo reporting software", gscPosition: 14, gscImpressions: 2300, snapshots: [] })],
+      gapSignals: [], pageSignals: [],
+    }).find((o) => o.type === "striking_distance");
+    expect(gscBacked?.dataSource).toBe("gsc");
+
+    const estimate = assembleOpportunities({
+      asOf: d("2026-08-10"),
+      keywordSignals: [ks({ keyword: "seo reporting software", snapshots: [{ ...snap(12), keywordId: "k1" }] })],
+      gapSignals: [], pageSignals: [],
+    }).find((o) => o.type === "striking_distance");
+    expect(estimate?.dataSource).toBe("estimate");
+  });
+
   it("surfaces a content_vs_ranking opportunity (URL keyword) past the relevance gate", () => {
     const out = assembleOpportunities({
       asOf: d("2026-08-10"),
