@@ -22,6 +22,27 @@ export async function keywordIdeas(client: DataForSeoClient, p: {
   return { items, rows: items.length };
 }
 
+// Phrase-match research (like Semrush "Keyword Magic"): returns keywords that
+// CONTAIN the seed phrase, ordered by relevance. Far tighter than keyword_ideas,
+// whose broad word-overlap turns a seed like "ai seo content" into the generic
+// "* ai" app universe (sora ai, muah ai, ai baby...). Single seed, not an array.
+export async function keywordSuggestions(client: DataForSeoClient, p: {
+  keyword: string; locationCode: number; languageCode: string; limit?: number;
+}): Promise<{ items: KeywordIdea[]; rows: number }> {
+  const body = [{ keyword: p.keyword, location_code: p.locationCode, language_code: p.languageCode, limit: p.limit ?? 100 }];
+  const resp = await client.post<any>("/v3/dataforseo_labs/google/keyword_suggestions/live", body);
+  assertTasksOk(resp);
+  const raw = resp?.tasks?.[0]?.result?.[0]?.items ?? [];
+  const items: KeywordIdea[] = raw.map((i: any) => ({
+    keyword: i.keyword,
+    searchVolume: num(i.keyword_info?.search_volume),
+    cpc: num(i.keyword_info?.cpc),
+    competition: num(i.keyword_info?.competition),
+    difficulty: num(i.keyword_properties?.keyword_difficulty),
+  }));
+  return { items, rows: items.length };
+}
+
 export interface RankedKeyword { keyword: string; rankAbsolute: number | null; searchVolume: number | null; difficulty: number | null; url: string | null; }
 export async function rankedKeywords(client: DataForSeoClient, p: { target: string; locationCode: number; languageCode: string; limit?: number; }) {
   const body = [{ target: p.target, location_code: p.locationCode, language_code: p.languageCode, limit: p.limit ?? 100 }];

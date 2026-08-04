@@ -9,6 +9,7 @@ export const DEEPSEEK_CHAT_ENDPOINT = "deepseek/v4-pro/chat";
 const PRICES: Record<string, number> = {
   "/v3/serp/google/organic/live/advanced": 0.002,
   "/v3/dataforseo_labs/google/keyword_ideas/live": 0.012,
+  "/v3/dataforseo_labs/google/keyword_suggestions/live": 0.012,
   "/v3/dataforseo_labs/google/ranked_keywords/live": 0.012,
   "/v3/dataforseo_labs/google/keyword_overview/live": 0.012,
   "/v3/dataforseo_labs/google/domain_intersection/live": 0.012,

@@ -260,26 +260,42 @@ export async function judgeRelevance(
   client: DeepSeekClient,
   p: { domain: string; seeds: string[]; nicheTerms: string[]; candidates: string[] },
 ): Promise<{ kept: Set<string>; calls: number; unjudged: string[] }> {
+  const batches: string[][] = [];
+  for (let i = 0; i < p.candidates.length; i += JUDGE_BATCH) batches.push(p.candidates.slice(i, i + JUDGE_BATCH));
+
+  // Batches are independent, so judge them CONCURRENTLY — sequential calls made
+  // profiling ~4× slower (5 serial reasoning calls ≈ 4–5 min). Each batch still
+  // fails independently into `unjudged`; one bad batch never sinks the rest.
+  const results = await Promise.all(
+    batches.map(async (batch) => {
+      let called = false;
+      try {
+        const content = await client.chat([
+          { role: "system", content: JUDGE_SYSTEM_PROMPT },
+          { role: "user", content: buildJudgePrompt({ domain: p.domain, seeds: p.seeds, nicheTerms: p.nicheTerms, batch }) },
+        ]);
+        called = true; // a returned chat is a billed call, even if its body is unparseable
+        const rel = parseJsonObject(content)?.relevant; // parseJsonObject throws on garbage
+        if (!Array.isArray(rel)) throw new Error("judgeRelevance: model response missing 'relevant' array");
+        const kept: string[] = [];
+        for (const n of rel) {
+          const idx = typeof n === "number" ? n : Number(n);
+          if (Number.isInteger(idx) && idx >= 1 && idx <= batch.length) kept.push(batch[idx - 1]);
+        }
+        return { called, kept, unjudged: [] as string[] };
+      } catch {
+        return { called, kept: [] as string[], unjudged: batch };
+      }
+    }),
+  );
+
   const kept = new Set<string>();
   const unjudged: string[] = [];
   let calls = 0;
-  for (let i = 0; i < p.candidates.length; i += JUDGE_BATCH) {
-    const batch = p.candidates.slice(i, i + JUDGE_BATCH);
-    try {
-      const content = await client.chat([
-        { role: "system", content: JUDGE_SYSTEM_PROMPT },
-        { role: "user", content: buildJudgePrompt({ domain: p.domain, seeds: p.seeds, nicheTerms: p.nicheTerms, batch }) },
-      ]);
-      calls += 1; // a returned chat is a billed call, even if its body is unparseable
-      const rel = parseJsonObject(content)?.relevant; // parseJsonObject throws on garbage
-      if (!Array.isArray(rel)) throw new Error("judgeRelevance: model response missing 'relevant' array");
-      for (const n of rel) {
-        const idx = typeof n === "number" ? n : Number(n);
-        if (Number.isInteger(idx) && idx >= 1 && idx <= batch.length) kept.add(batch[idx - 1]);
-      }
-    } catch {
-      for (const kw of batch) unjudged.push(kw);
-    }
+  for (const r of results) {
+    if (r.called) calls += 1;
+    for (const k of r.kept) kept.add(k);
+    unjudged.push(...r.unjudged);
   }
   return { kept, calls, unjudged };
 }
