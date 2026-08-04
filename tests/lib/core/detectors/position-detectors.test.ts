@@ -62,3 +62,24 @@ describe("momentum", () => {
     expect(momentum(input([ks({ snapshots: [snap("2026-08-03", 9), snap("2026-08-10", 9)] })]))).toHaveLength(0);
   });
 });
+
+describe("strikingDistance — first-party GSC", () => {
+  it("uses real impressions/position when the query has GSC data (page 2)", () => {
+    const out = strikingDistance(input([ks({ gscPosition: 14, gscImpressions: 2300, volume: 50 })]));
+    expect(out).toHaveLength(1);
+    expect(out[0].type).toBe("striking_distance");
+    expect(out[0].currentPosition).toBe(14);
+    expect(out[0].volume).toBe(2300); // real impressions, not the 50 estimate
+    expect(out[0].evidence).toMatchObject({ source: "gsc" });
+  });
+  it("falls back to the snapshot path (as estimate) for page-1 GSC positions and thin impressions", () => {
+    const out = strikingDistance(input([ks({ gscPosition: 8, gscImpressions: 5000, snapshots: [snap("2026-08-10", 8)] })]));
+    expect(out).toHaveLength(1);
+    expect(out[0].evidence).toMatchObject({ source: "estimate" });
+    expect(strikingDistance(input([ks({ gscPosition: 14, gscImpressions: 20 })]))).toHaveLength(0);
+  });
+  it("tags the snapshot path as estimate when there is no GSC data", () => {
+    const out = strikingDistance(input([ks({ snapshots: [snap("2026-08-10", 12)] })]));
+    expect(out[0].evidence).toMatchObject({ source: "estimate" });
+  });
+});
