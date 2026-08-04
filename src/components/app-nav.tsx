@@ -11,6 +11,7 @@ export const NAV = [
   ["competitors", "Competitors"],
   ["audit", "Site audit"],
   ["backlinks", "Backlinks"],
+  ["gsc", "Search Console"],
   ["usage", "Usage & cost"],
   ["settings", "Settings"],
 ] as const;
@@ -18,7 +19,7 @@ export const NAV = [
 // Rendering groups: the analysis views, then the account views. Grouping encodes
 // what the sections are FOR, not just an alphabetical list.
 const GROUPS: { heading: string; slugs: string[] }[] = [
-  { heading: "Analyze", slugs: ["opportunities", "rankings", "keywords", "research", "competitors", "audit", "backlinks"] },
+  { heading: "Analyze", slugs: ["opportunities", "rankings", "keywords", "research", "competitors", "audit", "backlinks", "gsc"] },
   { heading: "Account", slugs: ["usage", "settings"] },
 ];
 const LABELS: Record<string, string> = Object.fromEntries(NAV);

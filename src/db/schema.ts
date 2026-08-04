@@ -1,6 +1,7 @@
 import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, numeric, real } from "drizzle-orm/pg-core";
 import type { AuditIssue } from "@/lib/audit/checks";
 import type { BacklinkSummary, ReferringDomain, Anchor } from "@/lib/dataforseo/backlinks";
+import type { GscTotals, GscTopRow } from "@/lib/google/gsc";
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -173,4 +174,36 @@ export const backlinkSnapshots = pgTable("backlink_snapshots", {
   summary: jsonb("summary").$type<BacklinkSummary | null>(),
   referringDomains: jsonb("referring_domains").$type<ReferringDomain[]>().notNull().default([]),
   anchors: jsonb("anchors").$type<Anchor[]>().notNull().default([]),
+});
+
+// A project's Google Search Console connection: the OAuth refresh token + the
+// chosen GSC property. One per project (unique).
+export const googleConnections = pgTable("google_connections", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").notNull().unique().references(() => projects.id, { onDelete: "cascade" }),
+  refreshToken: text("refresh_token").notNull(),
+  propertyUrl: text("property_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Daily Search Console series (clicks/impressions/ctr/position) — the free,
+// real position-history that powers the trend charts. Replace-all per sync.
+export const gscDaily = pgTable("gsc_daily", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  date: text("date").notNull(),
+  clicks: integer("clicks").notNull().default(0),
+  impressions: integer("impressions").notNull().default(0),
+  ctr: real("ctr").notNull().default(0),
+  position: real("position").notNull().default(0),
+});
+
+// Latest GSC snapshot: window totals + top queries + top pages.
+export const gscSnapshots = pgTable("gsc_snapshots", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  totals: jsonb("totals").$type<GscTotals | null>(),
+  topQueries: jsonb("top_queries").$type<GscTopRow[]>().notNull().default([]),
+  topPages: jsonb("top_pages").$type<GscTopRow[]>().notNull().default([]),
 });

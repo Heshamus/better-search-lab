@@ -78,6 +78,13 @@
       "when": 1785875187275,
       "tag": "0010_narrow_sentinel",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1785876670024,
+      "tag": "0011_goofy_the_santerians",
+      "breakpoints": true
     }
   ]
 }

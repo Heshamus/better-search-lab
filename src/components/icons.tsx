@@ -79,6 +79,11 @@ export const IconBacklinks = (p: SVGProps<SVGSVGElement>) => (
     <path d="M16 13l1.8-1.8a3.2 3.2 0 00-4.5-4.5L11.5 8.5" />
   </Base>
 );
+export const IconGsc = (p: SVGProps<SVGSVGElement>) => (
+  <Base {...p}>
+    <path d="M3 12h3l2.4-6.5L13 18l2.6-6H21" />
+  </Base>
+);
 
 export const NAV_ICONS: Record<string, (p: SVGProps<SVGSVGElement>) => React.ReactElement> = {
   opportunities: IconOpportunities,
@@ -88,6 +93,7 @@ export const NAV_ICONS: Record<string, (p: SVGProps<SVGSVGElement>) => React.Rea
   competitors: IconCompetitors,
   audit: IconAudit,
   backlinks: IconBacklinks,
+  gsc: IconGsc,
   usage: IconUsage,
   settings: IconSettings,
 };
