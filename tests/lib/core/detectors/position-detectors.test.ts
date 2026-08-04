@@ -17,9 +17,10 @@ const snap = (date: string, rank: number | null) => ({
   ownUrls: [],
 });
 const ks = (over: Partial<KeywordSignal>): KeywordSignal => ({
-  keywordId: "k", keyword: "seo reporting", tags: [], snapshots: [], ownUrls: [], volume: 1200, difficulty: 30, ...over,
+  keywordId: "k", keyword: "seo reporting", tags: [], snapshots: [], ownUrls: [], volume: 1200, difficulty: 30,
+  gscImpressions: null, gscClicks: null, gscCtr: null, gscPosition: null, ...over,
 });
-const input = (signals: KeywordSignal[], asOf = d("2026-08-10")): DetectorInput => ({ keywordSignals: signals, gapSignals: [], asOf });
+const input = (signals: KeywordSignal[], asOf = d("2026-08-10")): DetectorInput => ({ keywordSignals: signals, gapSignals: [], pageSignals: [], asOf });
 
 describe("strikingDistance", () => {
   it("flags a keyword sitting at #5–20", () => {

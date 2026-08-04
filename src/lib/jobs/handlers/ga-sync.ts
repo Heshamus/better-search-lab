@@ -45,7 +45,7 @@ export function gaSyncHandler(opts?: { fetchImpl?: typeof fetch }) {
       report({ ...window, dimensions: ["date"], metrics: ["sessions", "totalUsers"] }),
       report({ ...window, dimensions: [], metrics: ["sessions", "totalUsers", "engagementRate"] }),
       report({ ...window, dimensions: ["sessionDefaultChannelGroup"], metrics: ["sessions"], orderByMetric: "sessions", limit: 12 }),
-      report({ ...window, dimensions: ["landingPage"], metrics: ["sessions"], orderByMetric: "sessions", limit: 25 }),
+      report({ ...window, dimensions: ["landingPage"], metrics: ["sessions", "engagementRate"], orderByMetric: "sessions", limit: 25 }),
       safeConversions(),
     ]);
 
@@ -60,7 +60,7 @@ export function gaSyncHandler(opts?: { fetchImpl?: typeof fetch }) {
     await saveGaSnapshot(db, projectId!, {
       totals: { sessions: t[0] ?? 0, users: t[1] ?? 0, engagementRate: t[2] ?? 0, conversions },
       channels: channelRows.map((r) => ({ channel: r.dimensions[0] || "(other)", sessions: r.metrics[0] ?? 0 })),
-      topPages: pageRows.map((r) => ({ page: r.dimensions[0] ?? "", sessions: r.metrics[0] ?? 0, conversions: 0 })),
+      topPages: pageRows.map((r) => ({ page: r.dimensions[0] ?? "", sessions: r.metrics[0] ?? 0, engagementRate: r.metrics[1] ?? 0, conversions: 0 })),
     });
 
     return { rows: dailyPoints.length, cost: 0 };

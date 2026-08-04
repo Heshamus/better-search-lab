@@ -30,6 +30,7 @@ export interface GaChannelRow {
 export interface GaPageRow {
   page: string;
   sessions: number;
+  engagementRate: number; // 0..1, per landing page
   conversions: number;
 }
 

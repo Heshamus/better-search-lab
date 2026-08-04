@@ -3,6 +3,7 @@ import { and, asc, desc, eq } from "drizzle-orm";
 import { listGapSignals } from "@/lib/competitors";
 import type { DetectorInput, DetectorSnap, KeywordSignal } from "@/lib/core/detectors/types";
 import type { EngineResult } from "@/lib/core/opportunity-engine";
+import { buildFirstPartyInput, normQuery } from "@/lib/core/inputs/first-party";
 
 /**
  * The ISO date (`YYYY-MM-DD`) of the Monday of the UTC week containing
@@ -32,6 +33,9 @@ export function mondayOf(isoDate: string): string {
 export async function loadDetectorInput(db: any, projectId: string, asOf: Date): Promise<DetectorInput> {
   const tracked = await db.select().from(keywords).where(and(eq(keywords.projectId, projectId), eq(keywords.isTracked, true)));
 
+  // First-party GSC/GA signals (empty when no Google connection → engine unchanged).
+  const { gscByQuery, pageSignals } = await buildFirstPartyInput(db, projectId);
+
   const keywordSignals: KeywordSignal[] = [];
   for (const kw of tracked) {
     const snaps = await db.select().from(rankSnapshots)
@@ -51,6 +55,7 @@ export async function loadDetectorInput(db: any, projectId: string, asOf: Date):
 
     const [metrics] = await db.select().from(keywordMetrics).where(eq(keywordMetrics.keywordId, kw.id));
 
+    const gsc = gscByQuery.get(normQuery(kw.keyword)) ?? null;
     keywordSignals.push({
       keywordId: kw.id,
       keyword: kw.keyword,
@@ -59,12 +64,16 @@ export async function loadDetectorInput(db: any, projectId: string, asOf: Date):
       ownUrls: latest?.ownUrls ?? [],
       volume: metrics?.searchVolume ?? null,
       difficulty: metrics?.difficulty ?? null,
+      gscImpressions: gsc?.impressions ?? null,
+      gscClicks: gsc?.clicks ?? null,
+      gscCtr: gsc?.ctr ?? null,
+      gscPosition: gsc?.position ?? null,
     });
   }
 
   const gapSignals = await listGapSignals(db, projectId);
 
-  return { keywordSignals, gapSignals, asOf };
+  return { keywordSignals, gapSignals, pageSignals, asOf };
 }
 
 /**

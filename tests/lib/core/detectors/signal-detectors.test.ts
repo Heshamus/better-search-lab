@@ -6,8 +6,8 @@ import { runDetectors } from "@/lib/core/detectors";
 import type { DetectorInput, KeywordSignal, GapSignal } from "@/lib/core/detectors/types";
 
 const d = (s: string) => new Date(s + "T00:00:00Z");
-const base = (over: Partial<DetectorInput>): DetectorInput => ({ keywordSignals: [], gapSignals: [], asOf: d("2026-08-10"), ...over });
-const ks = (o: Partial<KeywordSignal>): KeywordSignal => ({ keywordId: "k", keyword: "seo reporting", tags: [], snapshots: [], ownUrls: [], volume: 1000, difficulty: 30, ...o });
+const base = (over: Partial<DetectorInput>): DetectorInput => ({ keywordSignals: [], gapSignals: [], pageSignals: [], asOf: d("2026-08-10"), ...over });
+const ks = (o: Partial<KeywordSignal>): KeywordSignal => ({ keywordId: "k", keyword: "seo reporting", tags: [], snapshots: [], ownUrls: [], volume: 1000, difficulty: 30, gscImpressions: null, gscClicks: null, gscCtr: null, gscPosition: null, ...o });
 const snap = (rank: number | null, features: string[] = [], ownUrls: string[] = []) => ({ keywordId: "k", capturedAt: d("2026-08-10"), rankAbsolute: rank, fetchStatus: "ok", serpFeatures: features, ownUrls });
 
 describe("gap", () => {

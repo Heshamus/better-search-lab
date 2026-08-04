@@ -6,6 +6,7 @@ function inputWith(competitorCount: number): DetectorInput {
   return {
     keywordSignals: [],
     gapSignals: [{ keyword: "webflow seo", volume: 300, difficulty: 20, competitorCount }],
+    pageSignals: [],
     asOf: new Date("2026-08-03"),
   };
 }
