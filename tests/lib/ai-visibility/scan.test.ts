@@ -30,6 +30,9 @@ describe("runScan", () => {
     expect(out.citedSources[0]).toMatchObject({ domain: "rival.com", count: 4 });
     expect(out.citedSources.find((s) => s.domain === "harperflow.io")?.count).toBe(1);
     expect(out.queries).toEqual(queries);
+    // per-query: q1 is named+cited (perplexity), q2 is neither
+    expect(out.perQuery.find((q) => q.text === "q1")).toMatchObject({ named: true, cited: true, source: "gsc" });
+    expect(out.perQuery.find((q) => q.text === "q2")).toMatchObject({ named: false, cited: false, source: "generated" });
   });
 
   it("counts a failed engine call as zero answers, never throwing", async () => {

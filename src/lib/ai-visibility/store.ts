@@ -1,12 +1,13 @@
 import { aiVisibilitySnapshots } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
-import type { AiVisibilitySnapshotData, CitedSource, PerEngine } from "./types";
+import type { AiVisibilitySnapshotData, CitedSource, PerEngine, PerQuery } from "./types";
 
 export interface AiVisibilityRow {
   id: string;
   scannedAt: Date;
   queries: { text: string; source: "gsc" | "generated" }[];
   engines: PerEngine[];
+  perQuery: PerQuery[];
   namedTotal: number;
   citedTotal: number;
   answersTotal: number;
@@ -19,6 +20,7 @@ function mapRow(r: any): AiVisibilityRow {
     scannedAt: r.scannedAt,
     queries: (r.queries ?? []) as AiVisibilityRow["queries"],
     engines: (r.engines ?? []) as PerEngine[],
+    perQuery: (r.perQuery ?? []) as PerQuery[],
     namedTotal: r.namedTotal,
     citedTotal: r.citedTotal,
     answersTotal: r.answersTotal,
@@ -32,6 +34,7 @@ export async function saveScan(db: any, projectId: string, data: AiVisibilitySna
     projectId,
     queries: data.queries,
     engines: data.perEngine,
+    perQuery: data.perQuery,
     namedTotal: data.namedTotal,
     citedTotal: data.citedTotal,
     answersTotal: data.answersTotal,

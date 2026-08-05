@@ -10,6 +10,7 @@ afterEach(() => close?.());
 const mk = (cited: number): AiVisibilitySnapshotData => ({
   queries: [{ text: "best ai seo tool", source: "gsc" }],
   perEngine: [{ engine: "perplexity", answers: 3, named: 1, cited }],
+  perQuery: [{ text: "best ai seo tool", source: "gsc", named: true, cited: cited > 0 }],
   namedTotal: 1,
   citedTotal: cited,
   answersTotal: 3,

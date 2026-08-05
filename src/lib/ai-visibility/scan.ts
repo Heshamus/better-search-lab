@@ -1,6 +1,6 @@
 import { mapLimit } from "@/lib/async/map-limit";
 import { detectMention } from "./extract";
-import type { AiVisibilitySnapshotData, CitedSource, EngineAnswer, EngineId, PerEngine } from "./types";
+import type { AiVisibilitySnapshotData, CitedSource, EngineAnswer, EngineId, PerEngine, PerQuery } from "./types";
 
 // The scan query shape (mirrors queries.ts ScanQuery; kept local to avoid a
 // cross-import between the two ai-visibility modules).
@@ -33,13 +33,14 @@ export async function runScan(opts: {
     try {
       const ans = await opts.ask(e.model, q.text);
       const { named, cited } = detectMention(ans.answer, ans.citations, opts.prospect);
-      return { engine: e.id, ok: true, named, cited, citations: ans.citations };
+      return { query: q, engine: e.id, ok: true, named, cited, citations: ans.citations };
     } catch {
-      return { engine: e.id, ok: false, named: false, cited: false, citations: [] as string[] };
+      return { query: q, engine: e.id, ok: false, named: false, cited: false, citations: [] as string[] };
     }
   });
 
   const perEngine = new Map<EngineId, PerEngine>(opts.engines.map((e) => [e.id, { engine: e.id, answers: 0, named: 0, cited: 0 }]));
+  const perQuery = new Map<string, PerQuery>(opts.queries.map((q) => [q.text, { text: q.text, source: q.source, named: false, cited: false }]));
   const sources = new Map<string, { count: number; topUrl: string }>();
   let answersTotal = 0;
   let namedTotal = 0;
@@ -48,6 +49,11 @@ export async function runScan(opts: {
   for (const r of answers) {
     if (!r.ok) continue; // failed call = 0 answers
     const pe = perEngine.get(r.engine)!;
+    const pq = perQuery.get(r.query.text);
+    if (pq) {
+      if (r.named) pq.named = true;
+      if (r.cited) pq.cited = true;
+    }
     pe.answers += 1;
     answersTotal += 1;
     if (r.named) {
@@ -75,5 +81,5 @@ export async function runScan(opts: {
     .sort((a, b) => b.count - a.count)
     .slice(0, 12);
 
-  return { queries: opts.queries, perEngine: [...perEngine.values()], namedTotal, citedTotal, answersTotal, citedSources };
+  return { queries: opts.queries, perEngine: [...perEngine.values()], perQuery: [...perQuery.values()], namedTotal, citedTotal, answersTotal, citedSources };
 }

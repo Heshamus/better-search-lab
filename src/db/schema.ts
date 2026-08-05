@@ -3,7 +3,7 @@ import type { AuditIssue } from "@/lib/audit/checks";
 import type { BacklinkSummary, ReferringDomain, Anchor } from "@/lib/dataforseo/backlinks";
 import type { GscTotals, GscTopRow } from "@/lib/google/gsc";
 import type { GaTotals, GaChannelRow, GaPageRow } from "@/lib/google/analytics";
-import type { PerEngine, CitedSource } from "@/lib/ai-visibility/types";
+import type { PerEngine, PerQuery, CitedSource } from "@/lib/ai-visibility/types";
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -244,6 +244,7 @@ export const aiVisibilitySnapshots = pgTable(
     scannedAt: timestamp("scanned_at").defaultNow().notNull(),
     queries: jsonb("queries").$type<{ text: string; source: "gsc" | "generated" }[]>().notNull().default([]),
     engines: jsonb("engines").$type<PerEngine[]>().notNull().default([]),
+    perQuery: jsonb("per_query").$type<PerQuery[]>().notNull().default([]),
     namedTotal: integer("named_total").notNull().default(0),
     citedTotal: integer("cited_total").notNull().default(0),
     answersTotal: integer("answers_total").notNull().default(0),

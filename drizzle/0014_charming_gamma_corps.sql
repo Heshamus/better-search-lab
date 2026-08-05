@@ -1,0 +1,1 @@
+ALTER TABLE "ai_visibility_snapshots" ADD COLUMN "per_query" jsonb DEFAULT '[]'::jsonb NOT NULL;
