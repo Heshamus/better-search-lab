@@ -29,6 +29,7 @@ export interface GscTopRow {
   impressions: number;
   ctr: number;
   position: number;
+  page?: string | null; // for query rows: the page of ours Google ranks for it
 }
 
 export async function listSites(accessToken: string, fetchImpl: typeof fetch = fetch): Promise<GscSite[]> {
@@ -84,6 +85,24 @@ export interface RisingQuery {
   recent: number; // impressions, recent period
   prior: number; // impressions, prior period
   delta: number; // recent - prior
+  page: string | null; // the page of ours Google ranks for this query, or null = no page (content gap)
+}
+
+/**
+ * Build a query → best-page map from Google's `["query","page"]` rows (keys =
+ * [query, page]) — the page of ours with the most impressions for each query.
+ * This is Google's OWN authoritative mapping of your pages to search terms.
+ */
+export function buildQueryPageMap(rows: GscRow[]): Map<string, string> {
+  const best = new Map<string, { page: string; impressions: number }>();
+  for (const r of rows) {
+    const query = r.keys[0];
+    const page = r.keys[1];
+    if (!query || !page) continue;
+    const cur = best.get(query);
+    if (!cur || r.impressions > cur.impressions) best.set(query, { page, impressions: r.impressions });
+  }
+  return new Map([...best].map(([q, v]) => [q, v.page]));
 }
 
 /** Rank queries by impressions growth (recent vs prior period), rising first. */
@@ -107,7 +126,7 @@ export function computeRisingQueries(
     const rec = r.impressions;
     const delta = rec - (priorMap.get(q) ?? 0);
     if (rec < minRecent || delta < minDelta) continue;
-    out.push({ query: q, recent: rec, prior: priorMap.get(q) ?? 0, delta });
+    out.push({ query: q, recent: rec, prior: priorMap.get(q) ?? 0, delta, page: null });
   }
   return out.sort((a, b) => b.delta - a.delta).slice(0, limit);
 }

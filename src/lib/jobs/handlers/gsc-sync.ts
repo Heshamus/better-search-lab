@@ -1,7 +1,7 @@
 import { loadEnv } from "@/config/env";
 import { getConnection, replaceGscDaily, saveGscSnapshot } from "@/lib/google/store";
 import { refreshAccessToken } from "@/lib/google/oauth";
-import { searchAnalytics, computeRisingQueries, type GscRow, type GscTopRow } from "@/lib/google/gsc";
+import { searchAnalytics, computeRisingQueries, buildQueryPageMap, type GscRow, type GscTopRow } from "@/lib/google/gsc";
 
 function dateStr(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -34,14 +34,17 @@ export function gscSyncHandler(opts?: { fetchImpl?: typeof fetch }) {
     // first-party trend signal (your own demand moving before you even rank).
     const recentWin = { startDate: dateStr(new Date(end.getTime() - 28 * 86_400_000)), endDate: dateStr(end) };
     const priorWin = { startDate: dateStr(new Date(end.getTime() - 56 * 86_400_000)), endDate: dateStr(new Date(end.getTime() - 28 * 86_400_000)) };
-    const [daily, queries, pages, recentQ, priorQ] = await Promise.all([
+    const [daily, queries, pages, recentQ, priorQ, queryPage] = await Promise.all([
       searchAnalytics(accessToken, conn.propertyUrl, { ...window, dimensions: ["date"] }, opts?.fetchImpl),
       searchAnalytics(accessToken, conn.propertyUrl, { ...window, dimensions: ["query"], rowLimit: 25 }, opts?.fetchImpl),
       searchAnalytics(accessToken, conn.propertyUrl, { ...window, dimensions: ["page"], rowLimit: 25 }, opts?.fetchImpl),
       searchAnalytics(accessToken, conn.propertyUrl, { ...recentWin, dimensions: ["query"], rowLimit: 500 }, opts?.fetchImpl),
       searchAnalytics(accessToken, conn.propertyUrl, { ...priorWin, dimensions: ["query"], rowLimit: 500 }, opts?.fetchImpl),
+      // Google's own query→page mapping: which of OUR pages ranks for each query.
+      searchAnalytics(accessToken, conn.propertyUrl, { ...window, dimensions: ["query", "page"], rowLimit: 1000 }, opts?.fetchImpl),
     ]);
-    const risingQueries = computeRisingQueries(recentQ, priorQ);
+    const queryPageMap = buildQueryPageMap(queryPage);
+    const risingQueries = computeRisingQueries(recentQ, priorQ).map((r) => ({ ...r, page: queryPageMap.get(r.query) ?? null }));
 
     await replaceGscDaily(
       db,
@@ -57,7 +60,7 @@ export function gscSyncHandler(opts?: { fetchImpl?: typeof fetch }) {
 
     await saveGscSnapshot(db, projectId!, {
       totals: { clicks, impressions, ctr, position },
-      topQueries: toTop(queries),
+      topQueries: toTop(queries).map((q) => ({ ...q, page: queryPageMap.get(q.key) ?? null })),
       topPages: toTop(pages),
       risingQueries,
     });

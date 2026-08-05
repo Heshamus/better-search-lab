@@ -71,6 +71,7 @@ export function GscDashboard({ data }: { data: GscData }) {
           <thead>
             <tr className="border-b border-neutral-800">
               <th className="eyebrow px-4 py-2.5">Query</th>
+              <th className="eyebrow px-4 py-2.5">Your page</th>
               <th className="eyebrow px-4 py-2.5">Impr. (28d)</th>
               <th className="eyebrow px-4 py-2.5">Growth</th>
             </tr>
@@ -79,10 +80,17 @@ export function GscDashboard({ data }: { data: GscData }) {
             {data.risingQueries.length ? data.risingQueries.map((r) => (
               <tr key={r.query} className="border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20">
                 <td className="px-4 py-2.5 font-medium text-white">{r.query}</td>
+                <td className="px-4 py-2.5">
+                  {r.page ? (
+                    <span className="text-neutral-300" title={r.page}>{shortPath(r.page)}</span>
+                  ) : (
+                    <span className="rounded bg-at-risk/10 px-1.5 py-0.5 text-[0.66rem] font-medium text-at-risk">no page · gap</span>
+                  )}
+                </td>
                 <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(r.recent)}</span></td>
                 <td className="px-4 py-2.5"><span className="tnum font-medium text-accent">▲ {formatCompact(r.delta)}{r.prior === 0 ? " · new" : ""}</span></td>
               </tr>
-            )) : <tr><td colSpan={3} className="px-4 py-6 text-center text-sm text-neutral-500">No rising queries yet — they surface as demand for your topics accelerates.</td></tr>}
+            )) : <tr><td colSpan={4} className="px-4 py-6 text-center text-sm text-neutral-500">No rising queries yet — they surface as demand for your topics accelerates.</td></tr>}
           </tbody>
         </table>
       </div>

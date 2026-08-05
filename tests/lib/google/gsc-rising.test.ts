@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeRisingQueries } from "@/lib/google/gsc";
+import { computeRisingQueries, buildQueryPageMap } from "@/lib/google/gsc";
 import type { GscRow } from "@/lib/google/gsc";
 
 const row = (q: string, impressions: number): GscRow => ({ keys: [q], clicks: 0, impressions, ctr: 0, position: 0 });
@@ -19,5 +19,21 @@ describe("computeRisingQueries", () => {
     const out = computeRisingQueries(recent, [], { minRecent: 20, minDelta: 10, limit: 1 });
     expect(out).toHaveLength(1);
     expect(out[0].query).toBe("big");
+    expect(out[0].page).toBeNull(); // page is filled by the sync, not here
+  });
+});
+
+const pq = (query: string, page: string, impressions: number): GscRow => ({ keys: [query, page], clicks: 0, impressions, ctr: 0, position: 0 });
+
+describe("buildQueryPageMap", () => {
+  it("maps each query to the page of ours with the most impressions (Google's own mapping)", () => {
+    const map = buildQueryPageMap([
+      pq("frase alternative", "https://x.io/vs/frase", 80),
+      pq("frase alternative", "https://x.io/blog", 20),
+      pq("clearscope alternative", "https://x.io/vs/clearscope", 50),
+    ]);
+    expect(map.get("frase alternative")).toBe("https://x.io/vs/frase"); // highest impressions wins
+    expect(map.get("clearscope alternative")).toBe("https://x.io/vs/clearscope");
+    expect(map.get("no such query")).toBeUndefined();
   });
 });
