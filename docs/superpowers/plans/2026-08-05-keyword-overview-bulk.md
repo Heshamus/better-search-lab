@@ -221,6 +221,16 @@ git commit -m "feat(keywords): curated MARKETS table (26 markets, US default)"
 
 ## Task 3: `keywordOverviewBulk` mapper + real fixture
 
+> **REVISED 2026-08-05 after the live probe (airtight gate).** The probe found the plan's
+> "12-entry `monthly_searches`" assumption was wrong: DataForSEO returns the FULL history
+> (~93 months, newest-first) **and** a ready-made `keyword_info.search_volume_trend.yearly`
+> (the 12-month %). Corrected design: sort ascending, **keep the most recent 12 months**, and
+> take `trendPct` from `search_volume_trend.yearly` (computed fallback). Sparkline stays 12
+> points, CSV stays 12 columns — unchanged downstream. The controller ran the probe and created
+> the real fixture; the authoritative task text is the revised brief
+> `.superpowers/sdd/2026-08-05-keyword-overview-bulk/task-3-brief.md`. The code blocks below are
+> the pre-probe version, superseded by that brief.
+
 **Files:**
 - Create: `scripts/probe-keyword-overview.ts` (throwaway)
 - Create: `src/lib/dataforseo/fixtures/keyword-overview-bulk-live.json`
