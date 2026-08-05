@@ -104,6 +104,12 @@ export const IconAiVisibility = (p: SVGProps<SVGSVGElement>) => (
     <path d="M18 16.5l.7 2 .8-2 .7 2M6 4.5l.5 1.5" />
   </Base>
 );
+export const IconTrends = (p: SVGProps<SVGSVGElement>) => (
+  <Base {...p}>
+    <path d="M3 17l6-6 4 4 8-8" />
+    <path d="M15 7h6v6" />
+  </Base>
+);
 
 export const NAV_ICONS: Record<string, (p: SVGProps<SVGSVGElement>) => React.ReactElement> = {
   overview: IconOverview,
@@ -117,6 +123,7 @@ export const NAV_ICONS: Record<string, (p: SVGProps<SVGSVGElement>) => React.Rea
   gsc: IconGsc,
   ga: IconGa,
   "ai-visibility": IconAiVisibility,
+  trends: IconTrends,
   usage: IconUsage,
   settings: IconSettings,
 };

@@ -4,6 +4,7 @@ import type { BacklinkSummary, ReferringDomain, Anchor } from "@/lib/dataforseo/
 import type { GscTotals, GscTopRow, RisingQuery } from "@/lib/google/gsc";
 import type { GaTotals, GaChannelRow, GaPageRow } from "@/lib/google/analytics";
 import type { PerEngine, PerQuery, CitedSource } from "@/lib/ai-visibility/types";
+import type { RadarTerm, RadarSubreddit } from "@/lib/reddit/radar";
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -254,4 +255,21 @@ export const aiVisibilitySnapshots = pgTable(
     citedSources: jsonb("cited_sources").$type<CitedSource[]>().notNull().default([]),
   },
   (t) => [index("ai_visibility_snapshots_project_scanned_idx").on(t.projectId, t.scannedAt.desc())],
+);
+
+// One Reddit trend-radar scan per row (daily; trend compounds): which niche
+// terms have active Reddit discussion, the subreddits the niche lives in, and
+// our page-match per term. Append-only.
+export const redditRadarSnapshots = pgTable(
+  "reddit_radar_snapshots",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    scannedAt: timestamp("scanned_at").defaultNow().notNull(),
+    terms: jsonb("terms").$type<RadarTerm[]>().notNull().default([]),
+    subreddits: jsonb("subreddits").$type<RadarSubreddit[]>().notNull().default([]),
+    termsScanned: integer("terms_scanned").notNull().default(0),
+    threadsTotal: integer("threads_total").notNull().default(0),
+  },
+  (t) => [index("reddit_radar_project_scanned_idx").on(t.projectId, t.scannedAt.desc())],
 );

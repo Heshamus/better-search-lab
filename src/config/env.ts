@@ -25,6 +25,9 @@ const Schema = z.object({
   REPORT_EMAIL_TO: z.string().optional(),
   REPORT_EMAIL_FROM: z.string().optional(),
   APP_URL: z.string().optional(),
+  // Optional: enables the Reddit trend radar (via SerpApi's Google engine +
+  // site:reddit.com — Reddit's own API is gated). Absent → the radar is off.
+  SERPAPI_API_KEY: z.string().optional(),
 });
 export type Env = z.infer<typeof Schema>;
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {

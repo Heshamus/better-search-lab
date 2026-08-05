@@ -29,6 +29,8 @@ import { gscSyncHandler } from "../src/lib/jobs/handlers/gsc-sync";
 import { gaSyncHandler } from "../src/lib/jobs/handlers/ga-sync";
 import { aiVisibilityScanHandler } from "../src/lib/jobs/handlers/ai-visibility-scan";
 import { runWeeklyAiVisibility } from "../src/lib/ai-visibility/weekly";
+import { redditRadarHandler } from "../src/lib/jobs/handlers/reddit-radar";
+import { runDailyRedditRadar } from "../src/lib/reddit/daily";
 import { DataForSeoClient } from "../src/lib/dataforseo/client";
 import { DeepSeekClient } from "../src/lib/llm/deepseek";
 import { loadEnv } from "../src/config/env";
@@ -68,6 +70,7 @@ function resolveHandler(type: string): JobHandler | null {
     case "gsc_sync": return gscSyncHandler();
     case "ga_sync": return gaSyncHandler();
     case "ai_visibility_scan": return aiVisibilityScanHandler();
+    case "reddit_radar_scan": return redditRadarHandler();
     case "refresh_all": return refreshAllHandler();
     default: return null;
   }
@@ -102,6 +105,14 @@ async function run() {
     env,
     scan: (pid) => runJob(db, { type: "ai_visibility_scan", projectId: pid, date: today, handler: aiVisibilityScanHandler() }).then(() => undefined),
   }).catch((e) => console.error("[worker] weekly ai-visibility pass failed:", e));
+
+  // Self-healing daily Reddit trend radar (terms from GSC, searched via SerpApi).
+  await runDailyRedditRadar({
+    db,
+    now: new Date(),
+    env,
+    scan: (pid) => runJob(db, { type: "reddit_radar_scan", projectId: pid, date: today, handler: redditRadarHandler() }).then(() => undefined),
+  }).catch((e) => console.error("[worker] daily reddit radar pass failed:", e));
 }
 
 // Drain the on-demand queue continuously: run one job to completion, immediately
