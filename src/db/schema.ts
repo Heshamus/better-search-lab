@@ -1,8 +1,9 @@
-import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, numeric, real } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, numeric, real, index } from "drizzle-orm/pg-core";
 import type { AuditIssue } from "@/lib/audit/checks";
 import type { BacklinkSummary, ReferringDomain, Anchor } from "@/lib/dataforseo/backlinks";
 import type { GscTotals, GscTopRow } from "@/lib/google/gsc";
 import type { GaTotals, GaChannelRow, GaPageRow } from "@/lib/google/analytics";
+import type { PerEngine, CitedSource } from "@/lib/ai-visibility/types";
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -231,3 +232,22 @@ export const gaSnapshots = pgTable("ga_snapshots", {
   channels: jsonb("channels").$type<GaChannelRow[]>().notNull().default([]),
   topPages: jsonb("top_pages").$type<GaPageRow[]>().notNull().default([]),
 });
+
+// One AI-visibility scan per row (append-only, so the trend compounds): whether
+// AI engines (Perplexity/ChatGPT/Gemini) name/cite this project's domain for its
+// queries, plus per-engine tallies and the competing cited sources.
+export const aiVisibilitySnapshots = pgTable(
+  "ai_visibility_snapshots",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    scannedAt: timestamp("scanned_at").defaultNow().notNull(),
+    queries: jsonb("queries").$type<{ text: string; source: "gsc" | "generated" }[]>().notNull().default([]),
+    engines: jsonb("engines").$type<PerEngine[]>().notNull().default([]),
+    namedTotal: integer("named_total").notNull().default(0),
+    citedTotal: integer("cited_total").notNull().default(0),
+    answersTotal: integer("answers_total").notNull().default(0),
+    citedSources: jsonb("cited_sources").$type<CitedSource[]>().notNull().default([]),
+  },
+  (t) => [index("ai_visibility_snapshots_project_scanned_idx").on(t.projectId, t.scannedAt.desc())],
+);
