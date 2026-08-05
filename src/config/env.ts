@@ -19,6 +19,12 @@ const Schema = z.object({
   EDEN_SONAR_MODEL: z.string().optional(),
   EDEN_CHATGPT_MODEL: z.string().optional(),
   EDEN_GEMINI_MODEL: z.string().optional(),
+  // Optional: enables the weekly AI-visibility email report (Resend). Absent →
+  // the weekly scan still runs and builds the trend, it just doesn't email.
+  RESEND_API_KEY: z.string().optional(),
+  REPORT_EMAIL_TO: z.string().optional(),
+  REPORT_EMAIL_FROM: z.string().optional(),
+  APP_URL: z.string().optional(),
 });
 export type Env = z.infer<typeof Schema>;
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {

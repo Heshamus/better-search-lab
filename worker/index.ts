@@ -28,6 +28,7 @@ import { backlinksRefreshHandler } from "../src/lib/jobs/handlers/backlinks-refr
 import { gscSyncHandler } from "../src/lib/jobs/handlers/gsc-sync";
 import { gaSyncHandler } from "../src/lib/jobs/handlers/ga-sync";
 import { aiVisibilityScanHandler } from "../src/lib/jobs/handlers/ai-visibility-scan";
+import { runWeeklyAiVisibility } from "../src/lib/ai-visibility/weekly";
 import { DataForSeoClient } from "../src/lib/dataforseo/client";
 import { DeepSeekClient } from "../src/lib/llm/deepseek";
 import { loadEnv } from "../src/config/env";
@@ -92,6 +93,15 @@ async function run() {
   for (const pid of due.opportunities) {
     await runJob(db, { type: "weekly_opportunities", projectId: pid, date: today, handler: weeklyOpportunitiesHandler() });
   }
+
+  // Self-healing weekly AI-visibility: scan Google-connected projects not scanned
+  // in 7 days and email the week-over-week report (email is best-effort).
+  await runWeeklyAiVisibility({
+    db,
+    now: new Date(),
+    env,
+    scan: (pid) => runJob(db, { type: "ai_visibility_scan", projectId: pid, date: today, handler: aiVisibilityScanHandler() }).then(() => undefined),
+  }).catch((e) => console.error("[worker] weekly ai-visibility pass failed:", e));
 }
 
 // Drain the on-demand queue continuously: run one job to completion, immediately
