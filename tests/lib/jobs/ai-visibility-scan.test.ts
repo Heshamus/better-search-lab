@@ -23,7 +23,8 @@ describe("aiVisibilityScanHandler", () => {
       topQueries: [
         { key: "best ai seo tool", clicks: 5, impressions: 300, ctr: 0.016, position: 6 },
         { key: "automated blog publishing", clicks: 3, impressions: 150, ctr: 0.02, position: 9 },
-        { key: "harperflow", clicks: 2, impressions: 50, ctr: 0.04, position: 3 }, // brand — must be filtered
+        { key: "harperflow", clicks: 2, impressions: 50, ctr: 0.04, position: 3 }, // brand — filtered
+        { key: '"frase.io" -site:reddit.com -site:x.com', clicks: 1, impressions: 40, ctr: 0.02, position: 5 }, // junk — filtered
       ],
       topPages: [],
     });

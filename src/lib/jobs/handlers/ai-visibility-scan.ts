@@ -22,6 +22,13 @@ function isBrandQuery(q: string, name: string, domain: string): boolean {
   return [root, nameTok].filter((x) => x.length >= 3).some((tok) => t.includes(tok));
 }
 
+/** Skip GSC "queries" that aren't natural buyer questions — search-operator
+ *  strings (site:/-site:), quoted exact-match probes, or overly long ones. They
+ *  read as noise in the work-list and waste engine calls. */
+function isJunkQuery(q: string): boolean {
+  return q.length > 90 || /\bsite:/i.test(q) || /["']/.test(q);
+}
+
 function parseStringArray(content: string): string[] {
   let s = content.trim();
   const fenced = s.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
@@ -80,7 +87,7 @@ export function aiVisibilityScanHandler(opts?: { fetchImpl?: typeof fetch }) {
     const gsc = await getGscData(db, projectId!);
     const gscQueries = (gsc?.topQueries ?? [])
       .map((q) => q.key)
-      .filter((k) => typeof k === "string" && k.length >= 3 && !isBrandQuery(k, name, domain));
+      .filter((k) => typeof k === "string" && k.length >= 3 && !isBrandQuery(k, name, domain) && !isJunkQuery(k));
 
     const generate = async (): Promise<string[]> => {
       if (!env.DEEPSEEK_API_KEY) return [];
