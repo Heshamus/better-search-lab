@@ -1,0 +1,283 @@
+{
+  "tasks": [
+    {
+      "status_code": 20000,
+      "result": [
+        {
+          "items": [
+            {
+              "se_type": "google",
+              "keyword": "notion alternative",
+              "location_code": 2840,
+              "language_code": "en",
+              "search_partners": false,
+              "keyword_info": {
+                "se_type": "google",
+                "last_updated_time": "2026-07-11 10:39:32 +00:00",
+                "competition": 0.31,
+                "competition_level": "LOW",
+                "cpc": 13.65,
+                "search_volume": 720,
+                "low_top_of_page_bid": 3,
+                "high_top_of_page_bid": 10.99,
+                "categories": [
+                  10008
+                ],
+                "monthly_searches": [
+                  {
+                    "year": 2026,
+                    "month": 6,
+                    "search_volume": 720
+                  },
+                  {
+                    "year": 2026,
+                    "month": 5,
+                    "search_volume": 720
+                  },
+                  {
+                    "year": 2026,
+                    "month": 4,
+                    "search_volume": 720
+                  },
+                  {
+                    "year": 2026,
+                    "month": 3,
+                    "search_volume": 880
+                  },
+                  {
+                    "year": 2026,
+                    "month": 2,
+                    "search_volume": 720
+                  },
+                  {
+                    "year": 2026,
+                    "month": 1,
+                    "search_volume": 720
+                  },
+                  {
+                    "year": 2025,
+                    "month": 12,
+                    "search_volume": 720
+                  },
+                  {
+                    "year": 2025,
+                    "month": 11,
+                    "search_volume": 720
+                  },
+                  {
+                    "year": 2025,
+                    "month": 10,
+                    "search_volume": 720
+                  },
+                  {
+                    "year": 2025,
+                    "month": 9,
+                    "search_volume": 1000
+                  },
+                  {
+                    "year": 2025,
+                    "month": 8,
+                    "search_volume": 880
+                  },
+                  {
+                    "year": 2025,
+                    "month": 7,
+                    "search_volume": 720
+                  },
+                  {
+                    "year": 2025,
+                    "month": 6,
+                    "search_volume": 720
+                  },
+                  {
+                    "year": 2025,
+                    "month": 5,
+                    "search_volume": 880
+                  },
+                  {
+                    "year": 2025,
+                    "month": 4,
+                    "search_volume": 880
+                  }
+                ],
+                "search_volume_trend": {
+                  "monthly": 0,
+                  "quarterly": 0,
+                  "yearly": 0
+                }
+              },
+              "keyword_info_normalized_with_bing": null,
+              "keyword_info_normalized_with_clickstream": null,
+              "clickstream_keyword_info": null,
+              "keyword_properties": {
+                "se_type": "google",
+                "core_keyword": "notion alternatives",
+                "synonym_clustering_algorithm": "text_processing",
+                "keyword_difficulty": 2,
+                "detected_language": "en",
+                "is_another_language": false
+              },
+              "serp_info": null,
+              "avg_backlinks_info": {
+                "se_type": "google",
+                "backlinks": 16.2,
+                "dofollow": 10.5,
+                "referring_pages": 12,
+                "referring_domains": 6.1,
+                "referring_main_domains": 5.4,
+                "rank": 57.1,
+                "main_domain_rank": 585.4,
+                "last_updated_time": "2026-08-02 15:15:26 +00:00"
+              },
+              "search_intent_info": {
+                "se_type": "google",
+                "main_intent": "informational",
+                "foreign_intent": [
+                  "commercial",
+                  "navigational"
+                ],
+                "last_updated_time": "2026-04-29 16:22:54 +00:00"
+              }
+            },
+            {
+              "se_type": "google",
+              "keyword": "project management software",
+              "location_code": 2840,
+              "language_code": "en",
+              "search_partners": false,
+              "keyword_info": {
+                "se_type": "google",
+                "last_updated_time": "2026-07-14 22:29:53 +00:00",
+                "competition": 0.03,
+                "competition_level": "LOW",
+                "cpc": 49.7,
+                "search_volume": 135000,
+                "low_top_of_page_bid": 9.01,
+                "high_top_of_page_bid": 62.1,
+                "categories": [
+                  10019,
+                  10168,
+                  10296,
+                  10885,
+                  11270,
+                  12209
+                ],
+                "monthly_searches": [
+                  {
+                    "year": 2026,
+                    "month": 6,
+                    "search_volume": 246000
+                  },
+                  {
+                    "year": 2026,
+                    "month": 5,
+                    "search_volume": 550000
+                  },
+                  {
+                    "year": 2026,
+                    "month": 4,
+                    "search_volume": 135000
+                  },
+                  {
+                    "year": 2026,
+                    "month": 3,
+                    "search_volume": 90500
+                  },
+                  {
+                    "year": 2026,
+                    "month": 2,
+                    "search_volume": 74000
+                  },
+                  {
+                    "year": 2026,
+                    "month": 1,
+                    "search_volume": 60500
+                  },
+                  {
+                    "year": 2025,
+                    "month": 12,
+                    "search_volume": 40500
+                  },
+                  {
+                    "year": 2025,
+                    "month": 11,
+                    "search_volume": 60500
+                  },
+                  {
+                    "year": 2025,
+                    "month": 10,
+                    "search_volume": 74000
+                  },
+                  {
+                    "year": 2025,
+                    "month": 9,
+                    "search_volume": 90500
+                  },
+                  {
+                    "year": 2025,
+                    "month": 8,
+                    "search_volume": 246000
+                  },
+                  {
+                    "year": 2025,
+                    "month": 7,
+                    "search_volume": 110000
+                  },
+                  {
+                    "year": 2025,
+                    "month": 6,
+                    "search_volume": 90500
+                  },
+                  {
+                    "year": 2025,
+                    "month": 5,
+                    "search_volume": 74000
+                  },
+                  {
+                    "year": 2025,
+                    "month": 4,
+                    "search_volume": 49500
+                  }
+                ],
+                "search_volume_trend": {
+                  "monthly": -55,
+                  "quarterly": 82,
+                  "yearly": 172
+                }
+              },
+              "keyword_info_normalized_with_bing": null,
+              "keyword_info_normalized_with_clickstream": null,
+              "clickstream_keyword_info": null,
+              "keyword_properties": {
+                "se_type": "google",
+                "core_keyword": "project management softwares",
+                "synonym_clustering_algorithm": "text_processing",
+                "keyword_difficulty": 51,
+                "detected_language": "en",
+                "is_another_language": false
+              },
+              "serp_info": null,
+              "avg_backlinks_info": {
+                "se_type": "google",
+                "backlinks": 1513.7,
+                "dofollow": 728.5,
+                "referring_pages": 1109.9,
+                "referring_domains": 347.5,
+                "referring_main_domains": 328.2,
+                "rank": 265.2,
+                "main_domain_rank": 532.3,
+                "last_updated_time": "2026-07-30 03:55:18 +00:00"
+              },
+              "search_intent_info": {
+                "se_type": "google",
+                "main_intent": "commercial",
+                "foreign_intent": null,
+                "last_updated_time": "2026-04-29 17:30:59 +00:00"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
