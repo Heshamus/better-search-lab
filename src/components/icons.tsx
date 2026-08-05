@@ -55,6 +55,11 @@ export const IconResearch = (p: SVGProps<SVGSVGElement>) => (
     <path d="M20 20l-3.8-3.8" />
   </Base>
 );
+export const IconKeywordOverview = (p: SVGProps<SVGSVGElement>) => (
+  <Base {...p}>
+    <path d="M4 7h16M4 12h16M4 17h10" />
+  </Base>
+);
 export const IconCompetitors = (p: SVGProps<SVGSVGElement>) => (
   <Base {...p}>
     <circle cx="8.5" cy="9" r="2.7" />
@@ -117,6 +122,7 @@ export const NAV_ICONS: Record<string, (p: SVGProps<SVGSVGElement>) => React.Rea
   rankings: IconRankings,
   keywords: IconKeywords,
   research: IconResearch,
+  "keyword-overview": IconKeywordOverview,
   competitors: IconCompetitors,
   audit: IconAudit,
   backlinks: IconBacklinks,
