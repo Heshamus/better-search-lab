@@ -34,7 +34,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="mb-7 flex items-center gap-2.5 px-2">
           <Logo />
           <div className="leading-tight">
-            <div className="text-sm font-semibold tracking-tight text-white">SEO Platform</div>
+            <div className="text-sm font-semibold tracking-tight text-white">Better Search Lab</div>
             <div className="text-[0.65rem] font-medium tracking-wide text-neutral-500">SEARCH &amp; GEO VISIBILITY</div>
           </div>
         </div>

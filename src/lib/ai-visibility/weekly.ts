@@ -44,7 +44,7 @@ export async function runWeeklyAiVisibility(deps: {
       const res = await sendEmail(
         {
           to: env.REPORT_EMAIL_TO ?? "hesham@betterbrainlab.org",
-          from: env.REPORT_EMAIL_FROM ?? "HarperFlow SEO <reports@harperflow.io>",
+          from: env.REPORT_EMAIL_FROM ?? "Better Search Lab <reports@harperflow.io>",
           subject: report.subject,
           html: report.html,
           text: report.text,

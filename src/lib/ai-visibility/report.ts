@@ -76,7 +76,7 @@ export function buildWeeklyReport(opts: {
   ${competitors.length ? `<table role="presentation" style="border-collapse:collapse;font-size:13px">${competitors.map((c) => `<tr><td style="padding:2px 16px 2px 0;color:#0f172a">${esc(c.domain)}</td><td style="padding:2px 0;color:#64748b">${c.count} citations</td></tr>`).join("")}</table>` : '<p style="color:#94a3b8">— none —</p>'}
 
   <p style="margin:22px 0 0"><a href="${appUrl}/ai-visibility" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:9px 16px;border-radius:8px;font-size:13px">Open AI Visibility →</a></p>
-  <p style="margin:16px 0 0;color:#94a3b8;font-size:11px">Automated weekly scan from your SEO platform.</p>
+  <p style="margin:16px 0 0;color:#94a3b8;font-size:11px">Automated weekly scan from Better Search Lab.</p>
 </div>`;
 
   const textLines = [
