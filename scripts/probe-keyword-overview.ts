@@ -54,8 +54,11 @@ async function main() {
     }
   }
 
-  // Trim to the shape the mapper/test consume.
-  const trimmed = { tasks: [{ status_code: task?.status_code ?? 20000, result: [{ items }] }] };
+  // Trim to the shape the mapper/test consume. Carries BOTH the top-level envelope
+  // status_code/status_message and the task-level ones — assertTasksOk requires
+  // both, and a real DataForSEO success response always has both (an earlier probe
+  // dropped the top-level pair, which produced a fixture assertTasksOk would reject).
+  const trimmed = { status_code: resp?.status_code ?? 20000, status_message: resp?.status_message ?? "Ok.", tasks: [{ status_code: task?.status_code ?? 20000, status_message: task?.status_message ?? "Ok.", result: [{ items }] }] };
 
   // Emit the fixture JSON on stdout between markers — robust when running inside
   // a one-off container where a file write wouldn't survive.

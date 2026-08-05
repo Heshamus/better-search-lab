@@ -6,12 +6,7 @@ const clientFrom = (resp: unknown) => ({ post: async () => resp }) as any;
 
 describe("keywordOverviewBulk", () => {
   it("maps the real fixture: trims history to the most recent 12 months (ascending) and reads the yearly trend", async () => {
-    // The probe's trim kept only tasks[0].status_code, not the top-level envelope
-    // status_code that a real DataForSEO response always carries (see the sibling
-    // keyword-overview-live.json fixture) and that assertTasksOk requires alongside
-    // the task-level one. Restore it here, in the mock only — the fixture file on
-    // disk is untouched; this does not alter any keyword data.
-    const client = clientFrom({ status_code: 20000, ...fixture });
+    const client = clientFrom(fixture);
     const { rows, rowsBilled } = await keywordOverviewBulk(client, {
       keywords: ["notion alternative", "project management software"],
       locationCode: 2840, languageCode: "en",
