@@ -9,6 +9,7 @@ export interface RankingRow {
   rankAbsolute: number | null;
   url: string | null;
   serpFeatures: string[];
+  ownedFeatures: string[];
   fetchStatus: string;
   volume: number | null;
   difficulty: number | null;
@@ -71,6 +72,7 @@ export async function listRankings(db: any, projectId: string, asOf: Date): Prom
       rankAbsolute: isOk ? latest.rankAbsolute ?? null : null,
       url: isOk ? latest.url ?? null : null,
       serpFeatures: isOk ? latest.serpFeatures ?? [] : [],
+      ownedFeatures: isOk ? latest.ownedFeatures ?? [] : [],
       fetchStatus,
       volume: metrics?.searchVolume ?? null,
       difficulty: metrics?.difficulty ?? null,

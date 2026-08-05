@@ -3,7 +3,7 @@ import { assembleOpportunities } from "@/lib/core/opportunity-engine";
 import type { DetectorInput, KeywordSignal } from "@/lib/core/detectors/types";
 
 const d = (s: string) => new Date(s + "T00:00:00Z");
-const snap = (rank: number, features: string[] = [], ownUrls: string[] = []) => ({ keywordId: "k", capturedAt: d("2026-08-10"), rankAbsolute: rank, fetchStatus: "ok", serpFeatures: features, ownUrls });
+const snap = (rank: number, features: string[] = [], ownUrls: string[] = []) => ({ keywordId: "k", capturedAt: d("2026-08-10"), rankAbsolute: rank, fetchStatus: "ok", serpFeatures: features, ownedFeatures: [], ownUrls });
 const ks = (o: Partial<KeywordSignal>): KeywordSignal => ({ keywordId: "k1", keyword: "seo reporting software", tags: ["seo"], snapshots: [snap(8)], ownUrls: [], volume: 2000, difficulty: 25, gscImpressions: null, gscClicks: null, gscCtr: null, gscPosition: null, ...o });
 
 describe("assembleOpportunities", () => {

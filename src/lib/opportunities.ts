@@ -48,6 +48,7 @@ export async function loadDetectorInput(db: any, projectId: string, asOf: Date):
       rankAbsolute: s.rankAbsolute,
       fetchStatus: s.fetchStatus,
       serpFeatures: s.serpFeatures,
+      ownedFeatures: s.ownedFeatures ?? [],
       ownUrls: s.ownUrls,
     }));
 

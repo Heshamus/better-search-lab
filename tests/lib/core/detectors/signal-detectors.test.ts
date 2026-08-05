@@ -8,7 +8,7 @@ import type { DetectorInput, KeywordSignal, GapSignal } from "@/lib/core/detecto
 const d = (s: string) => new Date(s + "T00:00:00Z");
 const base = (over: Partial<DetectorInput>): DetectorInput => ({ keywordSignals: [], gapSignals: [], pageSignals: [], asOf: d("2026-08-10"), ...over });
 const ks = (o: Partial<KeywordSignal>): KeywordSignal => ({ keywordId: "k", keyword: "seo reporting", tags: [], snapshots: [], ownUrls: [], volume: 1000, difficulty: 30, gscImpressions: null, gscClicks: null, gscCtr: null, gscPosition: null, ...o });
-const snap = (rank: number | null, features: string[] = [], ownUrls: string[] = []) => ({ keywordId: "k", capturedAt: d("2026-08-10"), rankAbsolute: rank, fetchStatus: "ok", serpFeatures: features, ownUrls });
+const snap = (rank: number | null, features: string[] = [], ownUrls: string[] = [], ownedFeatures: string[] = []) => ({ keywordId: "k", capturedAt: d("2026-08-10"), rankAbsolute: rank, fetchStatus: "ok", serpFeatures: features, ownedFeatures, ownUrls });
 
 describe("gap", () => {
   it("flags winnable keywords a competitor ranks for", () => {
@@ -35,6 +35,14 @@ describe("serpFeature", () => {
   });
   it("ignores when we're not page-1", () => {
     expect(serpFeature(base({ keywordSignals: [ks({ snapshots: [snap(15, ["featured_snippet"])] })] }))).toHaveLength(0);
+  });
+  it("does not flag a feature we already own (only surfaces the unowned one)", () => {
+    // snippet is owned → not an opportunity; the unowned ai_overview is
+    const out = serpFeature(base({ keywordSignals: [ks({ snapshots: [snap(3, ["featured_snippet", "ai_overview"], [], ["featured_snippet"])] })] }));
+    expect(out).toHaveLength(1);
+    expect(out[0].evidence.feature).toBe("ai_overview");
+    // owning every present feature → nothing to capture
+    expect(serpFeature(base({ keywordSignals: [ks({ snapshots: [snap(3, ["featured_snippet"], [], ["featured_snippet"])] })] }))).toHaveLength(0);
   });
 });
 

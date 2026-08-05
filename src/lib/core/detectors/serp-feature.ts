@@ -18,13 +18,15 @@ function latestOkSnap(snapshots: DetectorSnap[]): DetectorSnap | null {
   return best;
 }
 
-/** A page-1 keyword whose latest SERP shows a capturable feature (snippet/PAA/AI overview). */
+/** A page-1 keyword whose latest SERP shows a capturable feature (snippet/PAA/AI
+ *  overview) that we DON'T already own — a feature we hold is not an opportunity. */
 export function serpFeature(input: DetectorInput): Candidate[] {
   const out: Candidate[] = [];
   for (const ks of input.keywordSignals) {
     const latest = latestOkSnap(ks.snapshots);
     if (!latest || latest.rankAbsolute == null || latest.rankAbsolute > PAGE1) continue;
-    const feature = latest.serpFeatures.find((f) => CAPTURABLE.has(f));
+    const owned = new Set(latest.ownedFeatures ?? []);
+    const feature = latest.serpFeatures.find((f) => CAPTURABLE.has(f) && !owned.has(f));
     if (!feature) continue;
     out.push({
       type: "serp_feature",

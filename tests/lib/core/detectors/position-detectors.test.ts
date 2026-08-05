@@ -14,6 +14,7 @@ const snap = (date: string, rank: number | null) => ({
   rankAbsolute: rank,
   fetchStatus: "ok",
   serpFeatures: [],
+  ownedFeatures: [],
   ownUrls: [],
 });
 const ks = (over: Partial<KeywordSignal>): KeywordSignal => ({

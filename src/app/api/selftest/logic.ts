@@ -27,6 +27,7 @@ export function buildSyntheticInput(): DetectorInput {
             rankAbsolute: 8, // striking distance (5-20)
             fetchStatus: "ok",
             serpFeatures: [],
+            ownedFeatures: [],
             ownUrls: [],
           },
         ],

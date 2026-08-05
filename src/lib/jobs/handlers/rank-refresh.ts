@@ -21,13 +21,13 @@ export function rankRefreshHandler(client: DataForSeoClient, serp: typeof serpOr
 
     await mapLimit(tracked, SERP_CONCURRENCY, async (kw: any) => {
       try {
-        const { items } = await serp(client, { keyword: kw.keyword, locationCode: kw.locationCode, languageCode: kw.languageCode, device: kw.device });
+        const { items, ownedFeatures } = await serp(client, { keyword: kw.keyword, locationCode: kw.locationCode, languageCode: kw.languageCode, device: kw.device, ownDomain: project.domain });
         const hit = findDomainRank(items, project.domain);
         const features = items[0]?.serpFeatures ?? [];
         const ownUrls = [...new Set(items.filter((i) => i.domain === project.domain).map((i) => i.url))];
         await db.insert(rankSnapshots).values({
           keywordId: kw.id, rankAbsolute: hit?.rankAbsolute ?? null, rankGroup: hit?.rankGroup ?? null,
-          url: hit?.url ?? null, serpFeatures: features, fetchStatus: "ok", ownUrls,
+          url: hit?.url ?? null, serpFeatures: features, ownedFeatures, fetchStatus: "ok", ownUrls,
         });
       } catch (e: any) {
         await db.insert(rankSnapshots).values({ keywordId: kw.id, fetchStatus: "failed", reason: String(e?.message ?? e) });

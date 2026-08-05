@@ -56,6 +56,8 @@ export const rankSnapshots = pgTable("rank_snapshots", {
   rankGroup: integer("rank_group"),
   url: text("url"),
   serpFeatures: jsonb("serp_features").$type<string[]>().notNull().default([]),
+  // Capturable SERP features THIS project's domain currently owns (subset of serpFeatures).
+  ownedFeatures: jsonb("owned_features").$type<string[]>().notNull().default([]),
   fetchStatus: text("fetch_status").notNull().default("ok"), // ok | failed
   reason: text("reason"),
   ownUrls: jsonb("own_urls").$type<string[]>().notNull().default([]),

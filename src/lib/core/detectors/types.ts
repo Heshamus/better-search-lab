@@ -7,7 +7,7 @@ export type OpportunityType =
   | "ctr_gap" | "content_vs_ranking";
 
 /** A rank snapshot enriched with the fields detectors read. */
-export type DetectorSnap = Snap & { serpFeatures: string[]; ownUrls: string[] };
+export type DetectorSnap = Snap & { serpFeatures: string[]; ownUrls: string[]; ownedFeatures: string[] };
 
 export interface KeywordSignal {
   keywordId: string;

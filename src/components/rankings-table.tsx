@@ -6,6 +6,13 @@ import { RankSparkline, type RankSparklinePoint } from "@/components/rank-sparkl
 import { KdMeter, PositionBadge } from "@/components/viz";
 import { formatCompact } from "@/lib/format";
 
+const FEATURE_LABEL: Record<string, string> = {
+  featured_snippet: "Featured snippet",
+  people_also_ask: "People also ask",
+  ai_overview: "AI Overview",
+  local_pack: "Local pack",
+};
+
 type SortKey = "rankAbsolute" | "delta7" | "volume" | "difficulty";
 type SortState = { key: SortKey | null; dir: 1 | -1 };
 
@@ -218,14 +225,23 @@ export function RankingsTable({ rows }: { rows: RankingRow[] }) {
                   <td className="px-4 py-2.5"><KdMeter kd={row.difficulty} /></td>
                   <td className="px-4 py-2.5">
                     <div className="flex flex-wrap gap-1">
-                      {row.serpFeatures.map((feature) => (
-                        <span
-                          key={feature}
-                          className="rounded-md bg-neutral-800/70 px-1.5 py-0.5 text-[10px] font-medium text-neutral-400"
-                        >
-                          {feature}
-                        </span>
-                      ))}
+                      {row.serpFeatures.map((feature) => {
+                        const owned = row.ownedFeatures.includes(feature);
+                        return (
+                          <span
+                            key={feature}
+                            title={owned ? "You own this feature" : "Present on the SERP — not yours yet"}
+                            className={
+                              owned
+                                ? "rounded-md bg-accent/15 px-1.5 py-0.5 text-[10px] font-medium text-accent"
+                                : "rounded-md bg-neutral-800/70 px-1.5 py-0.5 text-[10px] font-medium text-neutral-400"
+                            }
+                          >
+                            {owned ? "★ " : ""}
+                            {FEATURE_LABEL[feature] ?? feature}
+                          </span>
+                        );
+                      })}
                     </div>
                   </td>
                 </tr>

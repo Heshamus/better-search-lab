@@ -16,6 +16,7 @@ function makeRow(overrides: Partial<RankingRow> = {}): RankingRow {
     rankAbsolute: 10,
     url: "https://example.com/x",
     serpFeatures: [],
+    ownedFeatures: [],
     fetchStatus: "ok",
     volume: 500,
     difficulty: 20,
@@ -86,8 +87,8 @@ describe("RankingsTable", () => {
     // fetchStatus: unknown — "not yet checked", distinct from "failed".
     expect(screen.getByTestId("position-kw-5").textContent).toBe("not yet checked");
 
-    // SERP feature badge renders; an empty list renders nothing extra.
-    expect(within(screen.getByTestId("ranking-row-kw-1")).getByText("featured_snippet")).toBeTruthy();
+    // SERP feature badge renders (prettified); an empty list renders nothing extra.
+    expect(within(screen.getByTestId("ranking-row-kw-1")).getByText("Featured snippet")).toBeTruthy();
   });
 
   it("re-sorts rows when the Position header is clicked (nulls sort last)", () => {

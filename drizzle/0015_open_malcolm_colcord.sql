@@ -1,0 +1,1 @@
+ALTER TABLE "rank_snapshots" ADD COLUMN "owned_features" jsonb DEFAULT '[]'::jsonb NOT NULL;
