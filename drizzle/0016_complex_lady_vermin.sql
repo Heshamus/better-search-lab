@@ -1,0 +1,1 @@
+ALTER TABLE "gsc_snapshots" ADD COLUMN "rising_queries" jsonb DEFAULT '[]'::jsonb NOT NULL;

@@ -1,7 +1,7 @@
 import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, numeric, real, index } from "drizzle-orm/pg-core";
 import type { AuditIssue } from "@/lib/audit/checks";
 import type { BacklinkSummary, ReferringDomain, Anchor } from "@/lib/dataforseo/backlinks";
-import type { GscTotals, GscTopRow } from "@/lib/google/gsc";
+import type { GscTotals, GscTopRow, RisingQuery } from "@/lib/google/gsc";
 import type { GaTotals, GaChannelRow, GaPageRow } from "@/lib/google/analytics";
 import type { PerEngine, PerQuery, CitedSource } from "@/lib/ai-visibility/types";
 
@@ -212,6 +212,7 @@ export const gscSnapshots = pgTable("gsc_snapshots", {
   totals: jsonb("totals").$type<GscTotals | null>(),
   topQueries: jsonb("top_queries").$type<GscTopRow[]>().notNull().default([]),
   topPages: jsonb("top_pages").$type<GscTopRow[]>().notNull().default([]),
+  risingQueries: jsonb("rising_queries").$type<RisingQuery[]>().notNull().default([]),
 });
 
 // Daily GA4 sessions/users series — powers the traffic trend chart. Sessions is

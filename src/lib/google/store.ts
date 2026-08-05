@@ -1,6 +1,6 @@
 import { googleConnections, gscDaily, gscSnapshots, gaDaily, gaSnapshots } from "@/db/schema";
 import { asc, desc, eq } from "drizzle-orm";
-import type { GscTotals, GscTopRow } from "@/lib/google/gsc";
+import type { GscTotals, GscTopRow, RisingQuery } from "@/lib/google/gsc";
 import type { GaTotals, GaChannelRow, GaPageRow } from "@/lib/google/analytics";
 
 export interface GscConnection {
@@ -22,6 +22,7 @@ export interface GscData {
   totals: GscTotals | null;
   topQueries: GscTopRow[];
   topPages: GscTopRow[];
+  risingQueries: RisingQuery[];
   connectedAt: Date;
 }
 
@@ -76,9 +77,15 @@ export async function replaceGscDaily(db: any, projectId: string, rows: GscDaily
 export async function saveGscSnapshot(
   db: any,
   projectId: string,
-  data: { totals: GscTotals; topQueries: GscTopRow[]; topPages: GscTopRow[] },
+  data: { totals: GscTotals; topQueries: GscTopRow[]; topPages: GscTopRow[]; risingQueries?: RisingQuery[] },
 ): Promise<void> {
-  await db.insert(gscSnapshots).values({ projectId, totals: data.totals, topQueries: data.topQueries, topPages: data.topPages });
+  await db.insert(gscSnapshots).values({
+    projectId,
+    totals: data.totals,
+    topQueries: data.topQueries,
+    topPages: data.topPages,
+    risingQueries: data.risingQueries ?? [],
+  });
 }
 
 /** Everything the Search Console dashboard needs, or null if never synced. */
@@ -100,6 +107,7 @@ export async function getGscData(db: any, projectId: string): Promise<GscData | 
     totals: (snap.totals ?? null) as GscTotals | null,
     topQueries: (snap.topQueries ?? []) as GscTopRow[],
     topPages: (snap.topPages ?? []) as GscTopRow[],
+    risingQueries: (snap.risingQueries ?? []) as RisingQuery[],
     connectedAt: snap.createdAt,
   };
 }

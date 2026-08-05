@@ -75,3 +75,39 @@ export async function searchAnalytics(
     position: r.position ?? 0,
   }));
 }
+
+// A query whose impressions are accelerating: recent-period impressions well
+// above the prior period. `prior: 0` = brand-new demand. The earliest, cleanest
+// trend signal because it's YOUR first-party demand moving (no third-party lag).
+export interface RisingQuery {
+  query: string;
+  recent: number; // impressions, recent period
+  prior: number; // impressions, prior period
+  delta: number; // recent - prior
+}
+
+/** Rank queries by impressions growth (recent vs prior period), rising first. */
+export function computeRisingQueries(
+  recent: GscRow[],
+  prior: GscRow[],
+  opts?: { minRecent?: number; minDelta?: number; limit?: number },
+): RisingQuery[] {
+  const minRecent = opts?.minRecent ?? 20;
+  const minDelta = opts?.minDelta ?? 10;
+  const limit = opts?.limit ?? 15;
+  const priorMap = new Map<string, number>();
+  for (const r of prior) {
+    const q = r.keys[0];
+    if (q) priorMap.set(q, r.impressions);
+  }
+  const out: RisingQuery[] = [];
+  for (const r of recent) {
+    const q = r.keys[0] ?? "";
+    if (!q) continue;
+    const rec = r.impressions;
+    const delta = rec - (priorMap.get(q) ?? 0);
+    if (rec < minRecent || delta < minDelta) continue;
+    out.push({ query: q, recent: rec, prior: priorMap.get(q) ?? 0, delta });
+  }
+  return out.sort((a, b) => b.delta - a.delta).slice(0, limit);
+}

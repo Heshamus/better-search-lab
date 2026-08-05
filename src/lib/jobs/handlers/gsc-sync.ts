@@ -1,7 +1,7 @@
 import { loadEnv } from "@/config/env";
 import { getConnection, replaceGscDaily, saveGscSnapshot } from "@/lib/google/store";
 import { refreshAccessToken } from "@/lib/google/oauth";
-import { searchAnalytics, type GscRow, type GscTopRow } from "@/lib/google/gsc";
+import { searchAnalytics, computeRisingQueries, type GscRow, type GscTopRow } from "@/lib/google/gsc";
 
 function dateStr(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -30,11 +30,18 @@ export function gscSyncHandler(opts?: { fetchImpl?: typeof fetch }) {
     const end = new Date();
     const start = new Date(end.getTime() - 90 * 86_400_000);
     const window = { startDate: dateStr(start), endDate: dateStr(end) };
-    const [daily, queries, pages] = await Promise.all([
+    // Rising queries: recent 28 days vs the prior 28, per query — the earliest,
+    // first-party trend signal (your own demand moving before you even rank).
+    const recentWin = { startDate: dateStr(new Date(end.getTime() - 28 * 86_400_000)), endDate: dateStr(end) };
+    const priorWin = { startDate: dateStr(new Date(end.getTime() - 56 * 86_400_000)), endDate: dateStr(new Date(end.getTime() - 28 * 86_400_000)) };
+    const [daily, queries, pages, recentQ, priorQ] = await Promise.all([
       searchAnalytics(accessToken, conn.propertyUrl, { ...window, dimensions: ["date"] }, opts?.fetchImpl),
       searchAnalytics(accessToken, conn.propertyUrl, { ...window, dimensions: ["query"], rowLimit: 25 }, opts?.fetchImpl),
       searchAnalytics(accessToken, conn.propertyUrl, { ...window, dimensions: ["page"], rowLimit: 25 }, opts?.fetchImpl),
+      searchAnalytics(accessToken, conn.propertyUrl, { ...recentWin, dimensions: ["query"], rowLimit: 500 }, opts?.fetchImpl),
+      searchAnalytics(accessToken, conn.propertyUrl, { ...priorWin, dimensions: ["query"], rowLimit: 500 }, opts?.fetchImpl),
     ]);
+    const risingQueries = computeRisingQueries(recentQ, priorQ);
 
     await replaceGscDaily(
       db,
@@ -52,6 +59,7 @@ export function gscSyncHandler(opts?: { fetchImpl?: typeof fetch }) {
       totals: { clicks, impressions, ctr, position },
       topQueries: toTop(queries),
       topPages: toTop(pages),
+      risingQueries,
     });
 
     return { rows: daily.length, cost: 0 };

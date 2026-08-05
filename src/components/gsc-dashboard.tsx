@@ -62,6 +62,31 @@ export function GscDashboard({ data }: { data: GscData }) {
         </div>
       </div>
 
+      <div className="panel overflow-x-auto">
+        <div className="flex items-baseline justify-between gap-2 border-b border-neutral-800 px-4 py-2.5">
+          <h3 className="text-sm font-semibold text-white">Rising queries</h3>
+          <span className="eyebrow">last 28d vs prior · your demand accelerating</span>
+        </div>
+        <table className="w-full min-w-[360px] border-collapse text-left text-sm">
+          <thead>
+            <tr className="border-b border-neutral-800">
+              <th className="eyebrow px-4 py-2.5">Query</th>
+              <th className="eyebrow px-4 py-2.5">Impr. (28d)</th>
+              <th className="eyebrow px-4 py-2.5">Growth</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.risingQueries.length ? data.risingQueries.map((r) => (
+              <tr key={r.query} className="border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20">
+                <td className="px-4 py-2.5 font-medium text-white">{r.query}</td>
+                <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(r.recent)}</span></td>
+                <td className="px-4 py-2.5"><span className="tnum font-medium text-accent">▲ {formatCompact(r.delta)}{r.prior === 0 ? " · new" : ""}</span></td>
+              </tr>
+            )) : <tr><td colSpan={3} className="px-4 py-6 text-center text-sm text-neutral-500">No rising queries yet — they surface as demand for your topics accelerates.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="panel overflow-x-auto">
           <div className="border-b border-neutral-800 px-4 py-2.5"><h3 className="text-sm font-semibold text-white">Top queries</h3></div>
