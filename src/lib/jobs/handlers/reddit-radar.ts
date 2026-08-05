@@ -1,7 +1,11 @@
+import { and, eq } from "drizzle-orm";
+import { keywords, projects } from "@/db/schema";
 import { loadEnv } from "@/config/env";
 import { getGscData } from "@/lib/google/store";
+import { DeepSeekClient } from "@/lib/llm/deepseek";
 import { searchRedditThreads } from "@/lib/reddit/serpapi";
 import { runRedditRadar } from "@/lib/reddit/radar";
+import { filterRelevantThreads } from "@/lib/reddit/relevance";
 import { saveRadar } from "@/lib/reddit/store";
 
 const normQ = (s: string): string => s.toLowerCase().trim().replace(/\s+/g, " ");
@@ -36,9 +40,23 @@ export function redditRadarHandler(opts?: { fetchImpl?: typeof fetch }) {
     for (const r of gsc.risingQueries) add(r.query, r.page); // accelerating demand first
     for (const q of gsc.topQueries) add(q.key, q.page ?? null);
 
+    // Niche context for the relevance judge: the project's own tracked keywords
+    // (they describe the niche) + domain. Drops ambiguous-term noise like
+    // "copy ai alternative" pulling AI-chatbot threads.
+    const [project] = await db.select({ domain: projects.domain }).from(projects).where(eq(projects.id, projectId!));
+    const domain = String(project?.domain ?? "").replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "");
+    const kws = await db
+      .select({ keyword: keywords.keyword })
+      .from(keywords)
+      .where(and(eq(keywords.projectId, projectId!), eq(keywords.isTracked, true)))
+      .limit(25);
+    const niche = kws.map((k: { keyword: string }) => k.keyword).join(", ") || domain;
+    const ds = env.DEEPSEEK_API_KEY ? new DeepSeekClient({ apiKey: env.DEEPSEEK_API_KEY }) : null;
+
     const data = await runRedditRadar({
       terms,
       search: (term) => searchRedditThreads(env.SERPAPI_API_KEY!, term, { recency: "m", fetchImpl: opts?.fetchImpl }),
+      filter: ds ? (results) => filterRelevantThreads(results, { domain, niche, chat: (m) => ds.chat(m) }) : undefined,
       limit: MAX_TERMS,
     });
     await saveRadar(db, projectId!, data);

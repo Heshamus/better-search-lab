@@ -17,6 +17,7 @@ const serp = (subreddit: string) =>
 describe("redditRadarHandler", () => {
   it("scans GSC terms via SerpApi and saves a radar snapshot (fruitful terms only)", async () => {
     vi.stubEnv("SERPAPI_API_KEY", "k");
+    vi.stubEnv("DEEPSEEK_API_KEY", ""); // no relevance filter → raw threads, deterministic
     const t = await createTestDb();
     close = t.close;
     const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });

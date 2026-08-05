@@ -49,7 +49,7 @@ export async function searchRedditThreads(
   });
   if (opts?.recency) params.set("tbs", `qdr:${opts.recency}`);
   try {
-    const res = await fetchImpl(`https://serpapi.com/search.json?${params.toString()}`);
+    const res = await fetchImpl(`https://serpapi.com/search.json?${params.toString()}`, { signal: AbortSignal.timeout(30_000) });
     if (!res.ok) return [];
     const j = (await res.json()) as any;
     if (j?.error) return [];

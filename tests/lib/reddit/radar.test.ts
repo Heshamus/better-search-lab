@@ -27,6 +27,17 @@ describe("runRedditRadar", () => {
     expect(out.termsScanned).toBe(3);
   });
 
+  it("applies an injected relevance filter before aggregating", async () => {
+    const terms = [{ term: "copy ai alternative", volume: null, page: null }];
+    const search = async () => [thread("claude", "off-topic AI chat"), thread("SEO", "copy.ai for content")];
+    // filter drops the off-topic thread, keeps the on-topic one
+    const filter = async (results: any[]) => results.map((r) => ({ ...r, threads: r.threads.filter((th: any) => th.subreddit === "SEO") }));
+    const out = await runRedditRadar({ terms, search, filter });
+    expect(out.terms).toHaveLength(1);
+    expect(out.terms[0].threadCount).toBe(1);
+    expect(out.subreddits.map((s) => s.subreddit)).toEqual(["SEO"]); // off-topic subreddit gone
+  });
+
   it("respects the term limit", async () => {
     const terms = Array.from({ length: 30 }, (_, i) => ({ term: `t${i}`, volume: null, page: null }));
     const out = await runRedditRadar({ terms, search: async () => [thread("SEO")], limit: 5 });

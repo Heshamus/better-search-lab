@@ -26,13 +26,28 @@ export interface RedditRadarData {
  * empirical "likely to yield Reddit results" filter) and auto-discovers the
  * subreddits the niche clusters in. Pure over `search`; bounded concurrency.
  */
+export interface TermSpec {
+  term: string;
+  volume: number | null;
+  page: string | null;
+}
+export interface RadarResult {
+  t: TermSpec;
+  threads: RedditThread[];
+}
+
 export async function runRedditRadar(opts: {
-  terms: { term: string; volume: number | null; page: string | null }[];
+  terms: TermSpec[];
   search: (term: string) => Promise<RedditThread[]>;
   limit?: number;
+  // Optional relevance pass over the collected (term, threads) — drops threads
+  // that aren't actually about the niche (ambiguous-term noise). Injected so the
+  // aggregator stays pure and testable.
+  filter?: (results: RadarResult[]) => Promise<RadarResult[]>;
 }): Promise<RedditRadarData> {
   const scanned = opts.terms.slice(0, opts.limit ?? 15);
-  const results = await mapLimit(scanned, 3, async (t) => ({ t, threads: await opts.search(t.term) }));
+  let results: RadarResult[] = await mapLimit(scanned, 3, async (t) => ({ t, threads: await opts.search(t.term) }));
+  if (opts.filter) results = await opts.filter(results);
 
   const subCount = new Map<string, number>();
   const terms: RadarTerm[] = [];
