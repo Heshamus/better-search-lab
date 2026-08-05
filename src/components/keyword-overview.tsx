@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MARKETS, DEFAULT_MARKET } from "@/lib/markets";
+import { MARKETS, DEFAULT_MARKET, type Market } from "@/lib/markets";
 import { parseKeywordList } from "@/lib/keyword-list";
 import { buildKeywordCsv } from "@/lib/keyword-csv";
 import { formatCompact } from "@/lib/format";
@@ -12,7 +12,7 @@ type State =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "error" }
-  | { status: "results"; rows: KeywordOverviewRow[]; dropped: number };
+  | { status: "results"; rows: KeywordOverviewRow[]; dropped: number; market: Market };
 
 type SortKey = "trendPct" | "searchVolume" | "difficulty" | "cpc" | "competition";
 
@@ -51,17 +51,24 @@ export function KeywordOverview() {
       });
       if (!res.ok) { setState({ status: "error" }); return; }
       const data = await res.json();
-      setState({ status: "results", rows: (data.rows ?? []) as KeywordOverviewRow[], dropped: data.dropped ?? 0 });
+      // Snapshot the market actually used for THIS fetch — `market` here is the
+      // same value the request body above just sent. If the user later flips the
+      // dropdown without re-running Look up, the live `market` derived from
+      // `marketLabel` would drift from the data on screen; the results label and
+      // CSV filename must keep claiming the market that was actually fetched.
+      setState({ status: "results", rows: (data.rows ?? []) as KeywordOverviewRow[], dropped: data.dropped ?? 0, market });
     } catch { setState({ status: "error" }); }
   }
 
   function download() {
-    if (rows.length === 0) return;
+    // Narrow on `state` (not the live `market`) so the filename always names the
+    // market that was actually fetched, even if the dropdown moved on since.
+    if (state.status !== "results" || state.rows.length === 0) return;
     const csv = buildKeywordCsv(sorted);
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `keyword-overview-${market.label.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `keyword-overview-${state.market.label.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
   }
@@ -124,7 +131,7 @@ export function KeywordOverview() {
             <p className="text-xs text-at-risk">{state.dropped} keyword{state.dropped === 1 ? "" : "s"} dropped over the 100 cap.</p>
           ) : null}
           <div className="flex items-center justify-between">
-            <span className="text-xs text-neutral-500">{rows.length} keyword{rows.length === 1 ? "" : "s"} · {market.label}</span>
+            <span className="text-xs text-neutral-500">{rows.length} keyword{rows.length === 1 ? "" : "s"} · {state.market.label}</span>
             <button type="button" onClick={download} className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:border-accent dark:border-neutral-700 dark:text-neutral-200">
               Download CSV
             </button>
