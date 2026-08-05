@@ -56,7 +56,14 @@ export function KeywordOverview() {
       // dropdown without re-running Look up, the live `market` derived from
       // `marketLabel` would drift from the data on screen; the results label and
       // CSV filename must keep claiming the market that was actually fetched.
-      setState({ status: "results", rows: (data.rows ?? []) as KeywordOverviewRow[], dropped: data.dropped ?? 0, market });
+      //
+      // `dropped` likewise comes from the CLIENT's `parsed.dropped` (the count
+      // computed from the textarea at lookup time), not `data.dropped` — the
+      // client already pre-caps to 100 before POSTing, so the server's own
+      // `dropped` is always 0 and would make the post-lookup notice permanently
+      // dead. Snapshotting the client value keeps it honest if the cap logic
+      // ever changes (e.g. someone pastes >100 keywords).
+      setState({ status: "results", rows: (data.rows ?? []) as KeywordOverviewRow[], dropped: parsed.dropped, market });
     } catch { setState({ status: "error" }); }
   }
 
@@ -155,7 +162,7 @@ export function KeywordOverview() {
                     <td className="px-4 py-2.5 font-medium text-white">{r.keyword}</td>
                     <td className="px-4 py-2.5"><Sparkline values={r.monthly.map((m) => m.volume ?? 0)} /></td>
                     <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(r.searchVolume)}</span></td>
-                    <td className="px-4 py-2.5"><Delta value={r.trendPct} />{r.trendPct == null ? null : <span className="text-xs text-neutral-500">%</span>}</td>
+                    <td className="px-4 py-2.5"><Delta value={r.trendPct} />{r.trendPct != null && r.trendPct !== 0 ? <span className="text-xs text-neutral-500">%</span> : null}</td>
                     <td className="px-4 py-2.5"><KdMeter kd={r.difficulty} /></td>
                     <td className="px-4 py-2.5"><span className="tnum text-neutral-300">{fmtCpc(r.cpc)}</span></td>
                     <td className="px-4 py-2.5"><span className="tnum text-neutral-400">{r.competition == null ? "—" : r.competition.toFixed(2)}</span></td>

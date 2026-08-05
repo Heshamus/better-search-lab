@@ -46,4 +46,12 @@ describe("POST /api/keyword-overview", () => {
     expect(entry).toMatchObject({ endpoint: "/v3/dataforseo_labs/google/keyword_overview/live", rows: 1 });
     expect(entry.projectId).toBeUndefined();
   });
+
+  it("still returns 200 with rows when the cost-log write fails (billed data must not be discarded)", async () => {
+    (logApiUsage as any).mockRejectedValueOnce(new Error("db down"));
+    const res = await post({ keywords: ["a"], locationCode: 2840, languageCode: "en" });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.rows).toHaveLength(1);
+  });
 });

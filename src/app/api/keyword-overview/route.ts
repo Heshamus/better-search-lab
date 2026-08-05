@@ -29,7 +29,14 @@ export async function POST(req: NextRequest) {
       locationCode: Number(locationCode),
       languageCode: String(languageCode || "en"),
     });
-    await logApiUsage(db, { endpoint: KO_ENDPOINT, rows: rowsBilled }); // no projectId → account-level
+    // The DataForSEO call above already billed the account — a failure to record
+    // that spend must never discard the (paid-for) rows the caller is owed. Log
+    // and continue rather than letting a ledger-write throw 502 the request.
+    try {
+      await logApiUsage(db, { endpoint: KO_ENDPOINT, rows: rowsBilled }); // no projectId → account-level
+    } catch (e) {
+      console.error("[keyword-overview] cost log failed (continuing)", e);
+    }
     return NextResponse.json({ rows, requested: parsed.length, dropped });
   } catch (e) {
     console.error("[keyword-overview] fetch failed", e);

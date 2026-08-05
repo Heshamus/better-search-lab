@@ -9,7 +9,7 @@ const monthKey = (m: { year: number; month: number }) => `${m.year}-${String(m.m
 function cell(v: string | number | null): string {
   if (v == null) return "";
   const s = String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
 export function buildKeywordCsv(rows: KeywordOverviewRow[]): string {
