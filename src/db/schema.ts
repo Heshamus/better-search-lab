@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, numeric, real, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, numeric, real, index, uniqueIndex, date } from "drizzle-orm/pg-core";
 import type { AuditIssue } from "@/lib/audit/checks";
 import type { BacklinkSummary, ReferringDomain, Anchor } from "@/lib/dataforseo/backlinks";
 import type { GscTotals, GscTopRow, RisingQuery } from "@/lib/google/gsc";
@@ -283,3 +283,29 @@ export const projectRedditConfig = pgTable("project_reddit_config", {
   subreddits: jsonb("subreddits").$type<string[]>().default([]).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// One row per surfaced Reddit thread (judged fit+edge, drafted): the source
+// thread, why it matters, the drafted reply + citations, and its review
+// status. Deduped per project by thread URL — a rescan that resurfaces the
+// same thread is a silent no-op, not a duplicate row.
+export const redditConversations = pgTable(
+  "reddit_conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    scanDate: date("scan_date").notNull(),
+    threadUrl: text("thread_url").notNull(),
+    subreddit: text("subreddit").notNull().default(""),
+    title: text("title").notNull().default(""),
+    upVotes: integer("up_votes"),
+    numComments: integer("num_comments"),
+    postedAt: timestamp("posted_at", { withTimezone: true }),
+    whyItMatters: text("why_it_matters").notNull().default(""),
+    draftReply: text("draft_reply").notNull().default(""),
+    citations: jsonb("citations").$type<string[]>().default([]).notNull(),
+    promoRisk: text("promo_risk").notNull().default("medium"),
+    status: text("status").notNull().default("new"),
+    insertedAt: timestamp("inserted_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("reddit_conversations_project_url_idx").on(t.projectId, t.threadUrl)],
+);
