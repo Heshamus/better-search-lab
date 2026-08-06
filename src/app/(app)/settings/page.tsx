@@ -5,12 +5,14 @@ import { listProjects } from "@/lib/projects";
 import { listProfileCandidates } from "@/lib/profile";
 import { listCompetitors } from "@/lib/competitors";
 import { getRedditConfig } from "@/lib/reddit/reddit-config";
+import { listApiTokens } from "@/lib/api-tokens";
 import { ProjectCreateForm } from "@/components/project-create-form";
 import { ProjectEditForm } from "@/components/project-edit-form";
 import { ProfileReview } from "@/components/profile-review";
 import { CompetitorManager } from "@/components/competitor-manager";
 import { SettingsForm } from "@/components/settings-form";
 import { RedditBriefEditor } from "@/components/reddit-brief-editor";
+import { McpTokenManager } from "@/components/mcp-token-manager";
 
 // This page reads the DB (listProjects/getCurrentProject/listProfileCandidates/
 // listCompetitors) via cookies() on every request — force-dynamic skips the
@@ -40,9 +42,10 @@ const sectionHeadingClass =
 // section renders (the edit section and roster are project-gated), so the
 // create form IS the primary content — no separate EmptyState wrapper.
 export default async function SettingsPage() {
-  const [allProjects, project] = await Promise.all([
+  const [allProjects, project, mcpTokens] = await Promise.all([
     listProjects(db),
     getCurrentProject(db, (await cookies()).get("sp_project")?.value),
+    listApiTokens(db),
   ]);
 
   const [candidates, competitorRows, redditConfig] = project
@@ -130,6 +133,14 @@ export default async function SettingsPage() {
           />
         </section>
       ) : null}
+
+      {/* Account-wide, not project-scoped (createApiToken/listApiTokens take no
+          projectId) — unlike the sections above, this renders regardless of
+          whether a project exists yet, matching the unconditional fetch above. */}
+      <section className="flex flex-col gap-2">
+        <h2 className={sectionHeadingClass}>MCP access token</h2>
+        <McpTokenManager tokens={mcpTokens} />
+      </section>
 
       <section className="flex flex-col gap-2">
         {project ? (
