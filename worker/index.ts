@@ -36,12 +36,27 @@ import { redditRadarHandler } from "../src/lib/jobs/handlers/reddit-radar";
 import { redditConversationsHandler } from "../src/lib/jobs/handlers/reddit-conversations";
 import { runDailyConversationRadar } from "../src/lib/reddit/daily-conversations";
 import { scrapeReddit } from "../src/lib/reddit/apify";
+import { fetchSite } from "../src/lib/crawl/fetch-site";
 import { EdenClient } from "../src/lib/ai-visibility/engines";
 import { DataForSeoClient } from "../src/lib/dataforseo/client";
 import { DeepSeekClient } from "../src/lib/llm/deepseek";
 import { loadEnv } from "../src/config/env";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Plain-text summary of a project's own site, for seeding its Reddit knowledge
+// & voice brief (ensureKnowledgeBrief's `crawl` dep). fetchSite already strips
+// to HTML per page; this collapses that HTML to bounded plain text — a local
+// helper rather than deepseek.ts's stripTags, which is private to that module.
+function htmlToText(pages: { html: string }[]): string {
+  return pages
+    .map((p) => p.html)
+    .join(" ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 3000);
+}
 
 // Clients built once at module scope — shared by the cron run() and the queue drain.
 const env = loadEnv();
@@ -125,6 +140,11 @@ async function run() {
     scrape: (i) => scrapeReddit({ apiKey: env.APIFY_API_KEY!, actor: env.APIFY_REDDIT_ACTOR }, i),
     ask: env.EDENAI_API_KEY ? (m, p) => new EdenClient(env.EDENAI_API_KEY!).ask(m, p) : undefined,
     chat: (msgs) => new DeepSeekClient({ apiKey: env.DEEPSEEK_API_KEY! }).chat(msgs),
+    crawl: async (domain) => {
+      const r = await fetchSite("https://" + domain);
+      if (r.failed) return "";
+      return htmlToText(r.pages);
+    },
   }).catch((e) => console.error("[worker] daily reddit conversations pass failed:", e));
 }
 

@@ -94,6 +94,7 @@ export async function scanProjectConversations(deps: {
   scrape: (input: ConversationScrapeInput) => Promise<RedditPost[]>;
   ask?: (model: string, prompt: string) => Promise<{ answer: string; citations: string[] }>;
   chat: (m: ChatMessage[]) => Promise<string>;
+  crawl?: () => Promise<string>; // key-pages summary for the knowledge-brief seed — see ensureKnowledgeBrief
 }): Promise<StoredConversation[]> {
   const { db, projectId, domain } = deps;
 
@@ -103,11 +104,11 @@ export async function scanProjectConversations(deps: {
   const config = await getRedditConfig(db, projectId);
   const { brief, subreddits } = config.knowledgeBrief
     ? { brief: config.knowledgeBrief, subreddits: config.subreddits }
-    : await ensureKnowledgeBrief({ db, projectId, domain, chat: deps.chat });
+    : await ensureKnowledgeBrief({ db, projectId, domain, chat: deps.chat, crawl: deps.crawl });
 
   const terms = await deriveSearchTerms(db, projectId);
   const subredditUrls = subreddits
-    .map((s) => s.trim()) // a prior task can store untrimmed subreddit names
+    .map((s) => s.trim().replace(/^\/?r\//i, "")) // a prior task can store untrimmed names, or an LLM-suggested "r/foo"
     .filter(Boolean)
     .map((s) => `https://www.reddit.com/r/${s}/`);
 
@@ -165,6 +166,7 @@ const RECENCY_MS = 20 * 3_600_000; // ~daily, self-healing (mirrors runDailyRedd
 
 export interface ConversationRadarEnv {
   APIFY_API_KEY?: string;
+  DEEPSEEK_API_KEY?: string;
   RESEND_API_KEY?: string;
   REPORT_EMAIL_TO?: string;
   REPORT_EMAIL_FROM?: string;
@@ -184,9 +186,12 @@ const bareDomain = (d: string): string => d.replace(/^https?:\/\//, "").replace(
  * and — when it surfaces at least one conversation — email the digest
  * (best-effort: a Resend failure still leaves the conversations stored, since
  * storage happens inside scanProjectConversations before the email is attempted).
- * Off entirely when APIFY_API_KEY is absent (mirrors runWeeklyAiVisibility's
- * EDENAI_API_KEY gate). Fail-soft per project — one project's thrown error
- * (e.g. a DeepSeek outage) never aborts the rest of the pass.
+ * Off entirely when APIFY_API_KEY or DEEPSEEK_API_KEY is absent (mirrors
+ * runWeeklyAiVisibility's EDENAI_API_KEY gate, and redditConversationsHandler's
+ * own both-keys guard for the on-demand path) — the judge+draft steps need
+ * DeepSeek, so there's no point paying for the Apify scrape without it.
+ * Fail-soft per project — one project's thrown error (e.g. a DeepSeek outage
+ * mid-run) never aborts the rest of the pass.
  */
 export async function runDailyConversationRadar(deps: {
   db: any;
@@ -195,12 +200,13 @@ export async function runDailyConversationRadar(deps: {
   scrape: (input: ConversationScrapeInput) => Promise<RedditPost[]>;
   ask?: (model: string, prompt: string) => Promise<{ answer: string; citations: string[] }>;
   chat: (m: ChatMessage[]) => Promise<string>;
+  crawl?: (domain: string) => Promise<string>; // key-pages summary for a project's knowledge-brief seed
   sendEmailImpl?: SendEmailImpl;
 }): Promise<{ scanned: string[]; emailed: string[] }> {
   const { db, now, env } = deps;
   const scanned: string[] = [];
   const emailed: string[] = [];
-  if (!env.APIFY_API_KEY) return { scanned, emailed }; // feature off
+  if (!env.APIFY_API_KEY || !env.DEEPSEEK_API_KEY) return { scanned, emailed }; // feature off
 
   const all = await db.select().from(projects);
   for (const project of all) {
@@ -218,6 +224,7 @@ export async function runDailyConversationRadar(deps: {
         scrape: deps.scrape,
         ask: deps.ask,
         chat: deps.chat,
+        crawl: deps.crawl ? () => deps.crawl!(domain) : undefined,
       });
       scanned.push(project.id);
     } catch (e) {

@@ -85,6 +85,16 @@ describe("buildConversationsEmail", () => {
     expect(r.html).toContain("&amp;");
   });
 
+  it('escapes " in threadUrl so it cannot break out of the href attribute it is rendered into', () => {
+    const malicious = 'https://reddit.com/r/x" onmouseover="alert(1)';
+    const c = conv({ threadUrl: malicious });
+    const r = buildConversationsEmail({ domain: "acme.com", conversations: [c] });
+    // Unescaped, the raw quote would close href="..." early and let onmouseover="..."
+    // land as a second attribute on the same <a> tag — no <script> or > needed.
+    expect(r.html).not.toContain(`href="${malicious}"`);
+    expect(r.html).toContain("x&quot; onmouseover=&quot;alert(1)");
+  });
+
   it("returns a valid subject/html/text with a nothing-worth-joining body for an empty list", () => {
     const r = buildConversationsEmail({ domain: "acme.com", conversations: [] });
     expect(r.subject.length).toBeGreaterThan(0);

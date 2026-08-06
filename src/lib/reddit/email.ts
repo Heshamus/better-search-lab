@@ -1,6 +1,7 @@
 import type { StoredConversation } from "./conversations-store";
 
-const esc = (s: string): string => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const esc = (s: string): string =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const DASH = "—";
 
 const NO_DRAFT_NOTE = "✍️ No draft — write your own";

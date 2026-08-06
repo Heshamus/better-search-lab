@@ -3,10 +3,26 @@ import { projects } from "@/db/schema";
 import { loadEnv } from "@/config/env";
 import { scrapeReddit } from "@/lib/reddit/apify";
 import { scanProjectConversations } from "@/lib/reddit/daily-conversations";
+import { fetchSite } from "@/lib/crawl/fetch-site";
 import { EdenClient } from "@/lib/ai-visibility/engines";
 import { DeepSeekClient, type ChatMessage } from "@/lib/llm/deepseek";
 
 const bareDomain = (d: string): string => d.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "");
+
+// Plain-text summary of the project's own site, for seeding its Reddit
+// knowledge & voice brief (ensureKnowledgeBrief's `crawl` dep). fetchSite
+// already strips to HTML per page; this collapses that HTML to bounded plain
+// text — a local helper rather than deepseek.ts's stripTags, which is private
+// to that module.
+function htmlToText(pages: { html: string }[]): string {
+  return pages
+    .map((p) => p.html)
+    .join(" ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 3000);
+}
 
 /**
  * `reddit_conversations_scan`: on-demand per-project Reddit Conversations scan
@@ -31,8 +47,13 @@ export function redditConversationsHandler(opts?: { fetchImpl?: typeof fetch }) 
       : undefined;
     const deepseek = new DeepSeekClient({ apiKey: env.DEEPSEEK_API_KEY, fetchImpl: opts?.fetchImpl });
     const chat = (msgs: ChatMessage[]) => deepseek.chat(msgs);
+    const crawl = async () => {
+      const r = await fetchSite("https://" + domain, { fetchImpl: opts?.fetchImpl });
+      if (r.failed) return "";
+      return htmlToText(r.pages);
+    };
 
-    const rows = await scanProjectConversations({ db, projectId: projectId!, domain, env, scrape, ask, chat });
+    const rows = await scanProjectConversations({ db, projectId: projectId!, domain, env, scrape, ask, chat, crawl });
     return { rows: rows.length, cost: 0 };
   };
 }

@@ -5,7 +5,11 @@ import { addKeywords } from "@/lib/keywords";
 import { getRedditConfig, saveRedditConfig } from "@/lib/reddit/reddit-config";
 import { saveConversations, listLatestConversations } from "@/lib/reddit/conversations-store";
 import { apiUsage } from "@/db/schema";
-import { scanProjectConversations, runDailyConversationRadar } from "@/lib/reddit/daily-conversations";
+import {
+  scanProjectConversations,
+  runDailyConversationRadar,
+  type ConversationScrapeInput,
+} from "@/lib/reddit/daily-conversations";
 import type { RedditPost } from "@/lib/reddit/apify";
 import type { ChatMessage } from "@/lib/llm/deepseek";
 
@@ -109,6 +113,55 @@ describe("scanProjectConversations", () => {
     expect(config.subreddits).toEqual(["SEO"]);
     expect(scrape).toHaveBeenCalledOnce(); // the auto-seeded subreddit gave it something to scrape
   });
+
+  it("threads an injected crawl into the knowledge-brief seed when the project's config is empty", async () => {
+    const t = await createTestDb();
+    close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "example.com" });
+    const scrape = vi.fn(async () => []);
+    const chat = makeChat();
+    const crawl = vi.fn(async () => "CRAWLED_SITE_SUMMARY_TEXT");
+
+    await scanProjectConversations({
+      db: t.db,
+      projectId: p.id,
+      domain: "example.com",
+      env: {},
+      scrape,
+      chat,
+      crawl,
+    });
+
+    expect(crawl).toHaveBeenCalledOnce(); // no real network — the stub stands in for fetchSite
+    // The knowledge-brief prompt (routed by makeChat via its system-prompt substring match)
+    // must actually carry the crawled text through to the seed, not just invoke the stub.
+    const briefCall = chat.mock.calls.find(([messages]) => messages[0]?.content?.includes("knowledge & voice brief"));
+    expect(briefCall).toBeDefined();
+    const briefPrompt = briefCall![0].map((m: ChatMessage) => m.content).join("\n");
+    expect(briefPrompt).toContain("CRAWLED_SITE_SUMMARY_TEXT");
+  });
+
+  it("strips a leading r/ (case-insensitively) and trims configured subreddits before building URLs", async () => {
+    const t = await createTestDb();
+    close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "example.com" });
+    await saveRedditConfig(t.db, p.id, { knowledgeBrief: "We build SEO tools.", subreddits: ["r/SEO", " SEO "] });
+    const scrape = vi.fn(async (_input: ConversationScrapeInput) => []);
+    const chat = makeChat();
+
+    await scanProjectConversations({
+      db: t.db,
+      projectId: p.id,
+      domain: "example.com",
+      env: {},
+      scrape,
+      chat,
+    });
+
+    expect(scrape).toHaveBeenCalledOnce();
+    const [{ subredditUrls }] = scrape.mock.calls[0];
+    expect(subredditUrls).toEqual(["https://www.reddit.com/r/SEO/", "https://www.reddit.com/r/SEO/"]);
+  });
 });
 
 describe("runDailyConversationRadar", () => {
@@ -117,7 +170,34 @@ describe("runDailyConversationRadar", () => {
     close = t.close;
     await createProject(t.db, { name: "HF", domain: "example.com" });
     const scrape = vi.fn();
-    const out = await runDailyConversationRadar({ db: t.db, now: new Date(), env: {}, scrape, chat: vi.fn() });
+    const out = await runDailyConversationRadar({
+      db: t.db,
+      now: new Date(),
+      env: { DEEPSEEK_API_KEY: "k" },
+      scrape,
+      chat: vi.fn(),
+    });
+    expect(out).toEqual({ scanned: [], emailed: [] });
+    expect(scrape).not.toHaveBeenCalled();
+  });
+
+  it("no-ops when DEEPSEEK_API_KEY is absent, even with APIFY_API_KEY set (no billed scrape without a judge)", async () => {
+    const t = await createTestDb();
+    close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "example.com" });
+    // A working brief so the run would otherwise proceed to scrape — a real
+    // config, not a crashing stub, so a missing gate is what fails this test,
+    // not an unrelated chat-stub error caught by the per-project try/catch.
+    await saveRedditConfig(t.db, p.id, { knowledgeBrief: "We build SEO tools.", subreddits: ["SEO"] });
+    const scrape = vi.fn(async () => []);
+    const chat = makeChat();
+    const out = await runDailyConversationRadar({
+      db: t.db,
+      now: new Date(),
+      env: { APIFY_API_KEY: "k" },
+      scrape,
+      chat,
+    });
     expect(out).toEqual({ scanned: [], emailed: [] });
     expect(scrape).not.toHaveBeenCalled();
   });
@@ -141,7 +221,7 @@ describe("runDailyConversationRadar", () => {
     const out = await runDailyConversationRadar({
       db: t.db,
       now: new Date(),
-      env: { APIFY_API_KEY: "k" },
+      env: { APIFY_API_KEY: "k", DEEPSEEK_API_KEY: "k" },
       scrape,
       ask,
       chat,
@@ -171,7 +251,7 @@ describe("runDailyConversationRadar", () => {
     const out = await runDailyConversationRadar({
       db: t.db,
       now: new Date(),
-      env: { APIFY_API_KEY: "k" },
+      env: { APIFY_API_KEY: "k", DEEPSEEK_API_KEY: "k" },
       scrape,
       chat,
       sendEmailImpl,
@@ -190,7 +270,13 @@ describe("runDailyConversationRadar", () => {
     await saveConversations(t.db, p.id, "2026-08-06", [{ threadUrl: "https://www.reddit.com/r/x/1" }]);
 
     const scrape = vi.fn();
-    const out = await runDailyConversationRadar({ db: t.db, now: new Date(), env: { APIFY_API_KEY: "k" }, scrape, chat: vi.fn() });
+    const out = await runDailyConversationRadar({
+      db: t.db,
+      now: new Date(),
+      env: { APIFY_API_KEY: "k", DEEPSEEK_API_KEY: "k" },
+      scrape,
+      chat: vi.fn(),
+    });
     expect(out.scanned).toEqual([]);
     expect(scrape).not.toHaveBeenCalled();
   });
