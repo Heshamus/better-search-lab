@@ -3,11 +3,14 @@
 // returns its dataset items, no separate poll-for-completion step).
 //
 // Confirmed against a real probe: this actor's input model takes ONE source
-// per run — either a batch of subreddit URLs, or a single search query — so
-// scrapeReddit fires one run per source (in parallel) and merges the
-// results, deduping by post url. Output items carry selfText/score/
-// numComments/createdAt/subreddit/url and never include per-post comments,
-// so topComments is always [].
+// per run — either a single subreddit URL, or a single search query — so
+// scrapeReddit fires one run per subreddit plus one run per search term (in
+// parallel) and merges the results, deduping by post url. Splitting
+// subreddits one-per-run (rather than batching them into one urls:[...]
+// run) keeps each run fast enough to land inside RUN_TIMEOUT_MS and keeps
+// runs fail-soft-isolated from each other. Output items carry selfText/
+// score/numComments/createdAt/subreddit/url and never include per-post
+// comments, so topComments is always [].
 //
 // Previously targeted `trudax/reddit-scraper`, a $45/mo actor rental —
 // replaced with this free-tier actor.
@@ -26,6 +29,13 @@ export interface RedditPost {
 
 const DEFAULT_ACTOR = "automation-lab~reddit-scraper";
 const DEFAULT_MAX_POSTS_PER_SOURCE = 25;
+/**
+ * Per-run abort timeout. A live run showed the batched subreddit run (many
+ * urls in one Apify invocation) hitting a 120s timeout and dropping the
+ * whole source; runs are now split one-per-subreddit (see scrapeReddit) and
+ * given more headroom.
+ */
+export const RUN_TIMEOUT_MS = 240_000;
 
 function toNumberOrNull(v: unknown): number | null {
   return typeof v === "number" && Number.isFinite(v) ? v : null;
@@ -57,7 +67,7 @@ async function runOnce(url: string, fetchImpl: typeof fetch, body: Record<string
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(120_000),
+      signal: AbortSignal.timeout(RUN_TIMEOUT_MS),
     });
     if (!res.ok) {
       const detail = await res.text().catch(() => "");
@@ -76,11 +86,11 @@ async function runOnce(url: string, fetchImpl: typeof fetch, body: Record<string
  * Scrape Reddit via Apify's automation-lab/reddit-scraper actor and map its
  * dataset items to RedditPost[].
  *
- * The actor accepts one source per run, so this fires one run for the
- * (batched) subreddit URLs plus one run per search term, merges every run's
- * items, dedupes by post url, and maps the survivors. Fail-soft throughout:
- * a failing run just contributes no items rather than aborting the batch,
- * and a fully-failed batch resolves to [].
+ * The actor accepts one source per run, so this fires one run per subreddit
+ * URL plus one run per search term, merges every run's items, dedupes by
+ * post url, and maps the survivors. Fail-soft throughout: a failing run
+ * just contributes no items rather than aborting the batch, and a
+ * fully-failed batch resolves to [].
  */
 export async function scrapeReddit(
   cfg: { apiKey: string; actor?: string; fetchImpl?: typeof fetch },
@@ -98,10 +108,10 @@ export async function scrapeReddit(
   const maxPostsPerSource = input.maxItems ?? DEFAULT_MAX_POSTS_PER_SOURCE;
 
   const runs: Promise<any[]>[] = [];
-  if (input.subredditUrls?.length) {
+  for (const subredditUrl of input.subredditUrls ?? []) {
     runs.push(
       runOnce(url, fetchImpl, {
-        urls: input.subredditUrls,
+        urls: [subredditUrl],
         sort: (input.sort ?? "top").toLowerCase(),
         timeFilter: input.time,
         maxPostsPerSource,

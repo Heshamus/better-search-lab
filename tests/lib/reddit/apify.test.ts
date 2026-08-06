@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import fixture from "@/lib/reddit/fixtures/apify-reddit-live.json";
-import { scrapeReddit } from "@/lib/reddit/apify";
+import { scrapeReddit, RUN_TIMEOUT_MS } from "@/lib/reddit/apify";
 
 const jsonClient = (items: unknown) => async () =>
   ({ ok: true, status: 200, json: async () => items }) as unknown as Response;
@@ -70,6 +70,40 @@ describe("scrapeReddit", () => {
     expect(subredditRun?.body.urls).toEqual(["https://www.reddit.com/r/SEO/"]);
     const searchTerms = calls.filter((c) => "searchQuery" in c.body).map((c) => c.body.searchQuery).sort();
     expect(searchTerms).toEqual(["a", "b"]);
+  });
+
+  it("fires one run per subreddit (not a single batched urls array) plus one run per search term, using the 240s timeout", async () => {
+    const calls: { url: string; body: any }[] = [];
+    const fetchImpl = (async (url: string, opts: any) => {
+      calls.push({ url, body: JSON.parse(opts.body) });
+      return { ok: true, status: 200, json: async () => [] };
+    }) as any;
+
+    await scrapeReddit(
+      { apiKey: "tok", fetchImpl },
+      {
+        searches: ["x"],
+        subredditUrls: ["https://www.reddit.com/r/SEO/", "https://www.reddit.com/r/PPC/"],
+      },
+    );
+
+    expect(calls).toHaveLength(3);
+    for (const call of calls) {
+      expect(call.url).toContain("/acts/automation-lab~reddit-scraper/run-sync-get-dataset-items");
+      expect(call.url).toContain("token=tok");
+    }
+
+    const subredditRuns = calls.filter((c) => "urls" in c.body);
+    expect(subredditRuns.map((c) => c.body.urls)).toEqual(
+      expect.arrayContaining([["https://www.reddit.com/r/SEO/"], ["https://www.reddit.com/r/PPC/"]]),
+    );
+    expect(subredditRuns).toHaveLength(2);
+
+    const searchRuns = calls.filter((c) => "searchQuery" in c.body);
+    expect(searchRuns).toHaveLength(1);
+    expect(searchRuns[0]?.body.searchQuery).toBe("x");
+
+    expect(RUN_TIMEOUT_MS).toBe(240_000);
   });
 
   it("is fail-soft per run: a non-ok run contributes no items while the others still map", async () => {
