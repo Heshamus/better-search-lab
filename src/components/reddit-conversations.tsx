@@ -30,7 +30,7 @@ function formatAge(postedAt: Date | null): string {
 }
 
 /**
- * One surfaced conversation's card. Owns its own pending/error/copied state
+ * One surfaced conversation's card. Owns its own pending/error/copyState
  * so one card's Dismiss/Mark-posted/Copy action never affects its siblings.
  *
  * THE HONESTY RULE: `draftable` gates on a non-empty (trimmed) draftReply —
@@ -38,15 +38,20 @@ function formatAge(postedAt: Date | null): string {
  * conversation shows the "write your own" note and renders NO draft block
  * and NO Copy button, never an empty box or a fabricated reply. A high
  * `promoRisk` draft is still shown (never hidden) but flagged for review.
+ * Likewise a rejected clipboard write surfaces as "Copy failed", never a
+ * false "Copied", and a landed Mark-posted shows a lasting "✓ Posted" badge
+ * with both actions disabled rather than leaving the click with no visible
+ * confirmation.
  */
 function ConversationCard({ conv, projectId }: { conv: StoredConversation; projectId: string }) {
   const router = useRouter();
   const [pending, setPending] = useState<"dismissed" | "posted" | null>(null);
   const [error, setError] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<"idle" | "done" | "error">("idle");
 
   const draftable = conv.draftReply.trim() !== "";
   const showReviewFlag = draftable && conv.promoRisk === "high";
+  const isPosted = conv.status === "posted";
 
   // Direct fetch (not the useJob hook — this is a synchronous PATCH, not an
   // enqueue+poll job), so this component calls router.refresh() itself once
@@ -75,9 +80,17 @@ function ConversationCard({ conv, projectId }: { conv: StoredConversation; proje
     }
   }
 
+  // A rejected clipboard promise (denied permission, non-secure context, an
+  // unfocused document) is a real failure mode, not a hypothetical — caught
+  // here and surfaced honestly ("Copy failed") rather than left as an
+  // unhandled rejection with the button silently still saying "Copy".
   async function handleCopy() {
-    await navigator.clipboard.writeText(conv.draftReply);
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(conv.draftReply);
+      setCopyState("done");
+    } catch {
+      setCopyState("error");
+    }
   }
 
   return (
@@ -110,7 +123,7 @@ function ConversationCard({ conv, projectId }: { conv: StoredConversation; proje
             </div>
             <div className="flex items-center gap-2">
               <button type="button" onClick={handleCopy} className={actionButtonClass}>
-                {copied ? "Copied" : "Copy"}
+                {copyState === "done" ? "Copied" : copyState === "error" ? "Copy failed" : "Copy"}
               </button>
               {showReviewFlag ? (
                 <span className="rounded bg-at-risk/10 px-1.5 py-0.5 text-[0.66rem] font-medium text-at-risk">
@@ -154,10 +167,11 @@ function ConversationCard({ conv, projectId }: { conv: StoredConversation; proje
           Go to thread →
         </a>
         <div className="ml-auto flex items-center gap-2">
+          {isPosted ? <span className="text-xs font-medium text-accent">✓ Posted</span> : null}
           <button
             type="button"
             onClick={() => updateStatus("dismissed")}
-            disabled={pending !== null}
+            disabled={pending !== null || isPosted}
             className={actionButtonClass}
           >
             {pending === "dismissed" ? "Dismissing…" : "Dismiss"}
@@ -165,7 +179,7 @@ function ConversationCard({ conv, projectId }: { conv: StoredConversation; proje
           <button
             type="button"
             onClick={() => updateStatus("posted")}
-            disabled={pending !== null}
+            disabled={pending !== null || isPosted}
             className={actionButtonClass}
           >
             {pending === "posted" ? "Marking…" : "Mark posted"}

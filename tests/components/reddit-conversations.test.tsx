@@ -116,4 +116,55 @@ describe("RedditConversations", () => {
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith("Copy this exact draft text."));
   });
+
+  it("shows 'Copy failed' (never 'Copied') when the clipboard write rejects", async () => {
+    vi.stubGlobal("fetch", vi.fn());
+    const writeText = vi.fn().mockRejectedValue(new Error("clipboard denied"));
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    const conv = makeConversation({ draftReply: "Some draft text." });
+
+    render(<RedditConversations conversations={[conv]} projectId="proj-1" />);
+    fireEvent.click(screen.getByRole("button", { name: /copy/i }));
+
+    // findByRole polls (wraps in act/waitFor internally), so the rejected
+    // promise is fully settled — and caught, per THE HONESTY RULE — before
+    // this assertion runs. No unhandled rejection reaches the test runner.
+    expect(await screen.findByRole("button", { name: "Copy failed" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Copied" })).toBeNull();
+  });
+
+  it("clicking Mark posted PATCHes the status route with {status:\"posted\"} and calls router.refresh", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+    const conv = makeConversation({ id: "conv-77" });
+
+    render(<RedditConversations conversations={[conv]} projectId="proj-3" />);
+    fireEvent.click(screen.getByRole("button", { name: /mark posted/i }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/projects/proj-3/reddit-conversations/conv-77/status",
+        expect.objectContaining({
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "posted" }),
+        }),
+      );
+    });
+    await waitFor(() => expect(refreshMock).toHaveBeenCalled());
+  });
+
+  it("shows a '✓ Posted' badge and keeps the card visible (not filtered) when status is 'posted'", () => {
+    vi.stubGlobal("fetch", vi.fn());
+    const conv = makeConversation({ id: "conv-posted", title: "Posted thread title", status: "posted" });
+
+    render(<RedditConversations conversations={[conv]} projectId="proj-1" />);
+
+    expect(screen.getByText("Posted thread title")).toBeTruthy();
+    expect(screen.getByText(/✓ Posted/)).toBeTruthy();
+    const dismissBtn = screen.getByRole("button", { name: /dismiss/i }) as HTMLButtonElement;
+    const postedBtn = screen.getByRole("button", { name: /mark posted/i }) as HTMLButtonElement;
+    expect(dismissBtn.disabled).toBe(true);
+    expect(postedBtn.disabled).toBe(true);
+  });
 });
