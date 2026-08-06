@@ -4,7 +4,6 @@ import type { BacklinkSummary, ReferringDomain, Anchor } from "@/lib/dataforseo/
 import type { GscTotals, GscTopRow, RisingQuery } from "@/lib/google/gsc";
 import type { GaTotals, GaChannelRow, GaPageRow } from "@/lib/google/analytics";
 import type { PerEngine, PerQuery, CitedSource } from "@/lib/ai-visibility/types";
-import type { RadarTerm, RadarSubreddit } from "@/lib/reddit/radar";
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -256,6 +255,20 @@ export const aiVisibilitySnapshots = pgTable(
   },
   (t) => [index("ai_visibility_snapshots_project_scanned_idx").on(t.projectId, t.scannedAt.desc())],
 );
+
+// Column types for the dormant reddit_radar_snapshots table (the SerpApi radar
+// was retired; the table is kept dormant — dropping it would need a migration).
+interface RadarTerm {
+  term: string;
+  threadCount: number;
+  topThreads: { title: string; subreddit: string; url: string }[];
+  volume: number | null;
+  page: string | null;
+}
+interface RadarSubreddit {
+  subreddit: string;
+  count: number;
+}
 
 // One Reddit trend-radar scan per row (daily; trend compounds): which niche
 // terms have active Reddit discussion, the subreddits the niche lives in, and

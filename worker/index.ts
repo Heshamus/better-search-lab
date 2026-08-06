@@ -29,10 +29,6 @@ import { gscSyncHandler } from "../src/lib/jobs/handlers/gsc-sync";
 import { gaSyncHandler } from "../src/lib/jobs/handlers/ga-sync";
 import { aiVisibilityScanHandler } from "../src/lib/jobs/handlers/ai-visibility-scan";
 import { runWeeklyAiVisibility } from "../src/lib/ai-visibility/weekly";
-// reddit_radar_scan / redditRadarHandler stay registered below: the live Trends
-// page's "Run Reddit Radar" button still enqueues this job type (its UI cutover
-// is a separate, later step) — only the self-healing DAILY pass is superseded.
-import { redditRadarHandler } from "../src/lib/jobs/handlers/reddit-radar";
 import { redditConversationsHandler } from "../src/lib/jobs/handlers/reddit-conversations";
 import { runDailyConversationRadar } from "../src/lib/reddit/daily-conversations";
 import { scrapeReddit } from "../src/lib/reddit/apify";
@@ -91,7 +87,6 @@ function resolveHandler(type: string): JobHandler | null {
     case "gsc_sync": return gscSyncHandler();
     case "ga_sync": return gaSyncHandler();
     case "ai_visibility_scan": return aiVisibilityScanHandler();
-    case "reddit_radar_scan": return redditRadarHandler();
     case "reddit_conversations_scan": return redditConversationsHandler();
     case "refresh_all": return refreshAllHandler();
     default: return null;
@@ -130,9 +125,8 @@ async function run() {
 
   // Self-healing daily Reddit "conversations worth joining" pass (Apify gather →
   // prefilter → DeepSeek fit+edge judge → Perplexity+DeepSeek draft → store →
-  // email digest). Supersedes the old SerpApi radar's daily auto-scan; the old
-  // on-demand reddit_radar_scan job type stays registered above for the
-  // still-live Trends page button until its UI is cut over separately.
+  // email digest). Supersedes the old SerpApi radar, which has been retired
+  // (see git history for src/lib/reddit/{serpapi,radar,relevance,daily,store}.ts).
   await runDailyConversationRadar({
     db,
     now: new Date(),
