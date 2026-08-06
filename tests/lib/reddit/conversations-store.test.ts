@@ -1,7 +1,13 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { createTestDb } from "@/db/test-db";
 import { createProject } from "@/lib/projects";
-import { saveConversations, listLatestConversations, seenThreadUrls, type NewConversation } from "@/lib/reddit/conversations-store";
+import {
+  saveConversations,
+  listLatestConversations,
+  seenThreadUrls,
+  updateConversationStatus,
+  type NewConversation,
+} from "@/lib/reddit/conversations-store";
 
 let close: (() => Promise<void>) | undefined;
 afterEach(() => close?.());
@@ -105,5 +111,36 @@ describe("conversations-store", () => {
 
     expect(await listLatestConversations(t.db, p1.id, 10)).toHaveLength(1);
     expect(await listLatestConversations(t.db, p2.id, 10)).toHaveLength(1);
+  });
+
+  it("updateConversationStatus updates the row's status, visible via listLatestConversations", async () => {
+    const t = await createTestDb();
+    close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+
+    await saveConversations(t.db, p.id, SCAN_DATE, [row("https://reddit.com/r/SEO/dismiss-me")]);
+    const [saved] = await listLatestConversations(t.db, p.id, 1);
+    expect(saved.status).toBe("new"); // column default, before the update
+
+    await updateConversationStatus(t.db, p.id, saved.id, "dismissed");
+
+    const [updated] = await listLatestConversations(t.db, p.id, 1);
+    expect(updated.status).toBe("dismissed");
+  });
+
+  it("updateConversationStatus scoped by project — a different project's id touches 0 rows", async () => {
+    const t = await createTestDb();
+    close = t.close;
+    const p1 = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p2 = await createProject(t.db, { name: "Other", domain: "other.io" });
+
+    await saveConversations(t.db, p1.id, SCAN_DATE, [row("https://reddit.com/r/SEO/cross-project")]);
+    const [saved] = await listLatestConversations(t.db, p1.id, 1);
+
+    // p2 (wrong project) tries to update p1's conversation by its id — must be a no-op.
+    await updateConversationStatus(t.db, p2.id, saved.id, "dismissed");
+
+    const [unchanged] = await listLatestConversations(t.db, p1.id, 1);
+    expect(unchanged.status).toBe("new"); // untouched by the cross-project update attempt
   });
 });

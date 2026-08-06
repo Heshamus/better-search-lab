@@ -1,5 +1,5 @@
 import { redditConversations } from "@/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 /** One persisted Reddit conversation row, as returned by listLatestConversations. */
 export interface StoredConversation {
@@ -76,4 +76,22 @@ export async function seenThreadUrls(db: any, projectId: string): Promise<Set<st
     .from(redditConversations)
     .where(eq(redditConversations.projectId, projectId));
   return new Set(rows.map((r: { threadUrl: string }) => r.threadUrl));
+}
+
+/**
+ * Sets a conversation's status (veto/act-on-it triage). Scoped by BOTH
+ * projectId and id — a tenant-isolation guarantee, not just a lookup
+ * shortcut: a caller that supplies the wrong project for a given row id
+ * must touch 0 rows rather than editing another tenant's data.
+ */
+export async function updateConversationStatus(
+  db: any,
+  projectId: string,
+  id: string,
+  status: "new" | "dismissed" | "posted",
+): Promise<void> {
+  await db
+    .update(redditConversations)
+    .set({ status })
+    .where(and(eq(redditConversations.projectId, projectId), eq(redditConversations.id, id)));
 }
