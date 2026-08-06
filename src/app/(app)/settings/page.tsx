@@ -4,11 +4,13 @@ import { getCurrentProject } from "@/lib/current-project";
 import { listProjects } from "@/lib/projects";
 import { listProfileCandidates } from "@/lib/profile";
 import { listCompetitors } from "@/lib/competitors";
+import { getRedditConfig } from "@/lib/reddit/reddit-config";
 import { ProjectCreateForm } from "@/components/project-create-form";
 import { ProjectEditForm } from "@/components/project-edit-form";
 import { ProfileReview } from "@/components/profile-review";
 import { CompetitorManager } from "@/components/competitor-manager";
 import { SettingsForm } from "@/components/settings-form";
+import { RedditBriefEditor } from "@/components/reddit-brief-editor";
 
 // This page reads the DB (listProjects/getCurrentProject/listProfileCandidates/
 // listCompetitors) via cookies() on every request — force-dynamic skips the
@@ -43,9 +45,13 @@ export default async function SettingsPage() {
     getCurrentProject(db, (await cookies()).get("sp_project")?.value),
   ]);
 
-  const [candidates, competitorRows] = project
-    ? await Promise.all([listProfileCandidates(db, project.id), listCompetitors(db, project.id)])
-    : [[], []];
+  const [candidates, competitorRows, redditConfig] = project
+    ? await Promise.all([
+        listProfileCandidates(db, project.id),
+        listCompetitors(db, project.id),
+        getRedditConfig(db, project.id),
+      ])
+    : [[], [], { knowledgeBrief: null, subreddits: [] }];
 
   return (
     <div className="flex flex-col gap-8">
@@ -111,6 +117,17 @@ export default async function SettingsPage() {
             <h3 className={sectionHeadingClass}>Competitors</h3>
             <CompetitorManager projectId={project.id} competitors={competitorRows} />
           </div>
+        </section>
+      ) : null}
+
+      {project ? (
+        <section className="flex flex-col gap-2">
+          <h2 className={sectionHeadingClass}>Reddit Conversations</h2>
+          <RedditBriefEditor
+            projectId={project.id}
+            knowledgeBrief={redditConfig.knowledgeBrief}
+            subreddits={redditConfig.subreddits}
+          />
         </section>
       ) : null}
 
