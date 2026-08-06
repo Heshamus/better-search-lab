@@ -18,6 +18,15 @@ export default defineConfig({
     // current-correct per-file mechanism) — see tests/components/*.
     environment: "node",
     setupFiles: ["./tests/setup/vitest-setup.ts"],
+    // mcp/ is a standalone package (its own package.json, its own npm-managed
+    // node_modules, its own vitest.config.ts — see mcp/README.md) that may
+    // never have had `npm i` run for it in a given checkout. Vitest 4's
+    // default exclude is only node_modules + .git (no "dist"), so without
+    // this it sweeps in mcp/tests/server.test.ts AND, once mcp/ has been
+    // built locally, the compiled duplicate mcp/dist/tests/server.test.js —
+    // and tries to run both under THIS config/environment instead of mcp's
+    // own. Run mcp's suite from inside mcp/: `cd mcp && npx vitest run`.
+    exclude: ["**/node_modules/**", "**/.git/**", "mcp/**"],
     // Every DB test builds a fresh PGlite via drizzle-kit `pushSchema`
     // (introspect + diff + apply the whole schema). Under vitest's parallel
     // file execution, dozens of concurrent pushSchema calls contend and blow

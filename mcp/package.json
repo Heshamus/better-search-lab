@@ -1,0 +1,24 @@
+{
+  "name": "@seo-platform/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone stdio MCP server exposing Better Search Lab's read-only /api/mcp/* endpoints to coding agents. Does not import the Next app.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}
