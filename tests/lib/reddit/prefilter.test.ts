@@ -2,7 +2,12 @@ import { describe, it, expect } from "vitest";
 import { prefilterPosts } from "@/lib/reddit/prefilter";
 import type { RedditPost } from "@/lib/reddit/apify";
 
+// CRITICAL: Fixed reference time (never use real wall-clock for fixtures when assertions use hardcoded `now`)
+// Prevents time-bomb where tests pass today but fail in hours or permanently after 2026-08-06T12:00:00Z
+const FIXED_NOW = Date.parse("2026-08-06T12:00:00Z");
+
 // Factory for creating RedditPost fixtures
+// Default createdAt is 1 hour before FIXED_NOW (deterministically fresh, not real-clock dependent)
 function makePost(overrides: Partial<RedditPost> = {}): RedditPost {
   return {
     id: "post-" + Math.random().toString(36).slice(2),
@@ -12,14 +17,14 @@ function makePost(overrides: Partial<RedditPost> = {}): RedditPost {
     subreddit: "test",
     upVotes: 10,
     numComments: 5,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(FIXED_NOW - 3600_000).toISOString(),
     topComments: [],
     ...overrides,
   };
 }
 
 describe("prefilterPosts", () => {
-  const now = Date.parse("2026-08-06T12:00:00Z");
+  const now = FIXED_NOW;
 
   it("drops stale posts (older than maxAgeHours default 72)", () => {
     // 73 hours ago
@@ -162,5 +167,48 @@ describe("prefilterPosts", () => {
     );
     expect(result).toHaveLength(2);
     expect(result.map((p) => p.id)).toEqual(["fresh-q", "fresh-body"]);
+  });
+
+  // IMPORTANT 1: Exact boundary cases — guards against <= → < off-by-one regressions
+  it("keeps posts at exact comment boundary (numComments === maxComments default 40)", () => {
+    const atBoundary = makePost({
+      numComments: 40,
+      title: "Boundary question?",
+    });
+
+    const result = prefilterPosts([atBoundary], { now });
+    expect(result).toHaveLength(1);
+  });
+
+  it("keeps posts at exact age boundary (createdAt exactly maxAgeHours ago)", () => {
+    // Exactly 72 hours ago (inclusive boundary)
+    const atAgeBoundary = makePost({
+      createdAt: new Date(now - 72 * 3600_000).toISOString(),
+      title: "Boundary age question?",
+    });
+
+    const result = prefilterPosts([atAgeBoundary], { now });
+    expect(result).toHaveLength(1);
+  });
+
+  // IMPORTANT 2: Edge cases for guards (negative age and NaN)
+  it("drops future-dated posts (age < 0 from hardcoded now)", () => {
+    const futurePost = makePost({
+      createdAt: new Date(now + 3600_000).toISOString(), // 1 hour in the future
+      title: "Future question?",
+    });
+
+    const result = prefilterPosts([futurePost], { now });
+    expect(result).toHaveLength(0);
+  });
+
+  it("drops posts with unparseable createdAt (Date.parse returns NaN)", () => {
+    const unparseable = makePost({
+      createdAt: "not-a-date",
+      title: "Broken date question?",
+    });
+
+    const result = prefilterPosts([unparseable], { now });
+    expect(result).toHaveLength(0);
   });
 });
