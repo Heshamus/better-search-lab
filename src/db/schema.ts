@@ -273,3 +273,13 @@ export const redditRadarSnapshots = pgTable(
   },
   (t) => [index("reddit_radar_project_scanned_idx").on(t.projectId, t.scannedAt.desc())],
 );
+
+// Per-project Reddit Conversations settings: the knowledge brief (what/who the
+// project is, fed to the fit+edge judge and reply drafter) and the subreddit
+// allow-list to scan. One row per project — upserted, not appended.
+export const projectRedditConfig = pgTable("project_reddit_config", {
+  projectId: uuid("project_id").primaryKey().references(() => projects.id, { onDelete: "cascade" }),
+  knowledgeBrief: text("knowledge_brief"),
+  subreddits: jsonb("subreddits").$type<string[]>().default([]).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
