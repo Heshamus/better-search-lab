@@ -105,6 +105,53 @@ describe("judgeConversations", () => {
     expect(result).toEqual(posts.map((p) => ({ url: p.url, fit: 0, edge: 0, whyItMatters: "", keep: false })));
   });
 
+  it("fails closed (does not reject) when chat RESOLVES with a non-string content", async () => {
+    // Plausible for a real LLM HTTP client whose message.content comes back
+    // null/undefined — the `Promise<string>` annotation doesn't enforce this
+    // at runtime. The parse step must be guarded, not just the chat() await.
+    const { posts } = makeThreePosts();
+    const chat = vi.fn(async () => null as unknown as string);
+
+    const result = await judgeConversations(posts, { brief: "x", chat });
+
+    expect(result).toEqual(posts.map((p) => ({ url: p.url, fit: 0, edge: 0, whyItMatters: "", keep: false })));
+  });
+
+  it("treats a stringified score as invalid — trips the atomic fail-closed path", async () => {
+    const { postA, postB, postC, posts } = makeThreePosts();
+    const chat = vi.fn(async () =>
+      JSON.stringify([
+        { url: postA.url, fit: "0.9", edge: 0.9, whyItMatters: "fit is a string, not a number" },
+        { url: postB.url, fit: 0.9, edge: 0.9, whyItMatters: "valid" },
+        { url: postC.url, fit: 0.9, edge: 0.9, whyItMatters: "valid" },
+      ]),
+    );
+
+    const result = await judgeConversations(posts, { brief: "x", chat });
+
+    // postA's invalid (stringified) fit leaves it out of the judged map, which
+    // makes the whole response incomplete -> every post fails closed, even
+    // postB/postC whose entries were individually well-formed.
+    expect(result).toEqual(posts.map((p) => ({ url: p.url, fit: 0, edge: 0, whyItMatters: "", keep: false })));
+  });
+
+  it("clamps an out-of-range score into [0,1] rather than passing it through raw", async () => {
+    const { postA, postB, postC, posts } = makeThreePosts();
+    const chat = vi.fn(async () =>
+      JSON.stringify([
+        { url: postA.url, fit: 1.4, edge: 0.7, whyItMatters: "fit over 1" },
+        { url: postB.url, fit: 0.6, edge: 0.7, whyItMatters: "ok" },
+        { url: postC.url, fit: 0.6, edge: 0.7, whyItMatters: "ok" },
+      ]),
+    );
+
+    const result = await judgeConversations(posts, { brief: "x", chat });
+
+    const a = result.find((j) => j.url === postA.url);
+    expect(a?.fit).toBe(1); // clamped, not 1.4
+    expect(a?.keep).toBe(true); // clamped fit still clears the 0.5 threshold
+  });
+
   it("returns [] without calling chat when there are no posts", async () => {
     const chat = vi.fn(async () => "[]");
 

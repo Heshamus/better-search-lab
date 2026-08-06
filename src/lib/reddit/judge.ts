@@ -139,29 +139,33 @@ export async function judgeConversations(
 ): Promise<Judgement[]> {
   if (posts.length === 0) return [];
 
-  let content: string;
+  // The chat call AND the parse both live inside this one try/catch (not just
+  // the await) — a `chat` that RESOLVES with a non-string (a real risk: an
+  // LLM HTTP client whose message.content came back null/undefined; the
+  // `Promise<string>` annotation doesn't enforce that at runtime) must still
+  // fail closed, not throw a TypeError out of judgeConversations.
   try {
-    content = await deps.chat([
+    const content = await deps.chat([
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: buildUserPrompt(deps.brief, posts) },
     ]);
+
+    const byUrl = parseJudgements(content, posts);
+    if (!byUrl) return failClosed(posts);
+
+    return posts
+      .map((p): Judgement => {
+        const j = byUrl.get(p.url)!;
+        return {
+          url: p.url,
+          fit: j.fit,
+          edge: j.edge,
+          whyItMatters: j.whyItMatters,
+          keep: j.fit >= FIT_THRESHOLD && j.edge >= EDGE_THRESHOLD,
+        };
+      })
+      .sort((a, b) => b.edge - a.edge);
   } catch {
     return failClosed(posts);
   }
-
-  const byUrl = parseJudgements(content, posts);
-  if (!byUrl) return failClosed(posts);
-
-  return posts
-    .map((p): Judgement => {
-      const j = byUrl.get(p.url)!;
-      return {
-        url: p.url,
-        fit: j.fit,
-        edge: j.edge,
-        whyItMatters: j.whyItMatters,
-        keep: j.fit >= FIT_THRESHOLD && j.edge >= EDGE_THRESHOLD,
-      };
-    })
-    .sort((a, b) => b.edge - a.edge);
 }
