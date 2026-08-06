@@ -15,12 +15,14 @@ vi.mock("@/lib/dataforseo/labs", () => ({
     rowsBilled: 1,
   })),
 }));
+vi.mock("@/lib/dataforseo/cost", () => ({ logApiUsage: vi.fn() }));
 
 import { requireApiToken } from "@/lib/api-guard";
 import { listProjects } from "@/lib/projects";
 import { listOpportunities } from "@/lib/opportunities";
 import { listLatestConversations } from "@/lib/reddit/conversations-store";
 import { keywordOverviewBulk } from "@/lib/dataforseo/labs";
+import { logApiUsage } from "@/lib/dataforseo/cost";
 import { GET as projectsGet } from "@/app/api/mcp/projects/route";
 import { GET as opportunitiesGet } from "@/app/api/mcp/opportunities/route";
 import { GET as redditGet } from "@/app/api/mcp/reddit-conversations/route";
@@ -36,6 +38,7 @@ beforeEach(() => {
   (listOpportunities as any).mockClear();
   (listLatestConversations as any).mockClear();
   (keywordOverviewBulk as any).mockClear();
+  (logApiUsage as any).mockClear();
 });
 
 describe("GET /api/mcp/projects (no params)", () => {
@@ -106,6 +109,15 @@ describe("GET /api/mcp/keyword-overview (project-agnostic)", () => {
     expect(keywordOverviewBulk).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ keywords: ["a", "b"], locationCode: 2826, languageCode: "en" }),
+    );
+  });
+
+  it("logs the paid lookup to the cost ledger after a successful call", async () => {
+    const res = await get(keywordOverviewGet, "http://x/api/mcp/keyword-overview?keywords=a,b");
+    expect(res.status).toBe(200);
+    expect(logApiUsage).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ endpoint: "/v3/dataforseo_labs/google/keyword_overview/live", rows: 1 }),
     );
   });
 

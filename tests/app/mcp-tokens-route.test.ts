@@ -23,6 +23,14 @@ const postReq = (body: unknown) =>
     headers: { "content-type": "application/json" },
   }) as any;
 
+// Deliberately invalid JSON — exercises the req.json().catch(() => ({})) path.
+const malformedPostReq = () =>
+  new Request("http://x", {
+    method: "POST",
+    body: "{not valid json",
+    headers: { "content-type": "application/json" },
+  }) as any;
+
 const deleteReq = (url: string) => new Request(url, { method: "DELETE" }) as any;
 
 describe("POST /api/mcp-tokens", () => {
@@ -37,6 +45,18 @@ describe("POST /api/mcp-tokens", () => {
 
   it("defaults an omitted label to null", async () => {
     await POST(postReq({}));
+    expect(createApiToken).toHaveBeenCalledWith(expect.anything(), null);
+  });
+
+  it("coalesces a whitespace-only label to null instead of persisting it", async () => {
+    await POST(postReq({ label: "   " }));
+    expect(createApiToken).toHaveBeenCalledWith(expect.anything(), null);
+  });
+
+  it("tolerates a malformed JSON body and mints a null-label token instead of 500ing", async () => {
+    const res = await POST(malformedPostReq());
+    expect(res.status).toBe(201);
+    expect(await res.json()).toEqual({ token: "bsl_freshplaintexttoken" });
     expect(createApiToken).toHaveBeenCalledWith(expect.anything(), null);
   });
 

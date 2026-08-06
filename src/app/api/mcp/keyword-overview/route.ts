@@ -4,6 +4,10 @@ import { parseKeywordList } from "@/lib/keyword-list";
 import { MARKETS, DEFAULT_MARKET } from "@/lib/markets";
 import { loadEnv } from "@/config/env";
 import { mcpRoute, MissingParamError } from "@/lib/mcp/reader";
+import { db } from "@/db/client";
+import { logApiUsage } from "@/lib/dataforseo/cost";
+
+const KO_ENDPOINT = "/v3/dataforseo_labs/google/keyword_overview/live";
 
 // Project-agnostic (mirrors POST /api/keyword-overview — no projectId). Accepts
 // `keywords` either comma-separated (`?keywords=a,b`) or repeated
@@ -13,10 +17,6 @@ import { mcpRoute, MissingParamError } from "@/lib/mcp/reader";
 // "\n" and ",". `market` is matched by label exactly like the Keyword Overview
 // UI (MARKETS.find(...) ?? DEFAULT_MARKET), so the same string the <select>
 // shows works here.
-//
-// Unlike the POST route, this does NOT call logApiUsage — the brief scoped
-// Task 2 to reusing the existing READ fn only; see the Task 2 report's
-// Concerns for the cost-tracking implication of that choice.
 function parseKeywords(searchParams: URLSearchParams): string[] {
   const raw = searchParams.getAll("keywords").join("\n");
   return parseKeywordList(raw).keywords;
@@ -32,9 +32,18 @@ export const GET = mcpRoute(async (req) => {
 
   const env = loadEnv();
   const client = new DataForSeoClient({ login: env.DATAFORSEO_LOGIN, password: env.DATAFORSEO_PASSWORD });
-  return keywordOverviewBulk(client, {
+  const result = await keywordOverviewBulk(client, {
     keywords,
     locationCode: market.locationCode,
     languageCode: market.languageCode,
   });
+  // The DataForSEO call above already billed the account — mirror the POST
+  // route's log-and-continue: a ledger-write failure must never cost the
+  // caller the (paid-for) rows it's owed.
+  try {
+    await logApiUsage(db, { endpoint: KO_ENDPOINT, rows: result.rowsBilled }); // no projectId → account-level
+  } catch (e) {
+    console.error("[mcp/keyword-overview] cost log failed (continuing)", e);
+  }
+  return result;
 });

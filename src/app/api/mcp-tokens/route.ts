@@ -19,8 +19,8 @@ import { createApiToken, listApiTokens, revokeApiToken } from "@/lib/api-tokens"
  */
 export async function POST(req: NextRequest) {
   const denied = await requireSession(); if (denied) return denied;
-  const { label } = await req.json();
-  const token = await createApiToken(db, label ?? null);
+  const { label } = await req.json().catch(() => ({}));
+  const token = await createApiToken(db, (typeof label === "string" && label.trim()) || null);
   return NextResponse.json({ token }, { status: 201 });
 }
 
