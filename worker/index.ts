@@ -29,8 +29,14 @@ import { gscSyncHandler } from "../src/lib/jobs/handlers/gsc-sync";
 import { gaSyncHandler } from "../src/lib/jobs/handlers/ga-sync";
 import { aiVisibilityScanHandler } from "../src/lib/jobs/handlers/ai-visibility-scan";
 import { runWeeklyAiVisibility } from "../src/lib/ai-visibility/weekly";
+// reddit_radar_scan / redditRadarHandler stay registered below: the live Trends
+// page's "Run Reddit Radar" button still enqueues this job type (its UI cutover
+// is a separate, later step) — only the self-healing DAILY pass is superseded.
 import { redditRadarHandler } from "../src/lib/jobs/handlers/reddit-radar";
-import { runDailyRedditRadar } from "../src/lib/reddit/daily";
+import { redditConversationsHandler } from "../src/lib/jobs/handlers/reddit-conversations";
+import { runDailyConversationRadar } from "../src/lib/reddit/daily-conversations";
+import { scrapeReddit } from "../src/lib/reddit/apify";
+import { EdenClient } from "../src/lib/ai-visibility/engines";
 import { DataForSeoClient } from "../src/lib/dataforseo/client";
 import { DeepSeekClient } from "../src/lib/llm/deepseek";
 import { loadEnv } from "../src/config/env";
@@ -71,6 +77,7 @@ function resolveHandler(type: string): JobHandler | null {
     case "ga_sync": return gaSyncHandler();
     case "ai_visibility_scan": return aiVisibilityScanHandler();
     case "reddit_radar_scan": return redditRadarHandler();
+    case "reddit_conversations_scan": return redditConversationsHandler();
     case "refresh_all": return refreshAllHandler();
     default: return null;
   }
@@ -106,13 +113,19 @@ async function run() {
     scan: (pid) => runJob(db, { type: "ai_visibility_scan", projectId: pid, date: today, handler: aiVisibilityScanHandler() }).then(() => undefined),
   }).catch((e) => console.error("[worker] weekly ai-visibility pass failed:", e));
 
-  // Self-healing daily Reddit trend radar (terms from GSC, searched via SerpApi).
-  await runDailyRedditRadar({
+  // Self-healing daily Reddit "conversations worth joining" pass (Apify gather →
+  // prefilter → DeepSeek fit+edge judge → Perplexity+DeepSeek draft → store →
+  // email digest). Supersedes the old SerpApi radar's daily auto-scan; the old
+  // on-demand reddit_radar_scan job type stays registered above for the
+  // still-live Trends page button until its UI is cut over separately.
+  await runDailyConversationRadar({
     db,
     now: new Date(),
     env,
-    scan: (pid) => runJob(db, { type: "reddit_radar_scan", projectId: pid, date: today, handler: redditRadarHandler() }).then(() => undefined),
-  }).catch((e) => console.error("[worker] daily reddit radar pass failed:", e));
+    scrape: (i) => scrapeReddit({ apiKey: env.APIFY_API_KEY!, actor: env.APIFY_REDDIT_ACTOR }, i),
+    ask: env.EDENAI_API_KEY ? (m, p) => new EdenClient(env.EDENAI_API_KEY!).ask(m, p) : undefined,
+    chat: (msgs) => new DeepSeekClient({ apiKey: env.DEEPSEEK_API_KEY! }).chat(msgs),
+  }).catch((e) => console.error("[worker] daily reddit conversations pass failed:", e));
 }
 
 // Drain the on-demand queue continuously: run one job to completion, immediately
