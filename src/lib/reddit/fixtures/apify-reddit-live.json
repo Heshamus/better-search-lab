@@ -2,26 +2,23 @@
   {
     "id": "1abc23",
     "title": "What's the best way to structure a technical SEO audit in 2026?",
-    "body": "I've been running audits for a few years but want to standardize the process. Beyond crawlability, indexation, and Core Web Vitals, what do you always include?",
-    "url": "https://www.reddit.com/r/SEO/comments/1abc23/whats_the_best_way_to_structure_a_technical_seo/",
-    "communityName": "r/SEO",
-    "upVotes": 42,
-    "numberOfComments": 17,
+    "selfText": "I've been running audits for a few years but want to standardize the process. Beyond crawlability, indexation, and Core Web Vitals, what do you always include?",
+    "score": 106,
+    "numComments": 20,
     "createdAt": "2026-07-30T14:22:05.000Z",
-    "comments": [
-      { "body": "Start with a full crawl in Screaming Frog, then layer GSC coverage data on top.", "upVotes": 12 },
-      { "body": "Don't forget log file analysis if the client can hand over server logs.", "upVotes": 8 },
-      { "body": "We split it into technical, content, and backlink passes and report each separately.", "upVotes": 5 }
-    ]
+    "subreddit": "SEO",
+    "url": "https://www.reddit.com/r/SEO/comments/1abc23/whats_the_best_way_to_structure_a_technical_seo/",
+    "permalink": "https://www.reddit.com/r/SEO/comments/1abc23/whats_the_best_way_to_structure_a_technical_seo/"
   },
   {
     "id": "1def45",
     "title": "Every Google update be like",
-    "body": "",
+    "selfText": "",
+    "score": 0,
+    "numComments": 0,
+    "createdAt": "2026-07-31T09:10:00.000Z",
+    "subreddit": "SEO",
     "url": "https://www.reddit.com/r/SEO/comments/1def45/every_google_update_be_like/",
-    "communityName": "r/SEO",
-    "upVotes": null,
-    "numberOfComments": null,
-    "createdAt": "2026-07-31T09:10:00.000Z"
+    "permalink": "https://www.reddit.com/r/SEO/comments/1def45/every_google_update_be_like/"
   }
 ]
