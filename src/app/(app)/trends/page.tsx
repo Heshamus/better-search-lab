@@ -12,12 +12,19 @@ export const dynamic = "force-dynamic";
 export default async function TrendsPage() {
   const project = await getCurrentProject(db, (await cookies()).get("sp_project")?.value);
   if (!project) {
-    return <EmptyState title="Create your first project in Settings" description="Add your site's domain in Settings to run the Reddit trend radar." />;
+    return <EmptyState title="Create your first project in Settings" description="Add your site's domain in Settings to surface Reddit conversations worth joining." />;
   }
 
   const env = loadEnv();
   const configured = Boolean(env.APIFY_API_KEY);
   const conversations = configured ? await listLatestConversations(db, project.id, 20) : [];
+  // RedditConversations filters status !== "dismissed" internally and defers the
+  // empty state to this page (its doc comment), so the branch below must count
+  // the same visible set — otherwise an all-dismissed project (the normal "caught
+  // up" state for an engaged user) renders RedditConversations's empty <div>
+  // instead of the "No conversations yet" EmptyState. RedditConversations still
+  // gets the full `conversations` array — it does its own filtering.
+  const visible = conversations.filter((c) => c.status !== "dismissed");
 
   return (
     <div className="flex flex-col gap-7">
@@ -37,7 +44,7 @@ export default async function TrendsPage() {
           title="Reddit Conversations needs an Apify key"
           description="This instance needs an Apify key before it can scan Reddit for conversations worth joining."
         />
-      ) : conversations.length ? (
+      ) : visible.length ? (
         <RedditConversations conversations={conversations} projectId={project.id} />
       ) : (
         <EmptyState
