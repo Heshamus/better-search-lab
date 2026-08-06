@@ -28,6 +28,10 @@ const Schema = z.object({
   // Optional: enables the Reddit trend radar (via SerpApi's Google engine +
   // site:reddit.com — Reddit's own API is gated). Absent → the radar is off.
   SERPAPI_API_KEY: z.string().optional(),
+  // Optional: enables the Reddit "conversations worth joining" engine (Apify).
+  // Absent → the daily conversation pass no-ops.
+  APIFY_API_KEY: z.string().optional(),
+  APIFY_REDDIT_ACTOR: z.string().optional(),
 });
 export type Env = z.infer<typeof Schema>;
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {

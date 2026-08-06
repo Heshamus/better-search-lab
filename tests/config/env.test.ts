@@ -15,4 +15,13 @@ describe("loadEnv", () => {
     const bad = { ...ok, DATABASE_URL: undefined };
     expect(() => loadEnv(bad)).toThrow(/DATABASE_URL/);
   });
+  it("accepts optional Apify config", () => {
+    const env = loadEnv({ ...ok, APIFY_API_KEY: "apify_xxx", APIFY_REDDIT_ACTOR: "trudax~reddit-scraper" });
+    expect(env.APIFY_API_KEY).toBe("apify_xxx");
+    expect(env.APIFY_REDDIT_ACTOR).toBe("trudax~reddit-scraper");
+  });
+  it("omits Apify config when absent", () => {
+    const env = loadEnv(ok);
+    expect(env.APIFY_API_KEY).toBeUndefined();
+  });
 });
