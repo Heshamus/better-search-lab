@@ -297,6 +297,18 @@ export const projectRedditConfig = pgTable("project_reddit_config", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+// Hashed personal-access tokens for the MCP server's bearer-auth guard
+// (requireApiToken in api-guard.ts). Only the sha256 hash is stored — the
+// plaintext token is returned once from createApiToken and never persisted,
+// so a DB leak alone can't be replayed as a valid credential.
+export const apiTokens = pgTable("api_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tokenHash: text("token_hash").notNull().unique(),
+  label: text("label"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+});
+
 // One row per surfaced Reddit thread (judged fit+edge, drafted): the source
 // thread, why it matters, the drafted reply + citations, and its review
 // status. Deduped per project by thread URL — a rescan that resurfaces the
