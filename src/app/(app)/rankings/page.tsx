@@ -1,11 +1,12 @@
 import { cookies } from "next/headers";
 import { db } from "@/db/client";
 import { getCurrentProject } from "@/lib/current-project";
-import { listRankings } from "@/lib/rankings";
+import { listRankings, getAveragePositionHistory } from "@/lib/rankings";
 import { EmptyState } from "@/components/empty-state";
 import { RankingsTable } from "@/components/rankings-table";
 import { RankingsSummary } from "@/components/rankings-summary";
 import { RefreshRankingsButton } from "@/components/refresh-rankings-button";
+import { TrendCard } from "@/components/trend-card";
 
 // This page reads the DB (getCurrentProject/listRankings) via cookies() on
 // every request — force-dynamic skips the build-time static-generation pass
@@ -48,6 +49,8 @@ export default async function RankingsPage() {
     );
   }
 
+  const posHistory = await getAveragePositionHistory(db, project.id);
+
   return (
     <div className="flex flex-col gap-7">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -57,6 +60,15 @@ export default async function RankingsPage() {
         </div>
         <RefreshRankingsButton projectId={project.id} />
       </div>
+
+      <TrendCard
+        title="Average position over time"
+        points={posHistory.points}
+        labels={posHistory.labels}
+        format={(n) => n.toFixed(1)}
+        invert
+        emptyLabel="Refresh rankings again to build a trend"
+      />
 
       <RankingsSummary rows={rows} />
 

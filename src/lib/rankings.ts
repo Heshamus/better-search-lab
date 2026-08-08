@@ -1,5 +1,5 @@
 import { rankSnapshots, keywordMetrics } from "@/db/schema";
-import { asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull } from "drizzle-orm";
 import { listTrackedKeywords } from "@/lib/keywords";
 import { deltaForKeyword, type Snap } from "@/lib/core/history";
 
@@ -98,4 +98,64 @@ export async function rankHistory(
   }).from(rankSnapshots)
     .where(eq(rankSnapshots.keywordId, keywordId))
     .orderBy(asc(rankSnapshots.capturedAt), asc(rankSnapshots.id));
+}
+
+/**
+ * Daily average `rankAbsolute` across every tracked keyword in the project,
+ * for the "Average position over time" trend on the Rankings page. Only
+ * `fetchStatus: "ok"` snapshots with a non-null `rankAbsolute` count toward
+ * the average — a failed fetch has no true position that day, so it's
+ * excluded rather than averaged in as 0 or carried forward from a prior day.
+ *
+ * Fetches ALL matching snapshots (mirrors `listRankings`'s unbounded style —
+ * no SQL-level LIMIT), buckets them into one mean per calendar day (UTC,
+ * `capturedAt.toISOString().slice(0, 10)`), sorts the resulting days
+ * ascending, then takes the LAST `limit` of them. Slicing AFTER aggregation
+ * (never a SQL `asc + limit` on the raw rows) is deliberate: limiting the raw
+ * query would return the `limit` OLDEST snapshots, so once a project's
+ * history grew past `limit` the trend would freeze on ancient data instead of
+ * sliding forward — the exact bug fixed for backlinks history in 3abd99c.
+ * Aggregating first means the day-window slice always reflects the true
+ * most-recent days regardless of how many raw snapshots exist.
+ */
+export async function getAveragePositionHistory(
+  db: any,
+  projectId: string,
+  limit = 90,
+): Promise<{ points: number[]; labels: string[] }> {
+  const tracked = await listTrackedKeywords(db, projectId);
+  if (!tracked.length) return { points: [], labels: [] };
+
+  const keywordIds = tracked.map((k: any) => k.id);
+
+  const snaps = await db.select({
+    capturedAt: rankSnapshots.capturedAt,
+    rankAbsolute: rankSnapshots.rankAbsolute,
+  }).from(rankSnapshots)
+    .where(and(
+      inArray(rankSnapshots.keywordId, keywordIds),
+      eq(rankSnapshots.fetchStatus, "ok"),
+      isNotNull(rankSnapshots.rankAbsolute),
+    ));
+
+  const byDay = new Map<string, { sum: number; count: number }>();
+  for (const s of snaps) {
+    const day = (s.capturedAt as Date).toISOString().slice(0, 10);
+    const bucket = byDay.get(day) ?? { sum: 0, count: 0 };
+    bucket.sum += s.rankAbsolute as number;
+    bucket.count += 1;
+    byDay.set(day, bucket);
+  }
+
+  const days = Array.from(byDay.keys()).sort();
+  const window = days.slice(-limit);
+
+  const points = window.map((day) => {
+    const { sum, count } = byDay.get(day)!;
+    return Math.round((sum / count) * 10) / 10;
+  });
+
+  const labels = window.length ? [window[0], window[window.length - 1]] : [];
+
+  return { points, labels };
 }

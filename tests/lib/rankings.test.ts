@@ -3,7 +3,7 @@ import { createTestDb } from "@/db/test-db";
 import { createProject } from "@/lib/projects";
 import { addKeywords, setKeywordTracked } from "@/lib/keywords";
 import { rankSnapshots, keywordMetrics } from "@/db/schema";
-import { listRankings, rankHistory } from "@/lib/rankings";
+import { listRankings, rankHistory, getAveragePositionHistory } from "@/lib/rankings";
 
 let close: () => Promise<void>;
 afterEach(() => close?.());
@@ -127,5 +127,50 @@ describe("rankHistory", () => {
     const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
     const [k1] = await addKeywords(t.db, p.id, [{ keyword: "x", locationCode: 2840, languageCode: "en" }]);
     expect(await rankHistory(t.db, k1.id)).toEqual([]);
+  });
+});
+
+describe("getAveragePositionHistory", () => {
+  it("averages ok/non-null rankAbsolute per day across tracked keywords, excluding failed snapshots", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const [k1, k2] = await addKeywords(t.db, p.id, [
+      { keyword: "seo reporting", locationCode: 2840, languageCode: "en" },
+      { keyword: "rank tracker", locationCode: 2840, languageCode: "en" },
+    ]);
+    await t.db.insert(rankSnapshots).values([
+      // Day 1: k1=10, k2=20, both ok → mean 15
+      { keywordId: k1.id, capturedAt: d("2026-08-01"), rankAbsolute: 10, fetchStatus: "ok" },
+      { keywordId: k2.id, capturedAt: d("2026-08-01"), rankAbsolute: 20, fetchStatus: "ok" },
+      // Day 2: k1=8 ok; k2 failed (null rank) — must be EXCLUDED, so mean is 8, not (8+0)/2
+      { keywordId: k1.id, capturedAt: d("2026-08-08"), rankAbsolute: 8, fetchStatus: "ok" },
+      { keywordId: k2.id, capturedAt: d("2026-08-08"), rankAbsolute: null, fetchStatus: "failed", reason: "timeout" },
+    ]);
+    const hist = await getAveragePositionHistory(t.db, p.id);
+    expect(hist.points).toEqual([15, 8]);
+    expect(hist.labels).toEqual(["2026-08-01", "2026-08-08"]);
+  });
+
+  it("returns empty points/labels when the project has no tracked keywords", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    expect(await getAveragePositionHistory(t.db, p.id)).toEqual({ points: [], labels: [] });
+  });
+
+  it("limit keeps the most-recent N days (not the oldest N), still ascending", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const [k1] = await addKeywords(t.db, p.id, [{ keyword: "x", locationCode: 2840, languageCode: "en" }]);
+    await t.db.insert(rankSnapshots).values([
+      { keywordId: k1.id, capturedAt: d("2026-07-01"), rankAbsolute: 30, fetchStatus: "ok" },
+      { keywordId: k1.id, capturedAt: d("2026-07-15"), rankAbsolute: 20, fetchStatus: "ok" },
+      { keywordId: k1.id, capturedAt: d("2026-08-01"), rankAbsolute: 10, fetchStatus: "ok" },
+    ]);
+    // limit=2 must keep the 2 MOST RECENT days (07-15, 08-01) — not the 2
+    // oldest (07-01, 07-15) — else the trend would freeze once history grows
+    // past `limit` (the bug fixed for backlinks history in 3abd99c).
+    const hist = await getAveragePositionHistory(t.db, p.id, 2);
+    expect(hist.points).toEqual([20, 10]);
+    expect(hist.labels).toEqual(["2026-07-15", "2026-08-01"]);
   });
 });
