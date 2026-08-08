@@ -48,6 +48,7 @@ export function GscDashboard({ data }: { data: GscData }) {
           labels={labels}
           format={(n) => n.toFixed(1)}
           invert
+          color="var(--color-series-2)"
           emptyLabel="No position data yet"
         />
       </div>
