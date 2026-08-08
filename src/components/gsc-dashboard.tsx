@@ -1,5 +1,5 @@
 import type { GscData } from "@/lib/google/store";
-import { AreaTrend } from "@/components/charts";
+import { TrendCard } from "@/components/trend-card";
 import { formatCompact } from "@/lib/format";
 
 function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
@@ -41,25 +41,15 @@ export function GscDashboard({ data }: { data: GscData }) {
       </dl>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="panel flex flex-col gap-4 p-5">
-          <h3 className="text-sm font-semibold text-white">Clicks over time</h3>
-          <AreaTrend points={data.daily.map((d) => d.clicks)} labels={labels} color="var(--color-accent)" height={200} emptyLabel="No click data yet" />
-        </div>
-        <div className="panel flex flex-col gap-4 p-5">
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-sm font-semibold text-white">Average position</h3>
-            <span className="eyebrow">lower is better</span>
-          </div>
-          <AreaTrend
-            points={data.daily.map((d) => d.position)}
-            labels={labels}
-            color="var(--color-series-2)"
-            height={200}
-            invert
-            yFormat={(n) => n.toFixed(1)}
-            emptyLabel="No position data yet"
-          />
-        </div>
+        <TrendCard title="Clicks over time" points={data.daily.map((d) => d.clicks)} labels={labels} format={formatCompact} emptyLabel="No click data yet" />
+        <TrendCard
+          title="Position over time"
+          points={data.daily.map((d) => d.position)}
+          labels={labels}
+          format={(n) => n.toFixed(1)}
+          invert
+          emptyLabel="No position data yet"
+        />
       </div>
 
       <div className="panel overflow-x-auto">

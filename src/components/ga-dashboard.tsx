@@ -1,5 +1,6 @@
 import type { GaData } from "@/lib/google/store";
-import { AreaTrend, Donut } from "@/components/charts";
+import { Donut } from "@/components/charts";
+import { TrendCard } from "@/components/trend-card";
 import { formatCompact } from "@/lib/format";
 
 function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
@@ -53,10 +54,7 @@ export function GaDashboard({ data }: { data: GaData }) {
       </dl>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="panel flex flex-col gap-4 p-5">
-          <h3 className="text-sm font-semibold text-white">Sessions over time</h3>
-          <AreaTrend points={data.daily.map((d) => d.sessions)} labels={labels} color="var(--color-accent)" height={200} emptyLabel="No session data yet" />
-        </div>
+        <TrendCard title="Sessions over time" points={data.daily.map((d) => d.sessions)} labels={labels} format={formatCompact} emptyLabel="No session data yet" />
         <div className="panel flex flex-col gap-4 p-5">
           <div className="flex items-baseline justify-between gap-2">
             <h3 className="text-sm font-semibold text-white">Traffic by channel</h3>
