@@ -1,5 +1,6 @@
 import type { RedditPost } from "./apify";
 import type { ChatMessage } from "@/lib/llm/deepseek";
+import { mapLimit } from "@/lib/async/map-limit";
 
 // One batched DeepSeek call that scores every candidate Reddit post on `fit`
 // (is this our wheelhouse) and `edge` (would replying add value not already
@@ -23,6 +24,9 @@ const EDGE_THRESHOLD = 0.6;
 // Posts scored per DeepSeek call. Small enough that the JSON response always
 // comes back complete (a truncated response fails the whole batch closed).
 const JUDGE_CHUNK = 10;
+// Batches judged concurrently — bounded so we don't stampede DeepSeek. Sequential
+// judging made a wide scan take minutes.
+const JUDGE_CONCURRENCY = 4;
 
 const SYSTEM_PROMPT =
   "You are a B2B community-participation strategist deciding which Reddit threads are worth a company " +
@@ -180,13 +184,12 @@ export async function judgeConversations(
 ): Promise<Judgement[]> {
   if (posts.length === 0) return [];
 
-  // Judge in small sequential batches and merge. One giant batch made the model
-  // truncate its JSON, which the fail-closed parser turned into ZERO keeps for
-  // the whole scan; small batches each come back complete. One bad batch only
-  // fails-closed its own posts, never the rest.
-  const out: Judgement[] = [];
-  for (let i = 0; i < posts.length; i += JUDGE_CHUNK) {
-    out.push(...(await judgeChunk(posts.slice(i, i + JUDGE_CHUNK), deps)));
-  }
-  return out.sort((a, b) => b.edge - a.edge);
+  // Judge in small batches and merge. One giant batch made the model truncate its
+  // JSON, which the fail-closed parser turned into ZERO keeps for the whole scan;
+  // small batches each come back complete, and one bad batch only fails-closed its
+  // own posts. Batches run concurrently (bounded) so a wide scan doesn't take minutes.
+  const chunks: RedditPost[][] = [];
+  for (let i = 0; i < posts.length; i += JUDGE_CHUNK) chunks.push(posts.slice(i, i + JUDGE_CHUNK));
+  const batched = await mapLimit(chunks, JUDGE_CONCURRENCY, (chunk) => judgeChunk(chunk, deps));
+  return batched.flat().sort((a, b) => b.edge - a.edge);
 }
