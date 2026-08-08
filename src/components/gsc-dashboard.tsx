@@ -43,7 +43,7 @@ export function GscDashboard({ data }: { data: GscData }) {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <TrendCard title="Clicks over time" points={data.daily.map((d) => d.clicks)} labels={labels} format={formatCompact} emptyLabel="No click data yet" />
         <TrendCard
-          title="Position over time"
+          title="Average position over time"
           points={data.daily.map((d) => d.position)}
           labels={labels}
           format={(n) => n.toFixed(1)}
