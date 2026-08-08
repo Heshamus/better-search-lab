@@ -9,6 +9,8 @@ import { EmptyState } from "@/components/empty-state";
 import { GaDashboard } from "@/components/ga-dashboard";
 import { GaPropertyPicker } from "@/components/ga-property-picker";
 import { RunGaSyncButton } from "@/components/run-ga-sync-button";
+import { TrendCard } from "@/components/trend-card";
+import { formatCompact } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -125,7 +127,16 @@ export default async function GaPage({ searchParams }: { searchParams: Promise<{
           <RunGaSyncButton projectId={project.id} label="Sync now" />
         </div>
       ) : (
-        <GaDashboard data={data} />
+        <>
+          <TrendCard
+            title="Sessions over time"
+            points={data.daily.map((d) => d.sessions)}
+            labels={data.daily.length ? [data.daily[0].date, data.daily[data.daily.length - 1].date] : []}
+            format={formatCompact}
+            emptyLabel="Connect + sync Analytics to build a trend"
+          />
+          <GaDashboard data={data} />
+        </>
       )}
     </div>
   );

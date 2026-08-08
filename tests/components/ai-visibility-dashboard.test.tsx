@@ -33,6 +33,8 @@ describe("AiVisibilityDashboard", () => {
     expect(screen.getByText("Invisible")).toBeTruthy(); // the uncited query
     expect(screen.getByText("rival.com")).toBeTruthy();
     expect(screen.getByText("Perplexity")).toBeTruthy();
-    expect(screen.getByText("20%")).toBeTruthy(); // cited rate 2/10
+    // cited rate 2/10 = 20%, shown in both the "Cited" tile and the TrendCard headline.
+    expect(screen.getAllByText("20%")).toHaveLength(2);
+    expect(screen.getByTestId("trend-headline").textContent).toBe("20%");
   });
 });

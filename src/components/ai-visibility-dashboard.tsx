@@ -1,5 +1,5 @@
 import type { AiVisibilityRow } from "@/lib/ai-visibility/store";
-import { AreaTrend } from "@/components/charts";
+import { TrendCard } from "@/components/trend-card";
 import { formatCompact } from "@/lib/format";
 
 const pct = (n: number, d: number): number => (d > 0 ? Math.round((100 * n) / d) : 0);
@@ -38,13 +38,13 @@ export function AiVisibilityDashboard({ latest, history, projectDomain }: { late
       </dl>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="panel flex flex-col gap-4 p-5">
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-sm font-semibold text-white">Cited rate over time</h3>
-            <span className="eyebrow">higher is better</span>
-          </div>
-          <AreaTrend points={trendPoints} labels={trend.length ? [trend[0].scannedAt.toISOString().slice(0, 10), trend[trend.length - 1].scannedAt.toISOString().slice(0, 10)] : []} color="var(--color-accent)" height={190} yFormat={(n) => `${Math.round(n)}%`} emptyLabel="Scan again to build a trend" />
-        </div>
+        <TrendCard
+          title="Cited rate over time"
+          points={trendPoints}
+          labels={trend.length ? [trend[0].scannedAt.toISOString().slice(0, 10), trend[trend.length - 1].scannedAt.toISOString().slice(0, 10)] : []}
+          format={(n) => `${Math.round(n)}%`}
+          emptyLabel="Scan again to build a trend"
+        />
         <div className="panel flex flex-col gap-3 p-5">
           <h3 className="text-sm font-semibold text-white">By engine</h3>
           <ul className="flex flex-col gap-2.5">

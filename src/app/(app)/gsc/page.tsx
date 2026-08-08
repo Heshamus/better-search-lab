@@ -6,6 +6,8 @@ import { getConnection, getGscData } from "@/lib/google/store";
 import { EmptyState } from "@/components/empty-state";
 import { GscDashboard } from "@/components/gsc-dashboard";
 import { RunGscSyncButton } from "@/components/run-gsc-sync-button";
+import { TrendCard } from "@/components/trend-card";
+import { formatCompact } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +91,16 @@ export default async function GscPage({ searchParams }: { searchParams: Promise<
           <RunGscSyncButton projectId={project.id} label="Sync now" />
         </div>
       ) : (
-        <GscDashboard data={data} />
+        <>
+          <TrendCard
+            title="Clicks over time"
+            points={data.daily.map((d) => d.clicks)}
+            labels={data.daily.length ? [data.daily[0].date, data.daily[data.daily.length - 1].date] : []}
+            format={formatCompact}
+            emptyLabel="Connect + sync Search Console to build a trend"
+          />
+          <GscDashboard data={data} />
+        </>
       )}
     </div>
   );
