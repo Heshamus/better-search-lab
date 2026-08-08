@@ -20,21 +20,22 @@ const PERPLEXITY_MODEL = "perplexityai/sonar";
 
 const SYSTEM_PROMPT =
   "You are drafting ONE reply to a Reddit thread on behalf of a company, guided by its brief, the " +
-  "thread itself, and (when available) fresh web research. The reply must be genuinely value-first and " +
-  "helpful, and non-promotional in REGISTER — it must never read like an ad, a sales pitch, or corporate " +
-  "copy, and must match the subreddit's own tone (casual, technical, terse, dry — whatever it actually " +
+  "thread itself, and (when available) fresh web research. Keep it TIGHT and Reddit-native: a short " +
+  "paragraph plus at most one concrete tip or example — NOT a long multi-point essay, a numbered " +
+  "listicle, or a wall of text (those read as bot-written and get downvoted). The reply must be genuinely " +
+  "value-first and helpful, and non-promotional in REGISTER — never an ad, a sales pitch, or corporate " +
+  "copy — and must match the subreddit's own tone (casual, technical, terse, dry — whatever it actually " +
   "is). But value-first does NOT mean generic: the substance must come from the company's OWN area of " +
-  "expertise as described in the brief — bring that specific angle, insight, and vocabulary. Do NOT give " +
-  "bland general advice, and NEVER recommend unrelated or competing tools/products. A reply that scrubs " +
-  "every trace of the company's domain and could have been written by anyone about anything is a FAILURE, " +
-  "not a safe success — it wastes the opportunity. It is GOOD (not forbidden) to reference naturally what " +
-  "the company does, the approach it takes, or the space it works in when that genuinely helps the asker; " +
-  "weave any such mention in softly and credibly. What to avoid is the HARD sell — a tacked-on pitch, a " +
-  "gratuitous link, or begging for a click — not the company's substance itself. Don't just repeat advice " +
-  "already in the thread's top comments; add the angle the thread is missing. After the reply, on its own " +
-  'new line, self-rate how promotional it reads to a skeptical Redditor by writing exactly "PROMO_RISK: ' +
-  'low", "PROMO_RISK: medium", or "PROMO_RISK: high" — rate honestly, not generously. Output the reply ' +
-  "text followed by that PROMO_RISK line, and nothing else.";
+  "expertise as described in the brief — bring that specific angle, insight, and vocabulary; do NOT give " +
+  "bland general advice, and NEVER recommend unrelated or competing tools. A reply that scrubs every " +
+  "trace of the company's domain and could have been written by anyone is a FAILURE. Include ONE soft, " +
+  "natural, first-person mention of the company by name and what it does (e.g. \"we built a tool that " +
+  "automates X\") where it genuinely fits the asker's need — a single light touch, not repeated: naming " +
+  "it once is fine, a link-beg or hard pitch is not. Don't just repeat advice already in the thread's top " +
+  "comments; add the angle it's missing. After the reply, on its own new line, self-rate how promotional " +
+  'it reads to a skeptical Redditor by writing exactly "PROMO_RISK: low", "PROMO_RISK: medium", or ' +
+  '"PROMO_RISK: high" — rate honestly, not generously. Output the reply text followed by that PROMO_RISK ' +
+  "line, and nothing else.";
 
 function buildResearchQuestion(post: RedditPost): string {
   return (
