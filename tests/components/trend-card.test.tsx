@@ -37,4 +37,15 @@ describe("TrendCard", () => {
     expect(screen.queryByTestId("trend-delta")).toBeNull();
     expect(screen.getByText("No history yet")).toBeTruthy();
   });
+
+  it("suppresses the Δ chip when showDelta is false, but still shows the headline", () => {
+    // A per-period delta series (e.g. net new/lost) opts out of the first→latest
+    // chip — it would just repeat the headline (and double-sign a signed format).
+    render(
+      <TrendCard title="Net new/lost" points={[0, 2, 5]} format={fmt} emptyLabel="No history yet" showDelta={false} />,
+    );
+
+    expect(screen.getByTestId("trend-headline").textContent).toBe("5");
+    expect(screen.queryByTestId("trend-delta")).toBeNull();
+  });
 });

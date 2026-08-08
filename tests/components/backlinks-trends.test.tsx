@@ -38,6 +38,14 @@ describe("BacklinksTrends", () => {
       "220", // Domain rank: String(Math.round(220))
       "+1", // Net new/lost: b.com added vs. the first snapshot
     ]);
+
+    // Only the three LEVEL cards carry a first→latest Δ chip. The net new/lost
+    // series is already a per-period delta (its first point is a synthetic 0),
+    // so its chip is suppressed — otherwise it would double-sign to "++1" and
+    // merely repeat its own headline.
+    const chips = screen.getAllByTestId("trend-delta").map((el) => el.textContent ?? "");
+    expect(chips).toHaveLength(3);
+    expect(chips.some((t) => t.includes("++"))).toBe(false);
   });
 
   it("renders 4 empty-state cards for an empty history", () => {

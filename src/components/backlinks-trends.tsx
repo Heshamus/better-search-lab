@@ -50,6 +50,7 @@ export function BacklinksTrends({ history }: { history: BacklinkHistoryPoint[] }
         format={netFormat}
         color="var(--color-series-4)"
         emptyLabel={EMPTY_LABEL}
+        showDelta={false}
       />
     </div>
   );

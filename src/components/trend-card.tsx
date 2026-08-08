@@ -20,6 +20,7 @@ export function TrendCard({
   invert = false,
   color,
   emptyLabel,
+  showDelta = true,
 }: {
   title: string;
   points: number[];
@@ -28,10 +29,14 @@ export function TrendCard({
   invert?: boolean;
   color?: string;
   emptyLabel: string;
+  // Set false for a series that is ALREADY a per-period delta (e.g. net
+  // new/lost): a first→latest Δ chip is meaningless there (the first point is
+  // a synthetic 0, so the chip just repeats the headline). Levels keep it.
+  showDelta?: boolean;
 }) {
   const hasLatest = points.length > 0;
   const headline = hasLatest ? format(points[points.length - 1]) : "—";
-  const hasDelta = points.length >= 2;
+  const hasDelta = points.length >= 2 && showDelta;
 
   // "Improvement" flips with `invert`: for a plain metric a rise (delta>0)
   // is good, but for a rank/position series a FALL (delta<0) is the climb.
