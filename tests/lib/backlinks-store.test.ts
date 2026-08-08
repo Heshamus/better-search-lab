@@ -89,6 +89,26 @@ describe("getBacklinksHistory", () => {
     expect(await getBacklinksHistory(t.db, p.id)).toEqual([]);
   });
 
+  it("limit returns the most-recent N snapshots (not the oldest N), still oldest→newest", async () => {
+    const t = await createTestDb();
+    close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+
+    await saveBacklinks(t.db, p.id, { summary: summary({ backlinks: 100 }), referringDomains: [], anchors: [] });
+    await new Promise((resolve) => setTimeout(resolve, 15));
+    await saveBacklinks(t.db, p.id, { summary: summary({ backlinks: 150 }), referringDomains: [], anchors: [] });
+    await new Promise((resolve) => setTimeout(resolve, 15));
+    await saveBacklinks(t.db, p.id, { summary: summary({ backlinks: 180 }), referringDomains: [], anchors: [] });
+
+    const history = await getBacklinksHistory(t.db, p.id, 2);
+
+    expect(history).toHaveLength(2);
+    // The 2 MOST RECENT snapshots (150, 180) — not the 2 oldest (100, 150) —
+    // returned in ascending order.
+    expect(history.map((h) => h.backlinks)).toEqual([150, 180]);
+    expect(history[0].at.getTime()).toBeLessThan(history[1].at.getTime());
+  });
+
   it("is scoped per project — a snapshot saved for a different project is excluded", async () => {
     const t = await createTestDb();
     close = t.close;

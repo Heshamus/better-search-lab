@@ -30,8 +30,7 @@ export default async function BacklinksPage() {
     );
   }
 
-  const data = await latestBacklinks(db, project.id);
-  const history = await getBacklinksHistory(db, project.id);
+  const [data, history] = await Promise.all([latestBacklinks(db, project.id), getBacklinksHistory(db, project.id)]);
 
   return (
     <div className="flex flex-col gap-7">

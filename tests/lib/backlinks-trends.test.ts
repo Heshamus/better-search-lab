@@ -50,10 +50,10 @@ describe("computeBacklinkTrends", () => {
     expect(computeBacklinkTrends(history).netNewLost).toEqual([0]);
   });
 
-  it("counts the actual set difference, not just the net count (simultaneous adds and drops)", () => {
+  it("nets simultaneous adds and drops into a single combined delta", () => {
     const history: BacklinkHistoryPoint[] = [
       point({ domains: ["a.com", "b.com", "c.com"] }),
-      point({ domains: ["a.com", "d.com", "e.com"] }), // b,c dropped (2 lost); d,e added (2 new) → net 0, not "nothing changed"
+      point({ domains: ["a.com", "d.com", "e.com"] }), // b,c dropped (2 lost); d,e added (2 new) → net 0
     ];
     expect(computeBacklinkTrends(history).netNewLost).toEqual([0, 0]);
   });

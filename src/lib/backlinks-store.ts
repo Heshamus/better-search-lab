@@ -1,5 +1,5 @@
 import { backlinkSnapshots } from "@/db/schema";
-import { asc, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import type { BacklinkSummary, ReferringDomain, Anchor } from "@/lib/dataforseo/backlinks";
 
 export interface BacklinkRow {
@@ -58,9 +58,13 @@ export async function latestBacklinks(db: any, projectId: string): Promise<Backl
 
 /**
  * Backlink snapshots for a project, oldest → newest, reduced to the fields
- * the trend charts need. Mirrors `latestBacklinks`'s query shape but orders
- * ascending (instead of taking just the newest row) so callers get a
- * ready-to-plot series.
+ * the trend charts need. Queries `desc(createdAt) + limit` to get the
+ * `limit` MOST RECENT snapshots, then reverses in memory so the returned
+ * array is still oldest → newest — the order the charts need.
+ *
+ * Deliberately NOT `orderBy(asc) + limit`: that would return the OLDEST
+ * `limit` rows instead, so once a project passed `limit` snapshots the
+ * trend would freeze on ancient data forever instead of sliding forward.
  */
 export async function getBacklinksHistory(db: any, projectId: string, limit = 90): Promise<BacklinkHistoryPoint[]> {
   const rows = await db
@@ -71,18 +75,20 @@ export async function getBacklinksHistory(db: any, projectId: string, limit = 90
     })
     .from(backlinkSnapshots)
     .where(eq(backlinkSnapshots.projectId, projectId))
-    .orderBy(asc(backlinkSnapshots.createdAt))
+    .orderBy(desc(backlinkSnapshots.createdAt))
     .limit(limit);
 
-  return rows.map((row: any) => {
-    const summary = (row.summary ?? null) as BacklinkSummary | null;
-    const referringDomains = (row.referringDomains ?? []) as ReferringDomain[];
-    return {
-      at: row.createdAt as Date,
-      backlinks: summary?.backlinks ?? 0,
-      referringDomains: summary?.referringDomains ?? 0,
-      rank: summary?.rank ?? null,
-      domains: referringDomains.map((d) => d.domain),
-    };
-  });
+  return rows
+    .map((row: any) => {
+      const summary = (row.summary ?? null) as BacklinkSummary | null;
+      const referringDomains = (row.referringDomains ?? []) as ReferringDomain[];
+      return {
+        at: row.createdAt as Date,
+        backlinks: summary?.backlinks ?? 0,
+        referringDomains: summary?.referringDomains ?? 0,
+        rank: summary?.rank ?? null,
+        domains: referringDomains.map((d) => d.domain),
+      };
+    })
+    .reverse();
 }
