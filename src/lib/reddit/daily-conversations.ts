@@ -27,12 +27,10 @@ import type { ChatMessage } from "@/lib/llm/deepseek";
 const APIFY_ENDPOINT = "apify/reddit-scraper";
 const PERPLEXITY_ENDPOINT = "eden/perplexity/sonar";
 const MAX_KEPT = 5;
-const SCRAPE_MAX_ITEMS = 50;
-// Max candidates scored in the judge's single batched DeepSeek call. Above this,
-// DeepSeek truncates its JSON response and the fail-closed parser rejects the
-// whole batch (0 kept). 20 stays well within a complete response while leaving
-// plenty of room to find MAX_KEPT.
-const JUDGE_BATCH_MAX = 20;
+// Posts scraped per source. Kept modest: total posts (and Apify spend) scale
+// with this across ~10 subreddits + search terms, and the judge scores every
+// surviving candidate. 20 finds the good threads without a runaway scrape/spend.
+const SCRAPE_MAX_ITEMS = 20;
 
 // Term derivation — ported from src/lib/jobs/handlers/reddit-radar.ts's `add()`
 // closure (rising GSC queries first, then top, deduped + junk-filtered), plus
@@ -130,24 +128,14 @@ export async function scanProjectConversations(deps: {
   const candidates = fresh.filter((p) => !seen.has(p.url));
   if (candidates.length === 0) return [];
 
-  // Bound the judge batch. judgeConversations scores every post in ONE DeepSeek
-  // call and fails the WHOLE batch closed if the response is missing any post's
-  // entry — and DeepSeek truncates its JSON when asked to score too many at once.
-  // A wide subreddit scrape yields 150+ candidates, which silently truncated →
-  // zeroed out every scan. Cap it (question posts first — highest reply value,
-  // and what the working results were), keeping the response complete + bounding
-  // DeepSeek/Perplexity spend. The judge still returns >5; the cutoff is `.slice(0, MAX_KEPT)`.
-  const toJudge =
-    candidates.length <= JUDGE_BATCH_MAX
-      ? candidates
-      : [...candidates]
-          .sort((a, b) => Number(/\?\s*$/.test(b.title)) - Number(/\?\s*$/.test(a.title)))
-          .slice(0, JUDGE_BATCH_MAX);
+  // judgeConversations scores all candidates in small internal batches (see
+  // JUDGE_CHUNK) and merges — so a wide scrape can't truncate one giant response
+  // and fail the whole scan closed. Judge every candidate (subreddit AND
+  // search-derived — the working results historically came from searches).
+  const judgements = await judgeConversations(candidates, { brief, chat: deps.chat });
+  await logApiUsage(db, { endpoint: DEEPSEEK_CHAT_ENDPOINT, rows: Math.ceil(candidates.length / 10) });
 
-  const judgements = await judgeConversations(toJudge, { brief, chat: deps.chat });
-  await logApiUsage(db, { endpoint: DEEPSEEK_CHAT_ENDPOINT, rows: 1 }); // the judge's one batched call
-
-  const postByUrl = new Map(toJudge.map((p) => [p.url, p]));
+  const postByUrl = new Map(candidates.map((p) => [p.url, p]));
   const kept = judgements
     .filter((j) => j.keep)
     .slice(0, MAX_KEPT)

@@ -20,6 +20,9 @@ export interface Judgement {
 
 const FIT_THRESHOLD = 0.5;
 const EDGE_THRESHOLD = 0.6;
+// Posts scored per DeepSeek call. Small enough that the JSON response always
+// comes back complete (a truncated response fails the whole batch closed).
+const JUDGE_CHUNK = 10;
 
 const SYSTEM_PROMPT =
   "You are a B2B community-participation strategist deciding which Reddit threads are worth a company " +
@@ -133,17 +136,20 @@ function failClosed(posts: RedditPost[]): Judgement[] {
  * missing a valid judgement for any post returns every post as
  * `{ fit:0, edge:0, whyItMatters:"", keep:false }` — never a partial result.
  */
-export async function judgeConversations(
+// Judge one bounded batch in a single `chat` call. Kept small (see JUDGE_CHUNK)
+// so the model's JSON response comes back complete — an over-large batch truncates
+// mid-array, the fail-closed parser then rejects the WHOLE batch, and every post
+// comes back keep:false. Fail-closed per batch: a thrown/non-string `chat` or an
+// unparseable/incomplete response returns this batch's posts as keep:false.
+async function judgeChunk(
   posts: RedditPost[],
   deps: { brief: string; chat: (m: ChatMessage[]) => Promise<string> },
 ): Promise<Judgement[]> {
-  if (posts.length === 0) return [];
-
   // The chat call AND the parse both live inside this one try/catch (not just
   // the await) — a `chat` that RESOLVES with a non-string (a real risk: an
   // LLM HTTP client whose message.content came back null/undefined; the
   // `Promise<string>` annotation doesn't enforce that at runtime) must still
-  // fail closed, not throw a TypeError out of judgeConversations.
+  // fail closed, not throw a TypeError.
   try {
     const content = await deps.chat([
       { role: "system", content: SYSTEM_PROMPT },
@@ -153,19 +159,34 @@ export async function judgeConversations(
     const byUrl = parseJudgements(content, posts);
     if (!byUrl) return failClosed(posts);
 
-    return posts
-      .map((p): Judgement => {
-        const j = byUrl.get(p.url)!;
-        return {
-          url: p.url,
-          fit: j.fit,
-          edge: j.edge,
-          whyItMatters: j.whyItMatters,
-          keep: j.fit >= FIT_THRESHOLD && j.edge >= EDGE_THRESHOLD,
-        };
-      })
-      .sort((a, b) => b.edge - a.edge);
+    return posts.map((p): Judgement => {
+      const j = byUrl.get(p.url)!;
+      return {
+        url: p.url,
+        fit: j.fit,
+        edge: j.edge,
+        whyItMatters: j.whyItMatters,
+        keep: j.fit >= FIT_THRESHOLD && j.edge >= EDGE_THRESHOLD,
+      };
+    });
   } catch {
     return failClosed(posts);
   }
+}
+
+export async function judgeConversations(
+  posts: RedditPost[],
+  deps: { brief: string; chat: (m: ChatMessage[]) => Promise<string> },
+): Promise<Judgement[]> {
+  if (posts.length === 0) return [];
+
+  // Judge in small sequential batches and merge. One giant batch made the model
+  // truncate its JSON, which the fail-closed parser turned into ZERO keeps for
+  // the whole scan; small batches each come back complete. One bad batch only
+  // fails-closed its own posts, never the rest.
+  const out: Judgement[] = [];
+  for (let i = 0; i < posts.length; i += JUDGE_CHUNK) {
+    out.push(...(await judgeChunk(posts.slice(i, i + JUDGE_CHUNK), deps)));
+  }
+  return out.sort((a, b) => b.edge - a.edge);
 }
