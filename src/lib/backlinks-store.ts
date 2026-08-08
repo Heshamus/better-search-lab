@@ -1,5 +1,5 @@
 import { backlinkSnapshots } from "@/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import type { BacklinkSummary, ReferringDomain, Anchor } from "@/lib/dataforseo/backlinks";
 
 export interface BacklinkRow {
@@ -8,6 +8,15 @@ export interface BacklinkRow {
   summary: BacklinkSummary | null;
   referringDomains: ReferringDomain[];
   anchors: Anchor[];
+}
+
+/** One backlinks snapshot reduced to what the trend charts plot. */
+export interface BacklinkHistoryPoint {
+  at: Date;
+  backlinks: number;
+  referringDomains: number;
+  rank: number | null;
+  domains: string[];
 }
 
 export async function saveBacklinks(
@@ -45,4 +54,35 @@ export async function latestBacklinks(db: any, projectId: string): Promise<Backl
     referringDomains: (row.referringDomains ?? []) as ReferringDomain[],
     anchors: (row.anchors ?? []) as Anchor[],
   };
+}
+
+/**
+ * Backlink snapshots for a project, oldest → newest, reduced to the fields
+ * the trend charts need. Mirrors `latestBacklinks`'s query shape but orders
+ * ascending (instead of taking just the newest row) so callers get a
+ * ready-to-plot series.
+ */
+export async function getBacklinksHistory(db: any, projectId: string, limit = 90): Promise<BacklinkHistoryPoint[]> {
+  const rows = await db
+    .select({
+      createdAt: backlinkSnapshots.createdAt,
+      summary: backlinkSnapshots.summary,
+      referringDomains: backlinkSnapshots.referringDomains,
+    })
+    .from(backlinkSnapshots)
+    .where(eq(backlinkSnapshots.projectId, projectId))
+    .orderBy(asc(backlinkSnapshots.createdAt))
+    .limit(limit);
+
+  return rows.map((row: any) => {
+    const summary = (row.summary ?? null) as BacklinkSummary | null;
+    const referringDomains = (row.referringDomains ?? []) as ReferringDomain[];
+    return {
+      at: row.createdAt as Date,
+      backlinks: summary?.backlinks ?? 0,
+      referringDomains: summary?.referringDomains ?? 0,
+      rank: summary?.rank ?? null,
+      domains: referringDomains.map((d) => d.domain),
+    };
+  });
 }

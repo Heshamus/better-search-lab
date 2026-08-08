@@ -1,9 +1,10 @@
 import { cookies } from "next/headers";
 import { db } from "@/db/client";
 import { getCurrentProject } from "@/lib/current-project";
-import { latestBacklinks } from "@/lib/backlinks-store";
+import { latestBacklinks, getBacklinksHistory } from "@/lib/backlinks-store";
 import { EmptyState } from "@/components/empty-state";
 import { BacklinksReport } from "@/components/backlinks-report";
+import { BacklinksTrends } from "@/components/backlinks-trends";
 import { RunBacklinksButton } from "@/components/run-backlinks-button";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +31,7 @@ export default async function BacklinksPage() {
   }
 
   const data = await latestBacklinks(db, project.id);
+  const history = await getBacklinksHistory(db, project.id);
 
   return (
     <div className="flex flex-col gap-7">
@@ -45,7 +47,10 @@ export default async function BacklinksPage() {
       </div>
 
       {data ? (
-        <BacklinksReport data={data} />
+        <>
+          <BacklinksTrends history={history} />
+          <BacklinksReport data={data} />
+        </>
       ) : (
         <EmptyState
           title="No backlink data yet"
