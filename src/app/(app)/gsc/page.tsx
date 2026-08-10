@@ -66,7 +66,17 @@ export default async function GscPage({ searchParams }: { searchParams: Promise<
             {connection?.propertyUrl ? ` · ${connection.propertyUrl}` : ""}.
           </p>
         </div>
-        {data ? <RunGscSyncButton projectId={project.id} /> : null}
+        {connection ? (
+          <div className="flex items-center gap-3">
+            <a
+              href={`/api/google/connect?projectId=${project.id}&from=gsc`}
+              className="text-xs font-medium text-neutral-400 underline-offset-2 transition-colors hover:text-neutral-200 hover:underline"
+            >
+              Reconnect
+            </a>
+            {data ? <RunGscSyncButton projectId={project.id} /> : null}
+          </div>
+        ) : null}
       </div>
 
       {errorMsg ? (

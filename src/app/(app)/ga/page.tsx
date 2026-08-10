@@ -94,7 +94,17 @@ export default async function GaPage({ searchParams }: { searchParams: Promise<{
             {connection?.gaPropertyId ? ` · GA4 property ${connection.gaPropertyId}` : ""}.
           </p>
         </div>
-        {data ? <RunGaSyncButton projectId={project.id} /> : null}
+        {connection ? (
+          <div className="flex items-center gap-3">
+            <a
+              href={`/api/google/connect?projectId=${project.id}&from=ga`}
+              className="text-xs font-medium text-neutral-400 underline-offset-2 transition-colors hover:text-neutral-200 hover:underline"
+            >
+              Reconnect
+            </a>
+            {data ? <RunGaSyncButton projectId={project.id} /> : null}
+          </div>
+        ) : null}
       </div>
 
       {errorMsg ? (

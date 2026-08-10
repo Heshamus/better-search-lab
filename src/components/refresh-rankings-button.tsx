@@ -20,7 +20,7 @@ export function RefreshRankingsButton({ projectId }: { projectId: string }) {
         aria-live="polite"
         className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
       >
-        {job.state === "running" ? "Refreshing rankings…" : "Refresh rankings"}
+        {job.state === "running" ? "Refreshing rankings… · ~1–2 min" : "Refresh rankings"}
       </button>
       <span role="status" aria-live="polite" className="text-xs text-at-risk">
         {job.error ?? null}

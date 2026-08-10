@@ -14,7 +14,7 @@ export function RunAiVisibilityButton({ projectId, label = "Run scan" }: { proje
         aria-live="polite"
         className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
       >
-        {job.state === "running" ? "Scanning…" : label}
+        {job.state === "running" ? "Scanning… · ~1–2 min" : label}
       </button>
       <span role="status" aria-live="polite" className="text-xs text-at-risk">
         {job.error ?? null}
