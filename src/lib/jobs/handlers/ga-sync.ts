@@ -1,6 +1,6 @@
 import { loadEnv } from "@/config/env";
 import { getConnection, replaceGaDaily, saveGaSnapshot, type GaDailyPoint } from "@/lib/google/store";
-import { refreshAccessToken } from "@/lib/google/oauth";
+import { getGoogleAccessToken, isGoogleConfigured } from "@/lib/google/access-token";
 import { runGaReport, normGaDate } from "@/lib/google/analytics";
 
 function dateStr(d: Date): string {
@@ -13,18 +13,12 @@ export function gaSyncHandler(opts?: { fetchImpl?: typeof fetch }) {
   return async (ctx: { db: any; projectId?: string }) => {
     const { db, projectId } = ctx;
     const env = loadEnv();
-    if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) throw new Error("Google OAuth is not configured on this instance");
+    if (!isGoogleConfigured(env)) throw new Error("Google is not configured on this instance");
     const conn = await getConnection(db, projectId!);
-    if (!conn?.refreshToken) throw new Error("Google is not connected for this project");
-    if (!conn.gaPropertyId) throw new Error("No Google Analytics property selected for this project");
+    if (!conn?.gaPropertyId) throw new Error("No Google Analytics property selected for this project");
     const prop = conn.gaPropertyId;
 
-    const accessToken = await refreshAccessToken({
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
-      refreshToken: conn.refreshToken,
-      fetchImpl: opts?.fetchImpl,
-    });
+    const accessToken = await getGoogleAccessToken(env, conn.refreshToken, opts?.fetchImpl);
 
     const end = new Date();
     const start = new Date(end.getTime() - 90 * 86_400_000);

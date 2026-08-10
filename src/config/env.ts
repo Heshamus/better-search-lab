@@ -13,6 +13,13 @@ const Schema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_REDIRECT_URI: z.string().optional(),
+  // Optional: a Google service-account key (raw or base64 JSON with client_email +
+  // private_key). When present, GSC/GA syncs authenticate as the service account
+  // (server-to-server, no user, no reauth, nothing to expire) instead of the
+  // per-user refresh token — the durable fix for the invalid_rapt reconnect
+  // treadmill. The SA must be granted access to the GA4 property + the Search
+  // Console property. Absent → unchanged user-OAuth behavior.
+  GOOGLE_SA_KEY: z.string().optional(),
   // Optional: enables the AI-Visibility scan (Perplexity/ChatGPT/Gemini via Eden
   // AI). Absent → the AI Visibility page shows a "not configured" note.
   EDENAI_API_KEY: z.string().optional(),

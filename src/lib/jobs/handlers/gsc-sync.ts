@@ -1,6 +1,6 @@
 import { loadEnv } from "@/config/env";
 import { getConnection, replaceGscDaily, saveGscSnapshot } from "@/lib/google/store";
-import { refreshAccessToken } from "@/lib/google/oauth";
+import { getGoogleAccessToken, isGoogleConfigured } from "@/lib/google/access-token";
 import { searchAnalytics, computeRisingQueries, buildQueryPageMap, type GscRow, type GscTopRow } from "@/lib/google/gsc";
 
 function dateStr(d: Date): string {
@@ -16,16 +16,13 @@ export function gscSyncHandler(opts?: { fetchImpl?: typeof fetch }) {
   return async (ctx: { db: any; projectId?: string }) => {
     const { db, projectId } = ctx;
     const env = loadEnv();
-    if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) throw new Error("Google OAuth is not configured on this instance");
+    if (!isGoogleConfigured(env)) throw new Error("Google is not configured on this instance");
     const conn = await getConnection(db, projectId!);
-    if (!conn?.refreshToken || !conn.propertyUrl) throw new Error("Search Console is not connected for this project");
+    // With a service account, auth no longer needs a per-user refresh token — we
+    // only need to know WHICH property to pull. So require the property, not the token.
+    if (!conn?.propertyUrl) throw new Error("Search Console is not connected for this project");
 
-    const accessToken = await refreshAccessToken({
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
-      refreshToken: conn.refreshToken,
-      fetchImpl: opts?.fetchImpl,
-    });
+    const accessToken = await getGoogleAccessToken(env, conn.refreshToken, opts?.fetchImpl);
 
     const end = new Date();
     const start = new Date(end.getTime() - 90 * 86_400_000);

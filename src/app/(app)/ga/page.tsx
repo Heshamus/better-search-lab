@@ -3,7 +3,7 @@ import { db } from "@/db/client";
 import { getCurrentProject } from "@/lib/current-project";
 import { loadEnv, type Env } from "@/config/env";
 import { getConnection, getGaData } from "@/lib/google/store";
-import { refreshAccessToken } from "@/lib/google/oauth";
+import { getGoogleAccessToken } from "@/lib/google/access-token";
 import { listGaProperties, type GaProperty } from "@/lib/google/analytics";
 import { EmptyState } from "@/components/empty-state";
 import { GaDashboard } from "@/components/ga-dashboard";
@@ -50,11 +50,7 @@ function ConnectPanel({ projectId, reconnect }: { projectId: string; reconnect?:
 // scope (GSC-only) → the caller shows a reconnect prompt.
 async function loadGaProperties(refreshToken: string, env: Env): Promise<{ scopeMissing: boolean; properties: GaProperty[] }> {
   try {
-    const token = await refreshAccessToken({
-      clientId: env.GOOGLE_CLIENT_ID!,
-      clientSecret: env.GOOGLE_CLIENT_SECRET!,
-      refreshToken,
-    });
+    const token = await getGoogleAccessToken(env, refreshToken);
     return { scopeMissing: false, properties: await listGaProperties(token) };
   } catch (e: unknown) {
     return { scopeMissing: /\b403\b/.test(String((e as Error)?.message ?? "")), properties: [] };
