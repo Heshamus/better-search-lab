@@ -31,7 +31,7 @@ import { aiVisibilityScanHandler } from "../src/lib/jobs/handlers/ai-visibility-
 import { runWeeklyAiVisibility } from "../src/lib/ai-visibility/weekly";
 import { redditConversationsHandler } from "../src/lib/jobs/handlers/reddit-conversations";
 import { runDailyConversationRadar } from "../src/lib/reddit/daily-conversations";
-import { scrapeReddit } from "../src/lib/reddit/apify";
+import { makeConversationScrape } from "../src/lib/reddit/scrape-source";
 import { fetchSite } from "../src/lib/crawl/fetch-site";
 import { EdenClient } from "../src/lib/ai-visibility/engines";
 import { DataForSeoClient } from "../src/lib/dataforseo/client";
@@ -131,7 +131,7 @@ async function run() {
     db,
     now: new Date(),
     env,
-    scrape: (i) => scrapeReddit({ apiKey: env.APIFY_API_KEY!, actor: env.APIFY_REDDIT_ACTOR }, i),
+    scrape: makeConversationScrape(env),
     ask: env.EDENAI_API_KEY ? (m, p) => new EdenClient(env.EDENAI_API_KEY!).ask(m, p) : undefined,
     chat: (msgs) => new DeepSeekClient({ apiKey: env.DEEPSEEK_API_KEY! }).chat(msgs),
     crawl: async (domain) => {

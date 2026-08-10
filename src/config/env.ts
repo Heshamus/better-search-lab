@@ -39,6 +39,12 @@ const Schema = z.object({
   // Absent → the daily conversation pass no-ops.
   APIFY_API_KEY: z.string().optional(),
   APIFY_REDDIT_ACTOR: z.string().optional(),
+  // Optional: Reddit's official API (application-only OAuth) as the PRIMARY
+  // conversations source — free reads, no user/redirect. When present it's used
+  // first and Apify becomes the automatic fallback; absent → Apify only.
+  REDDIT_CLIENT_ID: z.string().optional(),
+  REDDIT_CLIENT_SECRET: z.string().optional(),
+  REDDIT_USER_AGENT: z.string().optional(),
 });
 export type Env = z.infer<typeof Schema>;
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {

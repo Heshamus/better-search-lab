@@ -173,6 +173,8 @@ const RECENCY_MS = 20 * 3_600_000; // ~daily, self-healing (mirrors runDailyRedd
 
 export interface ConversationRadarEnv {
   APIFY_API_KEY?: string;
+  REDDIT_CLIENT_ID?: string;
+  REDDIT_CLIENT_SECRET?: string;
   DEEPSEEK_API_KEY?: string;
   RESEND_API_KEY?: string;
   REPORT_EMAIL_TO?: string;
@@ -213,7 +215,10 @@ export async function runDailyConversationRadar(deps: {
   const { db, now, env } = deps;
   const scanned: string[] = [];
   const emailed: string[] = [];
-  if (!env.APIFY_API_KEY || !env.DEEPSEEK_API_KEY) return { scanned, emailed }; // feature off
+  // Fetch source = official Reddit API OR Apify; the judge/draft steps need
+  // DeepSeek, so there's no point fetching without it.
+  const canFetch = env.APIFY_API_KEY || (env.REDDIT_CLIENT_ID && env.REDDIT_CLIENT_SECRET);
+  if (!canFetch || !env.DEEPSEEK_API_KEY) return { scanned, emailed }; // feature off
 
   const all = await db.select().from(projects);
   for (const project of all) {

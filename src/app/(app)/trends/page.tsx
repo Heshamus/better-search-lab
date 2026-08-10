@@ -6,6 +6,7 @@ import { listLatestConversations } from "@/lib/reddit/conversations-store";
 import { EmptyState } from "@/components/empty-state";
 import { RedditConversations } from "@/components/reddit-conversations";
 import { RunConversationsScanButton } from "@/components/run-conversations-scan-button";
+import { conversationFetchConfigured } from "@/lib/reddit/scrape-source";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function TrendsPage() {
   }
 
   const env = loadEnv();
-  const configured = Boolean(env.APIFY_API_KEY);
+  const configured = conversationFetchConfigured(env);
   const conversations = configured ? await listLatestConversations(db, project.id, 20) : [];
   // RedditConversations filters status !== "dismissed" internally and defers the
   // empty state to this page (its doc comment), so the branch below must count
