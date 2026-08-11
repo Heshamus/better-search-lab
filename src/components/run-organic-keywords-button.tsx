@@ -1,0 +1,20 @@
+"use client";
+import { useJob } from "@/components/use-job";
+
+export function RunOrganicKeywordsButton({ projectId }: { projectId: string }) {
+  const job = useJob();
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        onClick={() => void job.run(`/api/projects/${projectId}/organic-keywords`)}
+        disabled={job.state === "running"}
+        aria-live="polite"
+        className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
+      >
+        {job.state === "running" ? "Fetching… (~a few sec)" : "Refresh organic keywords"}
+      </button>
+      <span role="status" aria-live="polite" className="text-xs text-at-risk">{job.error ?? null}</span>
+    </div>
+  );
+}

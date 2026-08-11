@@ -115,12 +115,16 @@ export const IconTrends = (p: SVGProps<SVGSVGElement>) => (
     <path d="M15 7h6v6" />
   </Base>
 );
+export const IconOrganicKeywords = (p: SVGProps<SVGSVGElement>) => (
+  <Base {...p}><path d="M4 6h10M4 12h7M4 18h5" /><circle cx="17" cy="16" r="3" /><path d="M19.5 18.5 22 21" /></Base>
+);
 
 export const NAV_ICONS: Record<string, (p: SVGProps<SVGSVGElement>) => React.ReactElement> = {
   overview: IconOverview,
   opportunities: IconOpportunities,
   rankings: IconRankings,
   keywords: IconKeywords,
+  "organic-keywords": IconOrganicKeywords,
   research: IconResearch,
   "keyword-overview": IconKeywordOverview,
   competitors: IconCompetitors,
