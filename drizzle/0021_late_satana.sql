@@ -7,7 +7,7 @@ CREATE TABLE "organic_keywords" (
 	"difficulty" integer,
 	"url" text,
 	"est_traffic" double precision,
-	"captured_at" timestamp DEFAULT now() NOT NULL
+	"captured_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 ALTER TABLE "organic_keywords" ADD CONSTRAINT "organic_keywords_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE cascade ON UPDATE no action;

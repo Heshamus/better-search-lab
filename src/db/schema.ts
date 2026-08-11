@@ -191,7 +191,7 @@ export const organicKeywords = pgTable("organic_keywords", {
   difficulty: integer("difficulty"),
   url: text("url"),
   estTraffic: doublePrecision("est_traffic"),
-  capturedAt: timestamp("captured_at").defaultNow().notNull(),
+  capturedAt: timestamp("captured_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 // A project's Google connection: one OAuth refresh token (scopes cover both

@@ -12,10 +12,11 @@ export interface OrganicKeywordRow {
 
 /** Replace-all: the latest refresh is the only snapshot we keep (no history in v1). */
 export async function replaceOrganicKeywords(db: any, projectId: string, rows: OrganicKeywordRow[]): Promise<void> {
-  await db.delete(organicKeywords).where(eq(organicKeywords.projectId, projectId));
-  if (rows.length) {
-    await db.insert(organicKeywords).values(rows.map((r) => ({ projectId, ...r })));
-  }
+  await db.transaction(async (tx: any) => {
+    await tx.delete(organicKeywords).where(eq(organicKeywords.projectId, projectId));
+    if (rows.length === 0) return;
+    await tx.insert(organicKeywords).values(rows.map((r) => ({ projectId, ...r })));
+  });
 }
 
 /** The project's current organic-keyword snapshot (position ascending) + when it was captured. */
@@ -37,5 +38,12 @@ export async function getOrganicKeywords(db: any, projectId: string): Promise<{ 
     keyword: r.keyword, position: r.position, searchVolume: r.searchVolume,
     difficulty: r.difficulty, url: r.url, estTraffic: r.estTraffic,
   }));
-  return { rows, capturedAt: found.length ? (found[0].capturedAt as Date) : null };
+  // Explicit max, not found[0] — rows are sorted by position for display, and
+  // position order only accidentally matches capture-recency order today
+  // (single-statement insert ⇒ identical now() for every row). Computing the
+  // max independently keeps this correct even if inserts are ever chunked.
+  const capturedAt = found.length
+    ? found.reduce((max: Date, r: any) => ((r.capturedAt as Date) > max ? (r.capturedAt as Date) : max), found[0].capturedAt as Date)
+    : null;
+  return { rows, capturedAt };
 }

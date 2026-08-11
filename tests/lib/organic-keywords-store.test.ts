@@ -32,4 +32,31 @@ describe("organic-keywords-store", () => {
     const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
     expect(await getOrganicKeywords(t.db, p.id)).toEqual({ rows: [], capturedAt: null });
   });
+
+  it("replacing with an empty array clears a project's prior rows (synced-to-empty, not never-synced)", async () => {
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+
+    await replaceOrganicKeywords(t.db, p.id, [row("alpha", 3, 100), row("beta", 8, 50)]);
+    expect((await getOrganicKeywords(t.db, p.id)).rows).toHaveLength(2);
+
+    await replaceOrganicKeywords(t.db, p.id, []);
+    expect(await getOrganicKeywords(t.db, p.id)).toEqual({ rows: [], capturedAt: null });
+  });
+
+  it("is scoped per project — replacing project A's keywords leaves project B's rows untouched", async () => {
+    const t = await createTestDb(); close = t.close;
+    const a = await createProject(t.db, { name: "A", domain: "a.example" });
+    const b = await createProject(t.db, { name: "B", domain: "b.example" });
+
+    await replaceOrganicKeywords(t.db, a.id, [row("alpha", 3, 100)]);
+    await replaceOrganicKeywords(t.db, b.id, [row("beta", 5, 200)]);
+
+    await replaceOrganicKeywords(t.db, a.id, [row("gamma", 1, 999)]);
+
+    const gotA = await getOrganicKeywords(t.db, a.id);
+    const gotB = await getOrganicKeywords(t.db, b.id);
+    expect(gotA.rows.map((r) => r.keyword)).toEqual(["gamma"]);
+    expect(gotB.rows.map((r) => r.keyword)).toEqual(["beta"]);
+  });
 });

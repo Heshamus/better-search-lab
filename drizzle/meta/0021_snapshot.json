@@ -1,5 +1,5 @@
 {
-  "id": "cf2186c5-3dd8-4e63-8b5d-b501d72aef8c",
+  "id": "335ab141-20f9-443a-84f0-1c342c3a9410",
   "prevId": "f388f2f9-478b-4f66-9ed1-7b74c041553d",
   "version": "7",
   "dialect": "postgresql",
@@ -1335,7 +1335,7 @@
         },
         "captured_at": {
           "name": "captured_at",
-          "type": "timestamp",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
