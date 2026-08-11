@@ -8,6 +8,7 @@ import { logApiUsage, estimateCost, DEEPSEEK_CHAT_ENDPOINT } from "@/lib/datafor
 import type { DataForSeoClient } from "@/lib/dataforseo/client";
 import { extractNicheSeeds, judgeRelevance, type DeepSeekClient } from "@/lib/llm/deepseek";
 import { buildNicheProfile, relevanceScore, DEFAULT_RELEVANCE_THRESHOLD } from "@/lib/core/relevance";
+import { normalizeDomain } from "@/lib/competitors";
 
 const IDEAS_ENDPOINT = "/v3/dataforseo_labs/google/keyword_ideas/live";
 const RANKED_ENDPOINT = "/v3/dataforseo_labs/google/ranked_keywords/live";
@@ -106,7 +107,7 @@ export function profileSiteHandler(
     // still carry it), but surface it: swallowing a real provider failure silently
     // has previously masked a billing-lapse outage in production for 24h undetected.
     try {
-      const { items, rows: n } = await rankedKeywords(client, { target: project.domain, locationCode: loc, languageCode: lang, limit: MAX_CANDIDATES });
+      const { items, rows: n } = await rankedKeywords(client, { target: normalizeDomain(project.domain), locationCode: loc, languageCode: lang, limit: MAX_CANDIDATES });
       for (const it of items) if (it.keyword) put({ keyword: it.keyword, source: "ranking", volume: it.searchVolume, difficulty: it.difficulty });
       await logApiUsage(db, { endpoint: RANKED_ENDPOINT, rows: n, projectId });
       cost += estimateCost(RANKED_ENDPOINT, n); rows += n;

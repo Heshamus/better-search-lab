@@ -56,4 +56,20 @@ describe("rankRefreshHandler", () => {
     expect(snap.rankAbsolute).toBe(4); // still best hit
     expect(snap.ownUrls).toEqual(["https://harperflow.io/tools", "https://harperflow.io/blog/tools"]);
   });
+  it("finds rank and own_urls when the stored domain is mixed-case (SERP domains are lowercase)", async () => {
+    // Real projects store the domain verbatim ("HarperFlow.io"); SERP results are
+    // lowercased. A raw === match nulls the rank AND empties own_urls.
+    const t = await createTestDb(); close = t.close;
+    const p = await createProject(t.db, { name: "HF", domain: "HarperFlow.io" });
+    const [kw] = await addKeywords(t.db, p.id, [{ keyword: "seo tools", locationCode: 2840, languageCode: "en" }]);
+    const client = new DataForSeoClient({ login: "L", password: "P" });
+    const serp = vi.fn().mockResolvedValue({ rows: 2, items: [
+      { rankAbsolute: 4, rankGroup: 4, domain: "harperflow.io", url: "https://harperflow.io/tools", serpFeatures: [] },
+      { rankAbsolute: 2, rankGroup: 2, domain: "rival.com", url: "https://rival.com/x", serpFeatures: [] },
+    ]});
+    await rankRefreshHandler(client, serp)({ db: t.db, projectId: p.id });
+    const [snap] = await t.db.select().from(rankSnapshots).where(eq(rankSnapshots.keywordId, kw.id));
+    expect(snap.rankAbsolute).toBe(4);                              // was null before the fix
+    expect(snap.ownUrls).toEqual(["https://harperflow.io/tools"]); // was [] before the fix
+  });
 });

@@ -1,7 +1,11 @@
-import type { SerpItem } from "@/lib/dataforseo/serp";
+import { normDomain, type SerpItem } from "@/lib/dataforseo/serp";
 
 export function findDomainRank(items: SerpItem[], domain: string) {
-  const hit = items.find((i) => i.domain === domain);
+  // Case- and www-insensitive: SERP domains are lowercased, but a project's
+  // stored domain may be mixed-case ("HarperFlow.io"), which a raw === would
+  // silently never match — zeroing out the rank.
+  const target = normDomain(domain);
+  const hit = items.find((i) => normDomain(i.domain) === target);
   return hit ? { rankAbsolute: hit.rankAbsolute, rankGroup: hit.rankGroup, url: hit.url } : null;
 }
 

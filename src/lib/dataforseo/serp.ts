@@ -12,7 +12,10 @@ export interface SerpItem {
 const FEATURE_TYPES = new Set(["featured_snippet", "people_also_ask", "ai_overview", "local_pack"]);
 // Features a domain can actually WIN with content (local_pack is a maps result — excluded).
 const OWNABLE_TYPES = new Set(["featured_snippet", "people_also_ask", "ai_overview"]);
-const normDomain = (d: unknown): string => String(d ?? "").toLowerCase().replace(/^www\./, "");
+// Normalize a host for comparison: lowercase, strip a leading "www.". SERP result
+// domains come back lowercased; a project's stored domain may be mixed-case or
+// www-prefixed, so every domain match must normalize BOTH sides through this.
+export const normDomain = (d: unknown): string => String(d ?? "").toLowerCase().replace(/^www\./, "");
 
 /**
  * Which capturable SERP features THIS domain currently owns, from the raw SERP

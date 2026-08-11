@@ -1,6 +1,6 @@
 import { projects, keywords, rankSnapshots } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
-import { serpOrganicLive } from "@/lib/dataforseo/serp";
+import { serpOrganicLive, normDomain } from "@/lib/dataforseo/serp";
 import { findDomainRank } from "@/lib/core/rank";
 import { logApiUsage, estimateCost } from "@/lib/dataforseo/cost";
 import { mapLimit } from "@/lib/async/map-limit";
@@ -24,7 +24,7 @@ export function rankRefreshHandler(client: DataForSeoClient, serp: typeof serpOr
         const { items, ownedFeatures } = await serp(client, { keyword: kw.keyword, locationCode: kw.locationCode, languageCode: kw.languageCode, device: kw.device, ownDomain: project.domain });
         const hit = findDomainRank(items, project.domain);
         const features = items[0]?.serpFeatures ?? [];
-        const ownUrls = [...new Set(items.filter((i) => i.domain === project.domain).map((i) => i.url))];
+        const ownUrls = [...new Set(items.filter((i) => normDomain(i.domain) === normDomain(project.domain)).map((i) => i.url))];
         await db.insert(rankSnapshots).values({
           keywordId: kw.id, rankAbsolute: hit?.rankAbsolute ?? null, rankGroup: hit?.rankGroup ?? null,
           url: hit?.url ?? null, serpFeatures: features, ownedFeatures, fetchStatus: "ok", ownUrls,
