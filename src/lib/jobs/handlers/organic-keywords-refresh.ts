@@ -4,6 +4,7 @@ import { rankedKeywords } from "@/lib/dataforseo/labs";
 import { replaceOrganicKeywords, type OrganicKeywordRow } from "@/lib/organic-keywords-store";
 import { logApiUsage, estimateCost } from "@/lib/dataforseo/cost";
 import type { DataForSeoClient } from "@/lib/dataforseo/client";
+import { normalizeDomain } from "@/lib/competitors";
 
 const RANKED = "/v3/dataforseo_labs/google/ranked_keywords/live";
 const LIMIT = 1000; // top 1,000 by volume — see plan Global Constraints
@@ -18,7 +19,7 @@ export function organicKeywordsRefreshHandler(client: DataForSeoClient) {
     if (!project) return { rows: 0, cost: 0 };
 
     const { items, rows: n } = await rankedKeywords(client, {
-      target: project.domain,
+      target: normalizeDomain(project.domain),
       locationCode: project.defaultLocationCode,
       languageCode: project.defaultLanguageCode,
       limit: LIMIT,

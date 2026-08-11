@@ -4,7 +4,7 @@ import { createProject } from "@/lib/projects";
 import { DataForSeoClient } from "@/lib/dataforseo/client";
 import { organicKeywordsRefreshHandler } from "@/lib/jobs/handlers/organic-keywords-refresh";
 import { getOrganicKeywords } from "@/lib/organic-keywords-store";
-import { apiUsage } from "@/db/schema";
+import { apiUsage, projects } from "@/db/schema";
 import fixture from "@/lib/dataforseo/fixtures/ranked-keywords-live.json";
 
 let close: (() => Promise<void>) | undefined;
@@ -61,5 +61,29 @@ describe("organic_keywords_refresh handler", () => {
 
     const { rows } = await getOrganicKeywords(t.db, p.id);
     expect(rows).toEqual([]);
+  });
+
+  it("normalizes the stored domain (case, scheme, www, path) before using it as the DataForSEO target", async () => {
+    const t = await createTestDb(); close = t.close;
+    // Regression for a live bug: DataForSEO's ranked_keywords `target` is
+    // case-sensitive ("harperflow.io" ranked, "HarperFlow.io" returned zero),
+    // and the stored project domain isn't guaranteed to already be normalized.
+    const p = await createProject(t.db, { name: "HF", domain: "HarperFlow.io" });
+
+    let capturedTarget: unknown;
+    const fetchImpl = (async (_url: unknown, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? "[]"));
+      capturedTarget = body[0]?.target;
+      return new Response(JSON.stringify(fixture), { status: 200 });
+    }) as any;
+    const client = new DataForSeoClient({ login: "x", password: "y", fetchImpl });
+
+    await organicKeywordsRefreshHandler(client)({ db: t.db, projectId: p.id });
+
+    // The API target is normalized; the stored project.domain is untouched
+    // (display continues to show "HarperFlow.io" as entered).
+    expect(capturedTarget).toBe("harperflow.io");
+    const [project] = await t.db.select().from(projects);
+    expect(project.domain).toBe("HarperFlow.io");
   });
 });
