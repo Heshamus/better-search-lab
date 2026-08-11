@@ -148,6 +148,13 @@
       "when": 1786036199727,
       "tag": "0020_medical_hellcat",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1786429609209,
+      "tag": "0021_jazzy_tempest",
+      "breakpoints": true
     }
   ]
 }

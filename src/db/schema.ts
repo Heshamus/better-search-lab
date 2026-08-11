@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, numeric, real, index, uniqueIndex, date } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, numeric, real, index, uniqueIndex, date, doublePrecision } from "drizzle-orm/pg-core";
 import type { AuditIssue } from "@/lib/audit/checks";
 import type { BacklinkSummary, ReferringDomain, Anchor } from "@/lib/dataforseo/backlinks";
 import type { GscTotals, GscTopRow, RisingQuery } from "@/lib/google/gsc";
@@ -178,6 +178,20 @@ export const backlinkSnapshots = pgTable("backlink_snapshots", {
   summary: jsonb("summary").$type<BacklinkSummary | null>(),
   referringDomains: jsonb("referring_domains").$type<ReferringDomain[]>().notNull().default([]),
   anchors: jsonb("anchors").$type<Anchor[]>().notNull().default([]),
+});
+
+// One organic-keywords refresh per project — the latest DataForSEO Ranked
+// Keywords snapshot (replace-all per sync, no history in v1).
+export const organicKeywords = pgTable("organic_keywords", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  keyword: text("keyword").notNull(),
+  position: integer("position"),
+  searchVolume: integer("search_volume"),
+  difficulty: integer("difficulty"),
+  url: text("url"),
+  estTraffic: doublePrecision("est_traffic"),
+  capturedAt: timestamp("captured_at").defaultNow().notNull(),
 });
 
 // A project's Google connection: one OAuth refresh token (scopes cover both
