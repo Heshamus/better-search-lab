@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { OrganicKeywordsTable } from "@/components/organic-keywords-table";
 import type { OrganicKeywordRow } from "@/lib/organic-keywords-store";
@@ -90,5 +90,15 @@ describe("OrganicKeywordsTable", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /^prev$/i }));
     expect(screen.getByText(/page 1 of 1/i)).toBeTruthy();
+  });
+
+  it("Track posts the keyword to /api/keywords with the project's location/language", async () => {
+    const calls: any[] = [];
+    (global.fetch as any) = vi.fn(async (url: string, init: any) => { calls.push({ url, body: JSON.parse(init.body) }); return new Response("{}", { status: 200 }); });
+    render(<OrganicKeywordsTable {...props} rows={rows} />);
+    fireEvent.click(screen.getAllByRole("button", { name: /^track$/i })[0]);
+    await Promise.resolve();
+    expect(calls[0].url).toBe("/api/keywords");
+    expect(calls[0].body).toEqual({ projectId: "p1", keywords: [{ keyword: "webflow seo", locationCode: 2840, languageCode: "en" }] });
   });
 });

@@ -51,6 +51,22 @@ export function OrganicKeywordsTable(props: {
   const [bucket, setBucket] = useState<number | null>(null);
   const [sort, setSort] = useState<SortKey>("position");
   const [page, setPage] = useState(1);
+  const [tracked, setTracked] = useState<Set<string>>(new Set());
+
+  // Optimistic add to the local `tracked` set so the button flips to
+  // "Tracked" immediately; reverted only if the POST itself fails (network
+  // error or non-2xx via .catch — mirrors the brief's fire-and-forget shape).
+  async function track(keyword: string) {
+    setTracked((s) => new Set(s).add(keyword));
+    await fetch("/api/keywords", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        projectId: props.projectId,
+        keywords: [{ keyword, locationCode: props.defaultLocationCode, languageCode: props.defaultLanguageCode }],
+      }),
+    }).catch(() => setTracked((s) => { const n = new Set(s); n.delete(keyword); return n; }));
+  }
 
   const view = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -101,6 +117,7 @@ export function OrganicKeywordsTable(props: {
               <SortableHeader label="Difficulty" active={sort === "difficulty"} dir={-1} onClick={() => setSort("difficulty")} />
               <th className="eyebrow px-4 py-2.5">Ranking page</th>
               <SortableHeader label="Est. traffic" active={sort === "estTraffic"} dir={-1} onClick={() => setSort("estTraffic")} />
+              <th className="eyebrow px-4 py-2.5">Track</th>
             </tr>
           </thead>
           <tbody>
@@ -114,9 +131,15 @@ export function OrganicKeywordsTable(props: {
                   {r.url ? <a href={r.url} target="_blank" rel="noreferrer" className="text-neutral-300 hover:text-white" title={r.url}>{shortPath(r.url)}</a> : "—"}
                 </td>
                 <td className="px-4 py-2.5 tnum text-neutral-300">{r.estTraffic != null ? formatCompact(r.estTraffic) : "—"}</td>
+                <td className="px-4 py-2.5">
+                  <button type="button" disabled={tracked.has(r.keyword)} onClick={() => void track(r.keyword)}
+                    className="rounded-md px-2 py-0.5 text-xs font-medium text-accent hover:bg-accent/10 disabled:text-neutral-500">
+                    {tracked.has(r.keyword) ? "Tracked" : "Track"}
+                  </button>
+                </td>
               </tr>
             ))}
-            {view.length === 0 ? <tr><td colSpan={6} className="px-4 py-6 text-center text-sm text-neutral-500">No keywords match.</td></tr> : null}
+            {view.length === 0 ? <tr><td colSpan={7} className="px-4 py-6 text-center text-sm text-neutral-500">No keywords match.</td></tr> : null}
           </tbody>
         </table>
       </div>
