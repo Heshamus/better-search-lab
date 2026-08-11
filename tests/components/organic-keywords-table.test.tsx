@@ -14,7 +14,7 @@ const rows: OrganicKeywordRow[] = [
   { keyword: "webflow seo", position: 3, searchVolume: 100, difficulty: 20, url: "https://x.io/a", estTraffic: 40 },
   { keyword: "ai visibility", position: 15, searchVolume: 900, difficulty: 55, url: "https://x.io/b", estTraffic: 120 },
 ];
-const props = { projectId: "p1", defaultLocationCode: 2840, defaultLanguageCode: "en", capturedAt: new Date() };
+const props = { projectId: "p1", defaultLocationCode: 2840, defaultLanguageCode: "en" };
 
 // DOM order of the three fixture keywords, however the component currently
 // renders them — used to assert sort behavior without reaching into internals.

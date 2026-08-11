@@ -45,7 +45,7 @@ function SortableHeader({
 
 export function OrganicKeywordsTable(props: {
   projectId: string; defaultLocationCode: number; defaultLanguageCode: string;
-  rows: OrganicKeywordRow[]; capturedAt: Date | null;
+  rows: OrganicKeywordRow[];
 }) {
   const [q, setQ] = useState("");
   const [bucket, setBucket] = useState<number | null>(null);
