@@ -54,18 +54,29 @@ export function OrganicKeywordsTable(props: {
   const [tracked, setTracked] = useState<Set<string>>(new Set());
 
   // Optimistic add to the local `tracked` set so the button flips to
-  // "Tracked" immediately; reverted only if the POST itself fails (network
-  // error or non-2xx via .catch — mirrors the brief's fire-and-forget shape).
+  // "Tracked" immediately; reverted on EITHER a network-level failure or a
+  // non-2xx response (e.g. the ordinary 401 requireSession() returns on a
+  // stale session — fetch resolves normally for that, it does not reject —
+  // so a bare `.catch()` would miss it and leave the button falsely stuck on
+  // "Tracked" with nothing persisted). Mirrors the res.ok check already used
+  // by the sibling handlers against this exact endpoint/concept:
+  // TrackToggle.handleClick and AddKeywordsBox.handleSubmit in
+  // keyword-manager.tsx.
   async function track(keyword: string) {
     setTracked((s) => new Set(s).add(keyword));
-    await fetch("/api/keywords", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        projectId: props.projectId,
-        keywords: [{ keyword, locationCode: props.defaultLocationCode, languageCode: props.defaultLanguageCode }],
-      }),
-    }).catch(() => setTracked((s) => { const n = new Set(s); n.delete(keyword); return n; }));
+    try {
+      const res = await fetch("/api/keywords", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId: props.projectId,
+          keywords: [{ keyword, locationCode: props.defaultLocationCode, languageCode: props.defaultLanguageCode }],
+        }),
+      });
+      if (!res.ok) throw new Error(`track failed: ${res.status}`);
+    } catch {
+      setTracked((s) => { const n = new Set(s); n.delete(keyword); return n; });
+    }
   }
 
   const view = useMemo(() => {

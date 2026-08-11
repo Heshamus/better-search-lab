@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
 import { OrganicKeywordsTable } from "@/components/organic-keywords-table";
 import type { OrganicKeywordRow } from "@/lib/organic-keywords-store";
 
@@ -92,13 +92,35 @@ describe("OrganicKeywordsTable", () => {
     expect(screen.getByText(/page 1 of 1/i)).toBeTruthy();
   });
 
-  it("Track posts the keyword to /api/keywords with the project's location/language", async () => {
+  it("Track posts the keyword to /api/keywords with the project's location/language, then shows Tracked (disabled)", async () => {
     const calls: any[] = [];
     (global.fetch as any) = vi.fn(async (url: string, init: any) => { calls.push({ url, body: JSON.parse(init.body) }); return new Response("{}", { status: 200 }); });
     render(<OrganicKeywordsTable {...props} rows={rows} />);
     fireEvent.click(screen.getAllByRole("button", { name: /^track$/i })[0]);
-    await Promise.resolve();
     expect(calls[0].url).toBe("/api/keywords");
     expect(calls[0].body).toEqual({ projectId: "p1", keywords: [{ keyword: "webflow seo", locationCode: 2840, languageCode: "en" }] });
+    // The externally-visible deliverable: the clicked row's button flips its
+    // label and becomes disabled once the (successful) POST lands.
+    await waitFor(() => {
+      const trackedButton = screen.getAllByRole("button", { name: /^tracked$/i })[0];
+      expect(trackedButton).toBeTruthy();
+      expect(trackedButton).toBeDisabled();
+    });
+  });
+
+  it("Track reverts to the untracked state when the POST responds non-2xx (e.g. an expired session)", async () => {
+    // A resolved, non-ok Response — NOT a network rejection. fetch does not
+    // reject on HTTP error status, so this is the exact shape a `.catch()`
+    // -only handler would miss (the bug this test guards against).
+    (global.fetch as any) = vi.fn(async () => new Response("{}", { status: 401 }));
+    render(<OrganicKeywordsTable {...props} rows={rows} />);
+    fireEvent.click(screen.getAllByRole("button", { name: /^track$/i })[0]);
+    await waitFor(() => {
+      expect(screen.queryAllByRole("button", { name: /^tracked$/i })).toHaveLength(0);
+    });
+    // Reverted all the way back to an enabled "Track" — not stuck disabled.
+    const trackButton = screen.getAllByRole("button", { name: /^track$/i })[0];
+    expect(trackButton).toBeTruthy();
+    expect(trackButton).not.toBeDisabled();
   });
 });
