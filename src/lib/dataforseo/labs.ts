@@ -43,7 +43,7 @@ export async function keywordSuggestions(client: DataForSeoClient, p: {
   return { items, rows: items.length };
 }
 
-export interface RankedKeyword { keyword: string; rankAbsolute: number | null; searchVolume: number | null; difficulty: number | null; url: string | null; }
+export interface RankedKeyword { keyword: string; rankAbsolute: number | null; searchVolume: number | null; difficulty: number | null; url: string | null; etv: number | null; }
 export async function rankedKeywords(client: DataForSeoClient, p: { target: string; locationCode: number; languageCode: string; limit?: number; }) {
   const body = [{ target: p.target, location_code: p.locationCode, language_code: p.languageCode, limit: p.limit ?? 100 }];
   const resp = await client.post<any>("/v3/dataforseo_labs/google/ranked_keywords/live", body);
@@ -55,6 +55,7 @@ export async function rankedKeywords(client: DataForSeoClient, p: { target: stri
     searchVolume: num(i.keyword_data?.keyword_info?.search_volume),
     difficulty: num(i.keyword_data?.keyword_properties?.keyword_difficulty),
     url: i.ranked_serp_element?.serp_item?.url ?? null,
+    etv: num(i.ranked_serp_element?.serp_item?.etv),
   }));
   return { items, rows: items.length };
 }

@@ -25,6 +25,7 @@ import { competitorIntelHandler } from "../src/lib/jobs/handlers/competitor-inte
 import { profileSiteHandler } from "../src/lib/jobs/handlers/profile-site";
 import { siteAuditHandler } from "../src/lib/jobs/handlers/site-audit";
 import { backlinksRefreshHandler } from "../src/lib/jobs/handlers/backlinks-refresh";
+import { organicKeywordsRefreshHandler } from "../src/lib/jobs/handlers/organic-keywords-refresh";
 import { gscSyncHandler } from "../src/lib/jobs/handlers/gsc-sync";
 import { gaSyncHandler } from "../src/lib/jobs/handlers/ga-sync";
 import { aiVisibilityScanHandler } from "../src/lib/jobs/handlers/ai-visibility-scan";
@@ -84,6 +85,7 @@ function resolveHandler(type: string): JobHandler | null {
     case "competitor_intel": return competitorIntelHandler(client);
     case "site_audit": return siteAuditHandler();
     case "backlinks_refresh": return backlinksRefreshHandler(client);
+    case "organic_keywords_refresh": return organicKeywordsRefreshHandler(client);
     case "gsc_sync": return gscSyncHandler();
     case "ga_sync": return gaSyncHandler();
     case "ai_visibility_scan": return aiVisibilityScanHandler();
