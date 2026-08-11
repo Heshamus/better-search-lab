@@ -27,10 +27,10 @@ export default async function OrganicKeywordsPage() {
         <RunOrganicKeywordsButton projectId={project.id} />
       </div>
       {rows.length === 0 ? (
-        <div className="panel flex flex-col items-center gap-3 px-6 py-14 text-center">
-          <p className="text-base font-semibold text-white">No organic keywords yet</p>
-          <p className="max-w-sm text-sm text-neutral-400">Hit “Refresh organic keywords” to pull everything your domain ranks for (top 1,000 by volume).</p>
-        </div>
+        <EmptyState
+          title="No organic keywords yet"
+          description="Hit “Refresh organic keywords” to pull everything your domain ranks for (top 1,000 by volume)."
+        />
       ) : (
         <OrganicKeywordsTable projectId={project.id} defaultLocationCode={project.defaultLocationCode} defaultLanguageCode={project.defaultLanguageCode} rows={rows} capturedAt={capturedAt} />
       )}
