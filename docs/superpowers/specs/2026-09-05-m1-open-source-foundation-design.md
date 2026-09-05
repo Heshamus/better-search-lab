@@ -2,6 +2,9 @@
 
 > **Status:** design, owner-approved section by section on 2026-09-05. Terminal step of
 > brainstorming → next is `writing-plans`.
+> **Revised:** 2026-09-05 after owner review — first-admin locking (§9.1), session revocation
+> (§9.5), persisted onboarding state (§11.1), config compatibility (§8), demo allowlist (§13),
+> measurable install target (§21.1).
 > **Date:** 2026-09-05
 > **Repo:** `better-search-lab` (working folder `seo-platform`), product name **Better Search Lab**.
 > **Scope of this document:** Milestone 1 of a four-milestone program that turns the internal
@@ -49,8 +52,10 @@ it and a public release:
 
 ## 2. Goals
 
-- **G1 — Five-minute install.** `git clone` → two env vars → `docker compose up` → browser
-  wizard → populated dashboard, with no file editing after the env.
+- **G1 — Five-minute install.** `git clone` → set `AUTH_SECRET` and `APP_URL` →
+  `docker compose up` → browser wizard → populated dashboard: five minutes of the person's
+  time, under ten minutes wall clock, no file editing after `.env`. The acceptance test is
+  §21.1.
 - **G2 — Configure in the app.** Every integration is set, tested, and changed from Settings →
   Integrations without a restart. Env vars still work and win when set.
 - **G3 — Real users.** First-run admin, admin-managed users, two roles, hardened login. No
@@ -61,8 +66,9 @@ it and a public release:
   with zero external keys, for a hosted demo, screenshots, and try-before-configure.
 - **G6 — A repo strangers can trust.** License, scrubbed history-safe code, CI, published image
   and npm package, README + docs, community files.
-- **G7 — Zero-friction upgrade for the existing deployment.** Env untouched, users keep working,
-  the oldest user becomes admin automatically.
+- **G7 — Zero-friction upgrade for the existing deployment.** Env untouched, every account
+  keeps working after one re-sign-in (sessions gain a version, §9.5), the oldest user becomes
+  admin automatically.
 
 ## 3. Non-goals (explicitly deferred)
 
@@ -126,9 +132,9 @@ Every task inherits these verbatim:
 |---|---|---|
 | **A** Bootstrap hygiene | Lazy DB client; bootstrap env shrunk to two vars; secret-free `next build`; `ALLOWLIST` removed | — |
 | **B** Config service | `settings` table, typed registry, encryption, env override, `getConfig()`, client factories, call-site migration | A |
-| **C** Auth & users | First-run admin, users CRUD, roles + `requireAdmin`, on-brand login without Server Actions, hardening | A |
+| **C** Auth & users | Locked first-run admin, users CRUD, roles + `requireAdmin`, per-request session validation, on-brand login without Server Actions, hardening | A |
 | **D** Integrations UI | Settings tabs; per-integration forms; Test-connection routes; models dropdown | B, C |
-| **E** Setup wizard | `/setup` state machine, `jobs.progress`, competitor suggest | B, C, D |
+| **E** Setup wizard | `/setup` with persisted onboarding state, `jobs.progress`, competitor suggest | B, C, D |
 | **F** Provider seams | `ChatProvider` + two adapters, `EmailSender` + SMTP, `userData` wrapper, MCP default URL + npm bin | B |
 | **G** Demo mode | Deterministic seeder, boot hook, write block, demo login, demo provider | B, C, E |
 | **H** Repo & release | License, scrub, fixture sanitization, CI, Dockerfile, compose, docs, community files, versioning | H1 (license/scrub/CI) any time; H2 (compose/Dockerfile/docs) after A–G |
@@ -152,6 +158,11 @@ Build order: **A → B → C → D → E → F → G**, with **H1** in parallel 
 
   Every other variable moves to the registry (§8.2) as an *override*, including legacy aliases,
   so an existing `.env` keeps working.
+
+  Which vars a person actually types depends on the install path: **compose** wires
+  `DATABASE_URL` to its `db` service, so a compose user sets only `AUTH_SECRET` and `APP_URL`
+  in `.env`; a **bare-metal** install sets `DATABASE_URL` and `AUTH_SECRET`, with `APP_URL`
+  recommended. Every mention of "required env" elsewhere in this spec means this paragraph.
 - **`ALLOWLIST` removed.** `src/lib/auth/allowlist.ts` and its test are deleted; the users
   table is the allowlist. `seed.mjs` is deleted (replaced by `/setup`).
 - **Dockerfile** drops the placeholder-secrets block; `next build` runs with no env.
@@ -168,7 +179,7 @@ Build order: **A → B → C → D → E → F → G**, with **H1** in parallel 
 | `registry.ts` | The single declaration of every setting (§8.2). Exports `SETTINGS`, `GROUPS`, `SettingDef`, `settingByKey()`. |
 | `crypto.ts` | `deriveKey(authSecret)` (HKDF-SHA256, info `"bsl-settings-v1"`, 32 bytes), `encrypt(plain, key)`, `decrypt(payload, key)`. Payload format: `v1:` + base64(iv ‖ ciphertext ‖ tag), AES-256-GCM, 12-byte random IV. |
 | `store.ts` | `readAllSettings(db)`, `writeSettings(db, entries, updatedBy)`, `deleteSetting(db, key)`. Encrypts/decrypts per `SettingDef.secret`. A value that fails to decrypt is returned as `{ key, value: undefined, undecryptable: true }`. |
-| `resolve.ts` | `getConfig(db, opts?: { fresh?: boolean })` → `AppConfig`. Resolution per key: env (registry `env` or any `legacyEnv`, non-empty) > db > unset. In-process cache with a 30 s TTL; `invalidateConfigCache()` called by `writeSettings`. `envOverriddenKeys()` for the UI. |
+| `resolve.ts` | `getConfig(db, opts?: { fresh?: boolean })` → `AppConfig`. Resolution per key: env (registry `env` or any `legacyEnv`, non-empty) > db > unset. In-process cache with a 30 s TTL; `invalidateConfigCache()` called by `writeSettings`. `envOverriddenKeys()` for the UI. The cache is a web-process convenience only: the worker and the Test-connection routes always pass `fresh: true` (§8.4). Multiple web replicas may lag a save by up to 30 s; documented, accepted. |
 | `clients.ts` | Factories returning `null` when the group is not `configured`: `makeDataForSeoClient(cfg)`, `makeChatProvider(cfg)`, `makeEmailSender(cfg)`, `makeEdenClient(cfg)`, `makeGoogleAuth(cfg)`, `makeRedditSource(cfg)`, `makeApifyClient(cfg)`. |
 | `app-config.ts` | The `AppConfig` type: one object per group with typed fields plus a `configured: boolean` computed by the group's rule (§8.2). |
 
@@ -179,7 +190,7 @@ Each entry: `key`, `group`, `label`, `description`, `secret`, `env`, `legacyEnv[
 
 | Group | Key | Env (override) | Secret | Notes |
 |---|---|---|---|---|
-| app | `app.url` | `APP_URL` | no | Public base URL. Derives the Google redirect URI and email links. Default `http://localhost:3000`. |
+| app | `app.url` | `APP_URL` | no | Public base URL. Derives the Google redirect URI (unless `google.redirectUri` is set) and links in emails. No default: when unset, the features that need it show "set App URL" in their card rather than guessing. Compose and the demo file set it. |
 | dataforseo | `dataforseo.login` | `DATAFORSEO_LOGIN` | no | |
 | dataforseo | `dataforseo.password` | `DATAFORSEO_PASSWORD` | yes | *configured:* both set. |
 | llm | `llm.provider` | `LLM_PROVIDER` | no | enum: `deepseek` `openai` `anthropic` `openrouter` `groq` `together` `gemini` `ollama` `custom`. Legacy: when unset and `DEEPSEEK_API_KEY` is present → `deepseek`. |
@@ -189,7 +200,8 @@ Each entry: `key`, `group`, `label`, `description`, `secret`, `env`, `legacyEnv[
 | llm | `llm.effort` | `LLM_EFFORT` | no | enum `low` `medium` `high`; default `medium`. Used by the `anthropic` adapter only. *configured:* provider set and (apiKey set or provider is `ollama`) and model set. |
 | google | `google.clientId` | `GOOGLE_CLIENT_ID` | no | |
 | google | `google.clientSecret` | `GOOGLE_CLIENT_SECRET` | yes | |
-| google | `google.serviceAccountKey` | `GOOGLE_SA_KEY` | yes | Raw or base64 JSON. *configured:* SA key set, or clientId+clientSecret set. `GOOGLE_REDIRECT_URI` is dropped; the URI is `${app.url}/api/google/callback`. |
+| google | `google.serviceAccountKey` | `GOOGLE_SA_KEY` | yes | Raw or base64 JSON. |
+| google | `google.redirectUri` | `GOOGLE_REDIRECT_URI` | no | Optional. An explicit value wins; otherwise derived as `${app.url}/api/google/callback`. If neither this nor `app.url` is set, the Google card disables Connect with "set App URL first" and `/api/google/connect` returns `?error=not_configured`. Kept so an untouched `.env` keeps its working OAuth setup (the callback also uses it to compute its own redirect origin). *configured:* SA key set, or clientId + clientSecret set. |
 | edenai | `edenai.apiKey` | `EDENAI_API_KEY` | yes | *configured:* set. |
 | edenai | `edenai.sonarModel` / `chatgptModel` / `geminiModel` | `EDEN_SONAR_MODEL` / `EDEN_CHATGPT_MODEL` / `EDEN_GEMINI_MODEL` | no | Existing defaults preserved. |
 | email | `email.provider` | `EMAIL_PROVIDER` | no | enum `none` `resend` `smtp`. Legacy: unset + `RESEND_API_KEY` present → `resend`. |
@@ -222,8 +234,11 @@ settings
   handlers) switch to `getConfig(db)`; the 5 under `scripts/` too. `src/auth.ts` stops reading
   `ALLOWLIST`; `src/db/client.ts` and `src/db/migrate.ts` keep the bootstrap `loadEnv()`.
   `worker/index.ts` stops building clients at module scope and resolves them per job via
-  `clients.ts` (§8.1), so a key added in the UI takes effect on the next job without a restart.
-  The cron `run()` resolves once per tick.
+  `clients.ts` (§8.1) from `getConfig(db, { fresh: true })`. The worker is a separate process
+  that the web process's cache invalidation cannot reach, so it never uses the 30 s cache; that
+  fresh read is what makes "a key added in the UI takes effect on the next job without a
+  restart" true. The cron `run()` reads fresh once per tick. Test-connection routes read fresh
+  too, so a just-saved key is what gets tested.
 - Feature gates: pages that render "not configured" copy (`ai-visibility`, `gsc`, `ga`,
   `trends`, Reddit) read `cfg.<group>.configured` and render a link to
   `/settings/integrations#<group>` with the integration's name.
@@ -233,9 +248,14 @@ settings
 
 ### 9.1 First run
 
-- `src/lib/auth/users.ts` → `createFirstAdmin(db, { email, password })` executes one statement:
-  `INSERT INTO users (email, password_hash, role) SELECT $1, $2, 'admin' WHERE NOT EXISTS
-  (SELECT 1 FROM users)`; zero rows inserted → `AdminAlreadyExistsError`.
+- `src/lib/auth/users.ts` → `createFirstAdmin(db, { email, password })` runs in one
+  transaction: `SELECT pg_advisory_xact_lock(hashtext('bsl:users'))`, then
+  `SELECT count(*) FROM users`, then the insert only when the count is zero; otherwise
+  `AdminAlreadyExistsError`. A bare `INSERT … WHERE NOT EXISTS` is not enough: under
+  READ COMMITTED two concurrent statements both snapshot an empty table and both insert
+  (write skew), so two strangers racing a fresh public install would both become admin. The
+  same advisory lock wraps every user-management mutation (§9.2), which is also what makes the
+  last-admin invariants hold under concurrency. Verified by the real-Postgres suite in §18.
 - `/login` (server component) redirects to `/setup` when `countUsers() === 0`; `/setup` redirects
   to `/login` when users exist and the visitor is unauthenticated. After creating the admin the
   wizard signs them in (client-side `signIn`, §9.4) and continues.
@@ -260,8 +280,9 @@ settings
   read so demotion is immediate.
 - Users API (admin): `GET /api/users`, `POST /api/users` `{ email, role, password }`,
   `PATCH /api/users/[id]` `{ role? , password? }`, `DELETE /api/users/[id]`.
-  Invariants enforced in `users.ts`: cannot demote or delete the last admin; cannot delete
-  yourself; emails are normalized to lowercase and unique case-insensitively.
+  Invariants enforced in `users.ts`, each inside the `bsl:users` advisory-locked transaction:
+  cannot demote or delete the last admin; cannot delete yourself; emails are normalized to
+  lowercase and unique case-insensitively.
 - Own account: `POST /api/account/password` `{ currentPassword, newPassword }`.
 - `users.last_login_at timestamptz null` is added and stamped in `authorize()`.
 
@@ -288,6 +309,33 @@ settings
 `allowedOrigins` hack and the proxy-rewrites-host failure class. `stale-build-reloader` stays
 (harmless). The page is rebuilt on the Signal system: centered panel, logo + wordmark, inline
 error state, no signup link.
+
+### 9.5 Sessions and revocation
+
+Sessions stay JWT-based (Auth.js's Credentials provider supports only the JWT strategy), so
+revocation is done by validating every request against the users table:
+
+- `users.session_version integer not null default 1`. The JWT carries only `sub` (user id) and
+  `sv` (the version at sign-in); it carries no role.
+- `src/lib/auth/session.ts` → `resolveSessionUser()`: reads the JWT, loads `users` by id, and
+  returns `{ id, email, role }` only when the row exists and `session_version` equals `sv`. One
+  primary-key lookup per request. `requireSession()` and `requireAdmin()` use it, so a valid
+  JWT for a deleted user gets `401` instead of being accepted as it is today
+  (`src/lib/api-guard.ts`).
+- Pages get the same check: `src/app/(app)/layout.tsx` becomes a server component that calls
+  `resolveSessionUser()` and redirects an invalid session to `/login?reason=signed-out`, then
+  renders the existing client shell (moved to `src/components/app-shell.tsx`, which keeps
+  `usePathname`). Every `(app)` page is already `force-dynamic`, so the layout runs per
+  request. Middleware still only verifies the JWT signature (it runs on the edge without a
+  DB); it is a fast pre-filter, not the authority.
+- Revocation events. **Delete user** → immediate, the row is gone. **Password reset** by an
+  admin or by the user → `session_version` bumps, invalidating every session of that user
+  including the current one for a self-change; the account page signs the user out with
+  "Password changed — sign in again." **Role change** → effective on the next request, because
+  role is always read from the DB. **MCP tokens** are unaffected; they have their own revoke in
+  Settings → MCP.
+- JWTs minted before this change carry no `sv` and are rejected, so every existing user signs in
+  once after the upgrade (noted in `docs/upgrading.md`).
 
 ## 10. Slice D — Integrations UI
 
@@ -327,20 +375,33 @@ error state, no signup link.
 
 ### 11.1 Route and state machine
 
-`src/app/(auth)/setup/page.tsx` (server) computes the first incomplete step from DB state and
-renders `src/components/setup-wizard.tsx` (client) at that step; completed steps are revisitable.
+`src/app/(auth)/setup/page.tsx` (server) picks the first step whose **persisted** state is
+pending and renders `src/components/setup-wizard.tsx` (client) at that step; completed steps
+are revisitable. State is recorded explicitly rather than inferred from data, because inferred
+predicates cannot tell "skipped" from "not done" and cannot tell a half-finished build from a
+finished one:
 
-| Step | Shown when | Action | Skippable |
+- **Global steps** live in `settings` under a reserved, non-secret, hidden-from-Integrations
+  group: `setup.llmStep` = `done | skipped`, `setup.completedAt`. Steps 1 and 2 need no record:
+  "no users" and `!cfg.dataforseo.configured` are exact.
+- **Per-project steps** live in `projects.onboarding jsonb`:
+  `{ profile: "pending"|"done", competitors: "pending"|"skipped"|"done",
+  build: "pending"|"running"|"done"|"failed", buildJobs: { refreshAll?, audit?, backlinks?,
+  organic? } }` (job ids). `null` means a project created before M1 and is read as all-done, so
+  existing projects never enter the wizard.
+
+| Step | Pending when | Action → state written | Skippable |
 |---|---|---|---|
 | 1 Account | no users | `POST /api/setup/admin` → sign in | no |
 | 2 DataForSEO | `!cfg.dataforseo.configured` | Test & save via Integrations routes; shows balance, signup link, one-line cost expectation | no — an "Exit setup" link goes to `/overview` (empty state points back) |
-| 3 AI assistant | `!cfg.llm.configured` | preset + key + model, Test | yes |
-| 4 Your site | no projects, or `?step=site` | name, domain, a market select from the curated `MARKETS` table (`src/lib/markets.ts`, sets `defaultLocationCode` + `defaultLanguageCode`), device → `POST /api/projects`; the new project becomes current (`sp_project` cookie) so steps 5–7 act on it | no |
-| 5 Profile | current project has no tracked keywords | `POST /api/projects/[id]/profile` (existing job) with live progress → existing `ProfileReview` to confirm | no (manual keywords allowed) |
-| 6 Competitors | project has no competitors | existing `CompetitorManager` + **Suggest** (§11.3) | yes |
-| 7 Build | project has tracked keywords but no rank snapshots | `POST …/refresh-all` then `POST …/audit`, sequentially, each with progress; checkbox "Also fetch backlinks and organic keywords (≈ $X)" using `estimateCost` | no |
-| Done | everything above complete | redirect `/overview` | — |
+| 3 AI assistant | `setup.llmStep` unset | preset + key + model, Test → `done`; Skip → `skipped` | yes |
+| 4 Your site | no projects, or `?step=site` | name, domain, a market select from the curated `MARKETS` table (`src/lib/markets.ts`, sets `defaultLocationCode` + `defaultLanguageCode`), device → `POST /api/projects` initializes `onboarding` as all-pending; the new project becomes current (`sp_project` cookie) so steps 5–7 act on it | no |
+| 5 Profile | `onboarding.profile = pending` | `POST /api/projects/[id]/profile` (existing job) with live progress → existing `ProfileReview`; confirming (or adding manual keywords) → `done` | no |
+| 6 Competitors | `onboarding.competitors = pending` | existing `CompetitorManager` + **Suggest** (§11.3); Continue → `done`, Skip → `skipped` | yes |
+| 7 Build | `onboarding.build ∈ {pending, running, failed}` | Start → `running` + job ids for `refresh-all`, then `audit`, plus `backlinks`/`organic` when the checkbox "Also fetch backlinks and organic keywords (≈ $X)" (`estimateCost`) is on; the wizard polls the **recorded** ids, so closing the tab and returning resumes polling instead of enqueuing again; all done → `done`; any failed → `failed`, and Retry re-enqueues only the failed ones | no |
+| Done | nothing pending | `setup.completedAt` set on first completion; redirect `/overview` | — |
 
+- A skipped optional step never reappears in the wizard; it stays reachable in Settings.
 - `/setup` is public only while no users exist; steps 2+ require an authenticated admin (step
   4+ any authenticated user, since members may add sites).
 - Settings → Project gains an **Add a site** link to `/setup?step=site`; `ProjectCreateForm`
@@ -429,11 +490,22 @@ weekly report and the Reddit digest take an `EmailSender`.
   - Opportunities: the seeder runs `assembleOpportunities` (the real engine) over the generated
     signals and stores the result, so the shortlist is consistent with the data behind it.
   - Demo admin `demo@example.com`, password `demo-password`, role `admin`.
-- **Read-only:** middleware returns `403 { error: "This is a read-only demo." }` for any
-  non-GET `/api/**` request except `/api/auth/**` when `DEMO_MODE` is set. The root layout wraps
-  the app in a `DemoProvider`; `useDemo()` lets refresh/track/dismiss buttons render disabled
-  with a "Read-only demo" tooltip. Integrations renders every group as "Connected (demo)" with
-  no fields. The worker exits immediately in demo mode (compose does not start it).
+- **Read-only, by allowlist.** When `DEMO_MODE` is set, middleware lets through only:
+  `/api/auth/**` (any method), `GET /api/health`, `GET /api/selftest`, `GET /api/jobs/*`,
+  `GET /api/mcp/**` (bearer-guarded, read-only), and `GET /api/settings/integrations`
+  (read-only view). Every other `/api/**` request, **any method**, gets
+  `403 { error: "This is a read-only demo." }`. An allowlist rather than a "non-GET" rule
+  because the Google OAuth callback is a GET handler that writes (`upsertConnection` in
+  `src/app/api/google/callback/route.ts`); it is session-guarded and returns before any write
+  when Google is unconfigured, but the demo boundary must not depend on that. The root layout
+  wraps the app in a `DemoProvider`; `useDemo()` lets refresh/track/dismiss/connect buttons
+  render disabled with a "Read-only demo" tooltip. Integrations renders every group as
+  "Connected (demo)" with no fields; Users shows the demo admin only. The worker exits
+  immediately in demo mode (the demo compose file does not start it).
+- **Demo MCP token.** Token minting is blocked like every other write, so the seeder inserts an
+  `api_tokens` row for a fixed, documented token `bsl_demo_readonly` (hash stored, label
+  "Demo"). Settings → MCP in demo mode shows it read-only, and `docs/mcp.md` lists it. Publishing
+  it is safe because every `/api/mcp/*` route is read-only and the demo data is synthetic.
 - **Demo login:** `/login` shows a single **Explore the demo** button that signs in with the
   demo credentials. A `src/components/demo-banner.tsx` strip sits above the header with a
   link to the repo.
@@ -463,6 +535,7 @@ weekly report and the Reddit digest take an `EmailSender`.
 ### 14.2 CI (H1)
 
 - `.github/workflows/ci.yml` on push/PR: pnpm install (frozen), `tsc --noEmit`, `vitest run`,
+  the `tests/postgres/` suite against a Postgres 16 service container (`TEST_DATABASE_URL`),
   `next build` **with no env**, `cd mcp && npm ci && npx vitest run && npm run build`,
   `docker build`, then `docker compose -f docker-compose.demo.yml up -d` → poll `/api/health`
   → assert `/login` contains "Explore the demo" → `down`.
@@ -496,8 +569,8 @@ weekly report and the Reddit digest take an `EmailSender`.
   in-app meter as the honesty story) → architecture sketch → contributing → license.
 - `docs/`: `install.md`, `configuration.md` (**generated** by `scripts/gen-config-docs.ts` from
   the registry; CI fails if stale), `integrations/{dataforseo,llm,google,email,reddit,ai-visibility}.md`,
-  `mcp.md`, `upgrading.md` (incl. `ALLOWLIST` removal, `GOOGLE_REDIRECT_URI` removal, legacy
-  env aliases, first-admin promotion), `architecture.md`, `costs.md`, `faq.md`,
+  `mcp.md`, `upgrading.md` (incl. `ALLOWLIST` removal, legacy env aliases, first-admin
+  promotion, one-time re-sign-in because sessions gain a version), `architecture.md`, `costs.md`, `faq.md`,
   `screenshots/` (captured from demo mode).
 - `CONTRIBUTING.md` (dev setup, `docker compose up db`, test commands, spec → plan → build,
   conventional commits), `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SECURITY.md`,
@@ -512,6 +585,8 @@ weekly report and the Reddit digest take an `EmailSender`.
 | new table `settings` (§8.3) | in-app configuration |
 | `jobs.progress text null` | live progress |
 | `users.last_login_at timestamptz null` | Users page |
+| `users.session_version integer not null default 1` | session revocation (§9.5) |
+| `projects.onboarding jsonb null` | persisted wizard state (§11.1); `null` = pre-M1 project, read as complete |
 | unique index `users_email_lower_idx` on `lower(email)` | hardening |
 | custom migration: promote oldest user to admin if none (§9.1) | upgrade path |
 
@@ -525,7 +600,7 @@ weekly report and the Reddit digest take an `EmailSender`.
 | `POST /api/account/password` | `requireSession` |
 | `POST /api/projects/[id]/competitors/suggest` | `requireSession` |
 | `GET /api/health` | none |
-| all non-GET `/api/**` except `/api/auth/**` | `403` in demo mode (middleware) |
+| every `/api/**` request not on the demo allowlist (§13), any method | `403` in demo mode (middleware) |
 
 ## 17. Error handling
 
@@ -538,7 +613,11 @@ weekly report and the Reddit digest take an `EmailSender`.
   timeout; never a generic "failed".
 - **Wizard:** each job step shows the job's real `error`; Retry re-enqueues; Skip only where
   §11.1 allows. Progress text is only ever what a handler reported.
-- **First run:** the guarded insert; the loser sees "An admin already exists — sign in."
+- **First run:** the advisory-locked transaction; the loser sees "An admin already exists —
+  sign in."
+- **Sessions:** an invalid session (deleted user, bumped version, pre-upgrade token) is a plain
+  `401` on API routes and a redirect to `/login?reason=signed-out` with a one-line notice on
+  pages. Never a stack trace, never a half-rendered page.
 - **Demo:** seeder failure at boot → app starts, `/login` shows the reason. Mutations → `403`
   with a clear message.
 - **Boot:** a migration failure exits non-zero (serving a mismatched schema is worse than being
@@ -556,16 +635,28 @@ weekly report and the Reddit digest take an `EmailSender`.
   `authorize`; seeder PRNG determinism; `userData` and `competitorsDomain` parsing against
   fixtures; OpenAI-compatible adapter (stubbed fetch, reasoning-content quirk, retries);
   Anthropic adapter (mocked SDK client, refusal mapping); SMTP adapter (stubbed transport);
-  `PRESETS` completeness; middleware demo write-block decision function.
+  `PRESETS` completeness; the middleware demo-allowlist decision function (every listed path
+  and method passes, everything else is refused, including `GET /api/google/callback`).
 - **pglite integration:** settings routes (admin OK, member 403, secrets never echoed, env
-  override read-only); concurrent `createFirstAdmin` → exactly one row; users invariants (last
-  admin, self-delete); first-admin promotion migration; `jobs.progress` written and returned;
+  override read-only); `createFirstAdmin` refuses once any user exists; session validation
+  (deleted user → `401` on API and redirect on pages; bumped `session_version` → `401`;
+  demoted admin → `403` on the next admin call; a token without `sv` → `401`); wizard step
+  selection from persisted state (skipped steps do not reappear; a `null` `onboarding` is
+  complete; mid-build resume polls the recorded job ids instead of re-enqueuing; Retry
+  re-enqueues only failed jobs); users invariants (last admin, self-delete); first-admin
+  promotion migration; `jobs.progress` written and returned;
   `/api/health`; competitor suggest excludes own + existing domains; demo seeder feeds every
   loader and the engine (§13); lazy `db` Proxy instantiates once.
 - **Component tests:** login form (states: normal, error, first-run redirect, demo button);
   wizard renders the correct step for each DB state and shows progress; integrations form
   (masking, env badge, preset fill, models combobox); users manager (invariants surfaced);
   settings tabs by role; job-progress.
+- **Real-Postgres concurrency — `tests/postgres/`**, run only when `TEST_DATABASE_URL` is set
+  (CI provides a Postgres 16 service container; locally `docker compose up db`). pglite is a
+  single-connection engine and cannot reproduce a race, so these open two connections and run
+  the calls concurrently: two `createFirstAdmin` → exactly one admin row; two demotions of the
+  only two admins → at least one admin remains; two `writeSettings` on the same key → the last
+  committed value wins and no torn value is ever read.
 - **Build/packaging as tests:** `next build` with an empty environment in CI; the compose demo
   smoke in CI; `scripts/gen-config-docs.ts --check` in CI.
 - Run `pnpm exec tsc --noEmit`, `pnpm exec vitest run`, `pnpm build`, and `cd mcp && npx
@@ -573,10 +664,11 @@ weekly report and the Reddit digest take an `EmailSender`.
 
 ## 19. Live verification checklist (LIVE-VERIFICATION MANDATE — owner-run, recorded in the plan's ledger)
 
-1. Fresh machine: `git clone`, set `AUTH_SECRET` + `APP_URL`, `docker compose up -d`; `/api/health` OK.
-2. Wizard end to end on a real domain with a real DataForSEO account: balance shown at step 2;
-   profile produces candidates; suggest lists real competitors; build reaches a populated
-   Overview; progress messages visible throughout.
+1. Fresh machine: run the §21.1 acceptance test end to end, recording wall clock, active time,
+   and meter spend; `/api/health` OK first.
+2. During that run: balance shown at step 2; profile produces candidates; suggest lists real
+   competitors; progress messages visible throughout; close the tab mid-build and reopen
+   `/setup` → it resumes polling the same jobs rather than starting new ones.
 3. Every Test-connection button with real credentials (DataForSEO, one OpenAI-compatible
    provider, Anthropic, SMTP, Resend, Google SA, Reddit, Apify, Eden AI).
 4. Add a member user; confirm the member cannot reach Integrations/Users; change own password.
@@ -595,13 +687,38 @@ this into two plans at the F/G boundary if the task count warrants it.
 
 ## 21. Success criteria (M1 is done when all hold)
 
-1. Clone, two env vars, `docker compose up`, wizard → populated Overview in about ten minutes with no file editing.
+1. The install acceptance test (§21.1) passes.
 2. `DEMO_MODE=true` boots a populated two-project demo with no keys and every mutation blocked.
 3. The owner's deployment upgrades in place: users work, the oldest user is admin, integrations show "set via environment".
 4. CI green on typecheck, tests, secret-free `next build`, MCP tests, Docker build, compose demo smoke, and the generated-docs check.
 5. No internal references remain; `LICENSE` present; README and `docs/` complete; `configuration.md` generated.
 6. `npx @better-search-lab/mcp` registers against a local instance.
 7. The §19 checklist is complete.
+
+### 21.1 Install acceptance test (repeatable; the numbers go into the README's cost section)
+
+**Starting conditions.** A laptop with git and Docker Compose v2 on a residential connection;
+nothing else installed. A DataForSEO account with at least $5 balance. A live site of at least
+20 crawlable pages that already ranks for at least 50 keywords (the owner's own domain is the
+reference site for M1 verification; any site meeting the bound is valid). No LLM key.
+
+**Steps.** `git clone` → `cp .env.example .env` → set `AUTH_SECRET` (`openssl rand -base64 32`)
+and `APP_URL` → `docker compose up -d` → open `APP_URL` → wizard: create admin; enter DataForSEO
+credentials and Test; **Skip** the AI step; enter the site; Profile and confirm the candidates
+(cap the tracked set at 150 keywords); add two competitors from Suggest; Build with the
+backlinks/organic checkbox **off**; land on Overview.
+
+**Pass criteria.**
+
+| Measure | Bound |
+|---|---|
+| Person's active time (typing and clicking) | ≤ 5 min |
+| Wall clock from `docker compose up` to a populated Overview | ≤ 10 min |
+| DataForSEO spend for the run, as reported by the in-app meter | ≤ $1.00 for ≤ 150 tracked keywords (list-price estimate: profile ≈ $0.13, suggest $0.012, SERP 150 × $0.002 = $0.30, gaps 2 × $0.012, metrics ≤ $0.03 ≈ $0.50) |
+| Files edited after `.env` | 0 |
+| Overview after Build | Search Console/Analytics headline honestly "not connected"; "Do this next" non-empty; all four health tiles populated |
+
+Run it three times (fresh volumes each time) during live verification; all three must pass.
 
 ## 22. Owner prerequisites (outside the code)
 
