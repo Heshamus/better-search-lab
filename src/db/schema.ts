@@ -13,6 +13,17 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// In-app configuration (Settings → Integrations). One row per registry key
+// (src/lib/config/registry.ts). Secret values are stored AES-256-GCM encrypted
+// with a "v1:" prefix (src/lib/config/crypto.ts); env vars with the same
+// registry name override these rows at read time (src/lib/config/resolve.ts).
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
+});
+
 export const projects = pgTable("projects", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),

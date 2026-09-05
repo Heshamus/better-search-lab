@@ -155,6 +155,13 @@
       "when": 1786430608619,
       "tag": "0021_late_satana",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1788651029415,
+      "tag": "0022_settings",
+      "breakpoints": true
     }
   ]
 }
