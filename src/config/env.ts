@@ -17,8 +17,8 @@ const Schema = z.object({
     .transform((v) => v === "true" || v === "1"),
 
   // --- transitional: still read directly by code that Task 9–11 migrate ---
-  DATAFORSEO_LOGIN: z.string().min(1),
-  DATAFORSEO_PASSWORD: z.string().min(1),
+  DATAFORSEO_LOGIN: z.string().optional(),
+  DATAFORSEO_PASSWORD: z.string().optional(),
   DEEPSEEK_API_KEY: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
