@@ -5,8 +5,6 @@ import { sql } from "drizzle-orm";
 import { authConfig } from "./auth.config";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
-import { loadEnv } from "@/config/env";
-import { isAllowed } from "@/lib/auth/allowlist";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -43,8 +41,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const passwordValid = await compare(password, user.passwordHash);
         if (!passwordValid) return null;
-
-        if (!isAllowed(email, loadEnv().ALLOWLIST)) return null;
 
         return { id: user.id, email: user.email };
       },

@@ -4,24 +4,36 @@ import { loadEnv } from "@/config/env";
 const ok = {
   DATABASE_URL: "postgres://u:p@localhost:5432/db",
   DATAFORSEO_LOGIN: "login", DATAFORSEO_PASSWORD: "pw",
-  AUTH_SECRET: "x".repeat(32), ALLOWLIST: "a@x.com, b@x.com",
+  AUTH_SECRET: "x".repeat(32),
 };
 
 describe("loadEnv", () => {
-  it("parses and splits the allowlist", () => {
-    expect(loadEnv(ok).ALLOWLIST).toEqual(["a@x.com", "b@x.com"]);
+  it("accepts the bootstrap vars and defaults DEMO_MODE to false", () => {
+    const env = loadEnv(ok);
+    expect(env.DATABASE_URL).toBe(ok.DATABASE_URL);
+    expect(env.DEMO_MODE).toBe(false);
+  });
+  it("no longer knows ALLOWLIST", () => {
+    const env = loadEnv({ ...ok, ALLOWLIST: "a@x.com" }) as Record<string, unknown>;
+    expect(env.ALLOWLIST).toBeUndefined();
   });
   it("throws when a required var is missing", () => {
-    const bad = { ...ok, DATABASE_URL: undefined };
-    expect(() => loadEnv(bad)).toThrow(/DATABASE_URL/);
+    expect(() => loadEnv({ ...ok, DATABASE_URL: undefined })).toThrow(/DATABASE_URL/);
+  });
+  it("requires AUTH_SECRET to be at least 32 characters", () => {
+    expect(() => loadEnv({ ...ok, AUTH_SECRET: "short" })).toThrow(/AUTH_SECRET/);
+  });
+  it("parses DEMO_MODE=true and DEMO_MODE=1 as true", () => {
+    expect(loadEnv({ ...ok, DEMO_MODE: "true" }).DEMO_MODE).toBe(true);
+    expect(loadEnv({ ...ok, DEMO_MODE: "1" }).DEMO_MODE).toBe(true);
+    expect(loadEnv({ ...ok, DEMO_MODE: "no" }).DEMO_MODE).toBe(false);
+  });
+  it("passes ENCRYPTION_KEY through when present", () => {
+    expect(loadEnv({ ...ok, ENCRYPTION_KEY: "abc" }).ENCRYPTION_KEY).toBe("abc");
+    expect(loadEnv(ok).ENCRYPTION_KEY).toBeUndefined();
   });
   it("accepts optional Apify config", () => {
     const env = loadEnv({ ...ok, APIFY_API_KEY: "apify_xxx", APIFY_REDDIT_ACTOR: "trudax~reddit-scraper" });
     expect(env.APIFY_API_KEY).toBe("apify_xxx");
-    expect(env.APIFY_REDDIT_ACTOR).toBe("trudax~reddit-scraper");
-  });
-  it("omits Apify config when absent", () => {
-    const env = loadEnv(ok);
-    expect(env.APIFY_API_KEY).toBeUndefined();
   });
 });

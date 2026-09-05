@@ -1,11 +1,9 @@
-// Test-only fallback env so modules that import "@/db/client" (which runs loadEnv at
-// import) can be imported in the node test env, where vitest doesn't load .env.
-// ??= never overrides a real value; the postgres client is lazy (no connect at import).
+// Test-only fallback env. `??=` never overrides a real value. DATAFORSEO_* stay
+// until Task 11 shrinks the bootstrap schema; AUTH_SECRET must be ≥ 32 chars.
 process.env.DATABASE_URL ??= "postgres://test:test@localhost:5432/test";
 process.env.DATAFORSEO_LOGIN ??= "test";
 process.env.DATAFORSEO_PASSWORD ??= "test";
-process.env.AUTH_SECRET ??= "test_auth_secret_0123456789";
-process.env.ALLOWLIST ??= "test@example.com";
+process.env.AUTH_SECRET ??= "test_auth_secret_0123456789_abcdefghijklmnop";
 
 // Global Vitest setup. Runs for every test file regardless of environment
 // ("node" default or a per-file "// @vitest-environment jsdom" override) —
