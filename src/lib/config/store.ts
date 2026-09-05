@@ -31,8 +31,10 @@ export async function readAllSettings(db: any, key: Buffer): Promise<StoredSetti
 
 /**
  * Validate against the registry schema, encrypt secrets, upsert. `null` or ""
- * deletes the row. Invalidates the process cache so the web process sees the
- * change on the next read.
+ * deletes the row. Validates and encrypts the entire batch first; if any entry
+ * is invalid or unknown, rejects the whole batch with no database changes.
+ * Invalidates the process cache so the web process sees the change on the
+ * next read.
  */
 export async function writeSettings(
   db: any,
@@ -40,20 +42,33 @@ export async function writeSettings(
   entries: Record<string, string | null>,
   updatedBy: string | null,
 ): Promise<void> {
+  // Validate and encrypt everything BEFORE touching the database, so a bad
+  // value anywhere in the batch rejects the whole batch — a settings form
+  // with one invalid field must never half-save.
+  const ops: { key: string; stored: string | null }[] = [];
   for (const [settingKey, raw] of Object.entries(entries)) {
     const def = settingByKey(settingKey);
     if (!def) throw new Error(`unknown setting: ${settingKey}`);
     if (raw === null || raw.trim() === "") {
-      await db.delete(settings).where(eq(settings.key, settingKey));
+      ops.push({ key: settingKey, stored: null });
       continue;
     }
     const parsed = def.schema.parse(raw); // throws ZodError with the field's message
-    const stored = def.secret ? encrypt(parsed, key) : parsed;
-    const now = new Date();
-    await db
-      .insert(settings)
-      .values({ key: settingKey, value: stored, updatedAt: now, updatedBy })
-      .onConflictDoUpdate({ target: settings.key, set: { value: stored, updatedAt: now, updatedBy } });
+    ops.push({ key: settingKey, stored: def.secret ? encrypt(parsed, key) : parsed });
   }
+
+  const now = new Date();
+  await db.transaction(async (tx: any) => {
+    for (const op of ops) {
+      if (op.stored === null) {
+        await tx.delete(settings).where(eq(settings.key, op.key));
+      } else {
+        await tx
+          .insert(settings)
+          .values({ key: op.key, value: op.stored, updatedAt: now, updatedBy })
+          .onConflictDoUpdate({ target: settings.key, set: { value: op.stored, updatedAt: now, updatedBy } });
+      }
+    }
+  });
   invalidateConfigCache();
 }

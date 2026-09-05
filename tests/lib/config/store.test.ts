@@ -52,4 +52,14 @@ describe("settings store", () => {
     expect(row.value).toBeUndefined();
     expect(row.undecryptable).toBe(true);
   });
+
+  it("applies a multi-key batch atomically: one invalid entry means nothing is written", async () => {
+    const t = await createTestDb(); close = t.close;
+    await writeSettings(t.db, key, { "llm.model": "before" }, null);
+    await expect(
+      writeSettings(t.db, key, { "dataforseo.login": "me", "llm.model": "after", "email.smtpPort": "not-a-port" }, null),
+    ).rejects.toThrow();
+    const rows = await readAllSettings(t.db, key);
+    expect(rows.map((r) => [r.key, r.value])).toEqual([["llm.model", "before"]]);
+  });
 });
