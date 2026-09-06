@@ -105,6 +105,24 @@ describe("IntegrationsForm", () => {
     expect(within(card).getByRole("button", { name: /^save$/i })).not.toBeDisabled();
   });
 
+  it("names which secret each Replace button replaces, and saves on Enter without Test stealing the submit", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify(view), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<IntegrationsForm view={view} />);
+    const card = screen.getByTestId("integration-dataforseo");
+    expect(within(card).getByRole("button", { name: "Replace API password" })).toBeInTheDocument();
+    // Submitting the card's form (what Enter in a field does) saves it.
+    fireEvent.change(within(card).getByLabelText("Login"), { target: { value: "x" } });
+    const llm = screen.getByTestId("integration-llm");
+    fireEvent.change(within(llm).getByLabelText("Base URL"), { target: { value: "http://x/v1" } });
+    fireEvent.submit(within(llm).getByRole("button", { name: /^save$/i }).closest("form")!);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [url, init] = fetchMock.mock.calls[0] as any;
+    expect(url).toBe("/api/settings/integrations");
+    expect(JSON.parse(init.body)).toEqual({ values: { "llm.baseUrl": "http://x/v1" } });
+    expect(within(llm).getByRole("button", { name: /^test$/i })).toHaveAttribute("type", "button");
+  });
+
   it("surfaces a PUT error inline", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: "must be an http(s) URL" }), { status: 400 })));
     render(<IntegrationsForm view={view} />);

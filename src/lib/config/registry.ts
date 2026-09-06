@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LLM_PROVIDERS } from "./presets";
 
 /**
  * THE single declaration of every configurable setting. Everything else —
@@ -33,32 +34,15 @@ export interface SettingDef {
   options?: readonly string[];
 }
 
-export const LLM_PROVIDERS = ["deepseek", "openai", "anthropic", "openrouter", "groq", "together", "gemini", "ollama", "custom"] as const;
-export type LlmProviderId = (typeof LLM_PROVIDERS)[number];
+// LLM_PROVIDERS / LLM_PRESETS live in ./presets (zod-free, import-free) so the
+// client Integrations form can read them without pulling this module — and the
+// whole config service behind it — into the browser bundle. Re-exported here
+// unchanged: every existing `from "@/lib/config/registry"` import still works.
+export { LLM_PROVIDERS, LLM_PRESETS } from "./presets";
+export type { LlmProviderId, LlmPreset } from "./presets";
+
 export const EMAIL_PROVIDERS = ["none", "resend", "smtp"] as const;
 export const EFFORT_LEVELS = ["low", "medium", "high"] as const;
-
-export interface LlmPreset {
-  label: string;
-  /** null → the adapter owns the endpoint (anthropic) or the user must supply it (custom). */
-  baseUrl: string | null;
-  defaultModel: string;
-  needsKey: boolean;
-  kind: "openai-compatible" | "anthropic";
-}
-
-/** Defaults a provider preset fills in; every value stays editable in the UI. */
-export const LLM_PRESETS: Record<LlmProviderId, LlmPreset> = {
-  deepseek: { label: "DeepSeek", baseUrl: "https://api.deepseek.com", defaultModel: "deepseek-v4-pro", needsKey: true, kind: "openai-compatible" },
-  openai: { label: "OpenAI", baseUrl: "https://api.openai.com/v1", defaultModel: "gpt-5", needsKey: true, kind: "openai-compatible" },
-  anthropic: { label: "Anthropic", baseUrl: null, defaultModel: "claude-opus-5", needsKey: true, kind: "anthropic" },
-  openrouter: { label: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1", defaultModel: "openai/gpt-5", needsKey: true, kind: "openai-compatible" },
-  groq: { label: "Groq", baseUrl: "https://api.groq.com/openai/v1", defaultModel: "llama-3.3-70b-versatile", needsKey: true, kind: "openai-compatible" },
-  together: { label: "Together", baseUrl: "https://api.together.xyz/v1", defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo", needsKey: true, kind: "openai-compatible" },
-  gemini: { label: "Google Gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai", defaultModel: "gemini-2.5-flash", needsKey: true, kind: "openai-compatible" },
-  ollama: { label: "Ollama (local)", baseUrl: "http://localhost:11434/v1", defaultModel: "llama3.1", needsKey: false, kind: "openai-compatible" },
-  custom: { label: "Custom OpenAI-compatible", baseUrl: null, defaultModel: "", needsKey: true, kind: "openai-compatible" },
-};
 
 export const GROUPS: readonly SettingGroup[] = [
   { id: "app", label: "App", description: "How this install is reached from the outside." },

@@ -12,7 +12,7 @@ import { ResearchExplorer } from "@/components/research-explorer";
 export const dynamic = "force-dynamic";
 
 // Server component (Task 7, extended Task 18): resolves the current project
-// directly — no `/api` fetch, `(app)/*` is already middleware-guarded — for
+// directly — no `/api` fetch; the (app) layout validates the session against the users table on every render (middleware only pre-filters for a JWT) — for
 // its id + default location/language, which seed every `/api/research` and
 // `/api/keywords` call the client `ResearchExplorer` makes. Research itself is
 // live-on-demand (a real DataForSEO call per search), but each search IS

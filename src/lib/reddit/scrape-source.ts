@@ -23,11 +23,6 @@ function redditCfg(env: ConversationFetchEnv, fetchImpl?: typeof fetch): RedditA
   };
 }
 
-/** True when the conversations pipeline can fetch at all — official API OR Apify. */
-export function conversationFetchConfigured(env: ConversationFetchEnv): boolean {
-  return Boolean((env.REDDIT_CLIENT_ID && env.REDDIT_CLIENT_SECRET) || env.APIFY_API_KEY);
-}
-
 /**
  * Build the `scrape` dependency for the conversations pipeline. Prefers the
  * official Reddit API; if it isn't configured, OR its call THROWS (dead app /

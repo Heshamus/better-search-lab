@@ -13,7 +13,7 @@ import { KeywordManager } from "@/components/keyword-manager";
 export const dynamic = "force-dynamic";
 
 // Server component (Task 6, mirrors Task 4/5's pages): resolves the current
-// project directly — no `/api` fetch, `(app)/*` is already middleware-guarded
+// project directly — no `/api` fetch; the (app) layout validates the session against the users table on every render (middleware only pre-filters for a JWT)
 // — then reads the tracked keyword set straight from `src/lib`. All
 // mutation (Track/Untrack toggle, Add keywords) lives in the client
 // `KeywordManager`, which posts to the guarded `/api/keywords*` routes and

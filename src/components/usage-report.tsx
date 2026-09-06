@@ -8,6 +8,10 @@ function usd(n: number): string {
 // "/v3/dataforseo_labs/google/keyword_ideas/live" → "keyword_ideas";
 // "deepseek/v4-pro/chat" → "deepseek chat" — a readable label for the chart.
 function shortEndpoint(ep: string): string {
+  // "llm/chat" is what every chat provider logs since M1 made the provider
+  // configurable; "deepseek*" is the pre-M1 spelling still sitting in older
+  // ledger rows, so both have to render.
+  if (ep.startsWith("llm/chat")) return "llm chat";
   if (ep.startsWith("deepseek")) return "deepseek chat";
   const parts = ep.split("/").filter(Boolean);
   const i = parts.indexOf("google");

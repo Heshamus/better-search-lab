@@ -15,8 +15,8 @@ import { TrendCard } from "@/components/trend-card";
 export const dynamic = "force-dynamic";
 
 // Server component (Task 5, mirrors Task 4's opportunities page): resolves
-// the current project directly — no `/api` fetch, `(app)/*` is already
-// middleware-guarded — then reads this run's ranking rows straight from
+// the current project directly — no `/api` fetch;
+// the (app) layout validates the session against the users table on every render (middleware only pre-filters for a JWT) — then reads this run's ranking rows straight from
 // `src/lib`. All interactivity (sort, per-keyword history drill-in) lives in
 // the client `RankingsTable`.
 //

@@ -12,7 +12,7 @@ import { UsageReport } from "@/components/usage-report";
 export const dynamic = "force-dynamic";
 
 // Server component (Task 9, mirrors Tasks 4-8): resolves the current
-// project directly — no /api fetch, (app)/* is already middleware-guarded
+// project directly — no /api fetch; the (app) layout validates the session against the users table on every render (middleware only pre-filters for a JWT)
 // — then reads this project's api_usage aggregate straight from src/lib.
 // Pure read/display page: UsageReport is presentational-only, so there is
 // no client mutation half to wire up here.

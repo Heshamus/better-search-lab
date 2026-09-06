@@ -33,7 +33,7 @@ const SECTIONS: { type: string; title: string }[] = [
 
 // This is the dashboard's centerpiece (Task 4): the opportunities landing.
 // Server component — resolves the current project directly (no /api fetch;
-// (app)/* is already middleware-guarded), computes the health strip and
+// the (app) layout validates the session against the users table on every render (middleware only pre-filters for a JWT)), computes the health strip and
 // reads this week's shortlist straight from `src/lib`, then groups it into
 // calm, scannable advisor-card sections. All mutation (Track/Dismiss) lives
 // in the nested client `OpportunityActions`.

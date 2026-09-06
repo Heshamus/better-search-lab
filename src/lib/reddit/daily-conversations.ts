@@ -176,7 +176,7 @@ const bareDomain = (d: string): string => d.replace(/^https?:\/\//, "").replace(
  * Self-healing daily Reddit-conversations pass, run from the daily worker tick:
  * for each project not scanned in the last ~20h, run scanProjectConversations
  * and — when it surfaces at least one conversation — email the digest
- * (best-effort: a Resend failure still leaves the conversations stored, since
+ * (best-effort: a send failure still leaves the conversations stored, since
  * storage happens inside scanProjectConversations before the email is attempted).
  * `enabled` is decided by the caller: an AI assistant plus at least one fetch
  * source.

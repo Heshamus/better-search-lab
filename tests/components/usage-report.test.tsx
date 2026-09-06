@@ -33,6 +33,23 @@ describe("UsageReport", () => {
     expect(within(endpointRow).getByText("100")).toBeTruthy();
   });
 
+  it("labels the current llm/chat endpoint and the pre-M1 deepseek rows still in the ledger", () => {
+    render(
+      <UsageReport
+        summary={{
+          total: 0.3,
+          byDay: [],
+          byEndpoint: [
+            { endpoint: "llm/chat", cost: 0.2, rows: 2 },
+            { endpoint: "deepseek/chat", cost: 0.1, rows: 1 },
+          ],
+        }}
+      />,
+    );
+    expect(within(screen.getByTestId("usage-endpoint-llm/chat")).getByText("llm chat")).toBeTruthy();
+    expect(within(screen.getByTestId("usage-endpoint-deepseek/chat")).getByText("deepseek chat")).toBeTruthy();
+  });
+
   it("renders $0.00 and a gentle empty note for an all-empty summary (never blank)", () => {
     render(<UsageReport summary={{ total: 0, byDay: [], byEndpoint: [] }} />);
 

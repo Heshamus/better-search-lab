@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { LLM_PRESETS, type LlmProviderId } from "@/lib/config/registry";
+import { LLM_PRESETS, type LlmProviderId } from "@/lib/config/presets";
 import type { IntegrationFieldView, IntegrationGroupView, IntegrationsView } from "@/lib/config/view";
 
 const inputClass =
@@ -36,7 +36,7 @@ function Field({
       {maskedSecret ? (
         <div className="flex items-center gap-2">
           <span className="tnum text-sm text-neutral-400">•••••••• set</span>
-          <button type="button" className={buttonClass} onClick={onReveal}>Replace</button>
+          <button type="button" aria-label={`Replace ${field.label}`} className={buttonClass} onClick={onReveal}>Replace</button>
         </div>
       ) : field.options ? (
         <select id={id} className={inputClass} disabled={disabled} value={value} onChange={(e) => onChange(e.target.value)}>
@@ -76,21 +76,24 @@ function GroupCard({ group }: { group: IntegrationGroupView }) {
   const [status, setStatus] = useState<{ kind: "idle" | "saving" | "saved" | "testing" | "tested" | "error"; text?: string; ok?: boolean }>({ kind: "idle" });
   const [models, setModels] = useState<string[] | undefined>(undefined);
 
+  // Both `next` and the dirty keys are computed BEFORE either setter runs. A
+  // setValues updater must be pure — React may invoke it twice (StrictMode,
+  // and any re-render it decides to replay), and a setDirty() nested inside it
+  // was a side effect riding along on that.
   function edit(key: string, v: string) {
-    setValues((prev) => {
-      const next = { ...prev, [key]: v };
-      // The LLM provider preset fills base URL / model unless the person already typed their own.
-      // Own-property checks: `in` also resolves prototype keys such as "constructor".
-      if (key === "llm.provider" && Object.hasOwn(LLM_PRESETS, v)) {
-        const preset = LLM_PRESETS[v as LlmProviderId];
-        const prevPreset = Object.hasOwn(LLM_PRESETS, prev["llm.provider"]) ? LLM_PRESETS[prev["llm.provider"] as LlmProviderId] : undefined;
-        if (!prev["llm.baseUrl"] || prev["llm.baseUrl"] === prevPreset?.baseUrl) next["llm.baseUrl"] = preset.baseUrl ?? "";
-        if (!prev["llm.model"] || prev["llm.model"] === prevPreset?.defaultModel) next["llm.model"] = preset.defaultModel;
-        setDirty((d) => new Set([...d, "llm.baseUrl", "llm.model"]));
-      }
-      return next;
-    });
-    setDirty((d) => new Set([...d, key]));
+    const next = { ...values, [key]: v };
+    const touched = [key];
+    // The LLM provider preset fills base URL / model unless the person already typed their own.
+    // Own-property checks: `in` also resolves prototype keys such as "constructor".
+    if (key === "llm.provider" && Object.hasOwn(LLM_PRESETS, v)) {
+      const preset = LLM_PRESETS[v as LlmProviderId];
+      const prevPreset = Object.hasOwn(LLM_PRESETS, values["llm.provider"]) ? LLM_PRESETS[values["llm.provider"] as LlmProviderId] : undefined;
+      if (!values["llm.baseUrl"] || values["llm.baseUrl"] === prevPreset?.baseUrl) next["llm.baseUrl"] = preset.baseUrl ?? "";
+      if (!values["llm.model"] || values["llm.model"] === prevPreset?.defaultModel) next["llm.model"] = preset.defaultModel;
+      touched.push("llm.baseUrl", "llm.model");
+    }
+    setValues(next);
+    setDirty((d) => new Set([...d, ...touched]));
   }
 
   async function save() {
@@ -144,30 +147,35 @@ function GroupCard({ group }: { group: IntegrationGroupView }) {
           {group.configured ? "Connected" : "Not connected"}
         </span>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {group.fields.map((f) => (
-          <Field
-            key={f.key}
-            field={f}
-            value={values[f.key] ?? ""}
-            revealed={revealed.has(f.key)}
-            onChange={(v) => edit(f.key, v)}
-            onReveal={() => setRevealed((r) => new Set([...r, f.key]))}
-            models={f.key === "llm.model" ? models : undefined}
-          />
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => void save()} disabled={busy || dirty.size === 0} className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 disabled:opacity-50">
-          {status.kind === "saving" ? "Saving…" : "Save"}
-        </button>
-        <button type="button" onClick={() => void test()} disabled={busy} className={buttonClass}>
-          {status.kind === "testing" ? "Testing…" : "Test"}
-        </button>
-        {status.kind === "saved" ? <span className="text-xs text-up">{status.text}</span> : null}
-        {status.kind === "tested" ? <span className={`text-xs ${status.ok ? "text-up" : "text-at-risk"}`}>{status.text}</span> : null}
-        {status.kind === "error" ? <span role="alert" className="text-xs text-at-risk">{status.text}</span> : null}
-      </div>
+      {/* A real <form> so Enter in any field saves this card (and only this
+          card) instead of doing nothing. Test stays type="button" — it must
+          never be what Enter triggers. */}
+      <form onSubmit={(e) => { e.preventDefault(); void save(); }} className="flex flex-col gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {group.fields.map((f) => (
+            <Field
+              key={f.key}
+              field={f}
+              value={values[f.key] ?? ""}
+              revealed={revealed.has(f.key)}
+              onChange={(v) => edit(f.key, v)}
+              onReveal={() => setRevealed((r) => new Set([...r, f.key]))}
+              models={f.key === "llm.model" ? models : undefined}
+            />
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="submit" disabled={busy || dirty.size === 0} className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 disabled:opacity-50">
+            {status.kind === "saving" ? "Saving…" : "Save"}
+          </button>
+          <button type="button" onClick={() => void test()} disabled={busy} className={buttonClass}>
+            {status.kind === "testing" ? "Testing…" : "Test"}
+          </button>
+          {status.kind === "saved" ? <span className="text-xs text-up">{status.text}</span> : null}
+          {status.kind === "tested" ? <span className={`text-xs ${status.ok ? "text-up" : "text-at-risk"}`}>{status.text}</span> : null}
+          {status.kind === "error" ? <span role="alert" className="text-xs text-at-risk">{status.text}</span> : null}
+        </div>
+      </form>
     </section>
   );
 }
@@ -175,7 +183,13 @@ function GroupCard({ group }: { group: IntegrationGroupView }) {
 export function IntegrationsForm({ view }: { view: IntegrationsView }) {
   return (
     <div className="flex flex-col gap-5">
-      {view.groups.map((g) => <GroupCard key={g.id} group={g} />)}
+      {/* The key folds in each field's set/source, so a save + router.refresh()
+          remounts the card against the new view. Keyed by id alone, a card that
+          just stored a secret kept its stale useState seed and went on showing
+          an empty input where the server now says "•••••••• set". */}
+      {view.groups.map((g) => (
+        <GroupCard key={`${g.id}:${g.fields.map((f) => `${f.set ? 1 : 0}${f.source ?? "-"}`).join("")}`} group={g} />
+      ))}
     </div>
   );
 }

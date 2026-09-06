@@ -4,10 +4,11 @@ import { useEffect } from "react";
 import { maybeReloadForStaleBuild } from "@/lib/stale-build-reload";
 
 /**
- * Mounted once in the root layout. A stale-build Server Action submit throws an
- * uncaught error / unhandled rejection ("An unexpected response was received from
- * the server."); this listens for exactly that and reloads once to pull the
- * current build (see @/lib/stale-build-reload for the matcher + loop guard).
+ * Mounted once in the root layout. A client left holding a previous build after
+ * a redeploy can throw an uncaught error / unhandled rejection ("An unexpected
+ * response was received from the server."); this listens for exactly that and
+ * reloads once to pull the current build (see @/lib/stale-build-reload for the
+ * matcher, the loop guard, and the Server-Action origin this outlived).
  * Renders nothing.
  */
 export function StaleBuildReloader() {

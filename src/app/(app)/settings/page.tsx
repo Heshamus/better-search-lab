@@ -23,7 +23,7 @@ const sectionHeadingClass =
   "text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400";
 
 // Server component (Task 18, mirrors Tasks 4-9): resolves the current project
-// directly — no /api fetch, (app)/* is already middleware-guarded — and reads
+// directly — no /api fetch; the (app) layout validates the session against the users table on every render (middleware only pre-filters for a JWT) — and reads
 // everything the page mounts (project roster, this project's profile
 // candidates, its tracked competitors) straight from src/lib. All mutation
 // (edit/profile/delete, add-candidates, add/delete-competitor, create-project,

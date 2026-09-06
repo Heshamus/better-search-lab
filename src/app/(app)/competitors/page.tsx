@@ -21,7 +21,7 @@ const sectionHeadingClass =
   "text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400";
 
 // Server component (Task 18, mirrors Tasks 8/12/14): resolves the current
-// project directly — no /api fetch, (app)/* is already middleware-guarded —
+// project directly — no /api fetch; the (app) layout validates the session against the users table on every render (middleware only pre-filters for a JWT) —
 // then reads the competitor roster, per-competitor intel, and this project's
 // keyword-gap rows straight from src/lib. All mutation (add/delete competitor,
 // Refresh intel, Find keyword gaps, per-row Add to tracking) lives in the

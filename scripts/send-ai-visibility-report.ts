@@ -14,17 +14,21 @@ const bare = (d: string): string => d.replace(/^https?:\/\//, "").replace(/\/.*$
 async function main() {
   const cfg = await getConfig(db, { fresh: true });
   const email = makeEmailSender(cfg);
+  const reportTo = cfg.email.reportTo;
+  // Once, before the loop: the answer is the same for every project, and
+  // repeating it per project buries the reports that were actually built.
+  if (!email || !reportTo) console.log("email not configured — building reports without sending");
   const all = await db.select().from(projects);
   let sent = 0;
   for (const project of all) {
     const history = await getScanHistory(db, project.id, 2);
     if (!history.length) continue;
     const report = buildWeeklyReport({ domain: bare(project.domain), latest: history[0], previous: history[1] ?? null, appUrl: cfg.app.url });
-    if (!email || !cfg.email.reportTo) {
-      console.log("email not configured — skipping send");
+    if (!email || !reportTo) {
+      console.log(`${project.domain} → not sent :: subject="${report.subject}"`);
     } else {
-      const res = await email.send({ to: cfg.email.reportTo, subject: report.subject, html: report.html, text: report.text });
-      console.log(`${project.domain} → to=${cfg.email.reportTo} :: ${JSON.stringify(res)} :: subject="${report.subject}"`);
+      const res = await email.send({ to: reportTo, subject: report.subject, html: report.html, text: report.text });
+      console.log(`${project.domain} → to=${reportTo} :: ${JSON.stringify(res)} :: subject="${report.subject}"`);
       if (res.sent) sent += 1;
     }
   }

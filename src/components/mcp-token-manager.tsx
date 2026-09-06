@@ -79,7 +79,8 @@ function TokenRow({ token }: { token: McpTokenSummary }) {
 
 /**
  * Settings screen's MCP access token manager: mint a new bearer token for
- * the MCP server (owner-only, requireSession-guarded route), see it
+ * the MCP server (admin-only, requireAdmin-guarded route — a token reads
+ * every project), see it
  * exactly once, and revoke existing ones. Mirrors reddit-brief-editor.tsx's
  * SaveState + router.refresh() idiom for the generate flow, and
  * reddit-conversations.tsx's honest try/catch handleCopy for the copy box.

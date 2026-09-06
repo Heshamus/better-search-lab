@@ -35,6 +35,7 @@ import { getConfig } from "../src/lib/config/resolve";
 import { conversationFetchEnv, makeChatProvider, makeDataForSeoClient, makeEdenClient, makeEmailSender, NOT_CONFIGURED } from "../src/lib/config/clients";
 import type { AppConfig } from "../src/lib/config/app-config";
 import type { DataForSeoClient } from "../src/lib/dataforseo/client";
+import { recipientWarning } from "../src/lib/email/recipient-warning";
 import { loadEnv } from "../src/config/env";
 
 loadEnv(); // fail fast on a bad bootstrap env
@@ -160,6 +161,16 @@ async function queueLoop() {
     }
   }
 }
+
+// Said once, at startup, from a FRESH read: an operator who connected email
+// and never saw a report should not have to guess whether it is broken or
+// simply has nobody to send to.
+void freshConfig()
+  .then((cfg) => {
+    const warning = recipientWarning(cfg);
+    if (warning) console.warn("[worker] " + warning);
+  })
+  .catch((e) => console.error("[worker] could not read config at startup:", e));
 
 registerSchedules({ schedule: (c, fn) => cron.schedule(c, fn), run });
 console.log("[worker] schedules registered");

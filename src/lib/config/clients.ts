@@ -56,7 +56,7 @@ export function googleAuthConfig(cfg: AppConfig): { clientId?: string; clientSec
   return { clientId: cfg.google.clientId, clientSecret: cfg.google.clientSecret, serviceAccountKey: cfg.google.serviceAccountKey };
 }
 
-/** The env-shaped bag makeConversationScrape / conversationFetchConfigured still take. */
+/** The env-shaped bag makeConversationScrape still takes. */
 export function conversationFetchEnv(cfg: AppConfig): ConversationFetchEnv {
   return {
     REDDIT_CLIENT_ID: cfg.reddit.clientId,
