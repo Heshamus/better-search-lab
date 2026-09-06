@@ -25,10 +25,13 @@ importers:
         version: 15.5.22(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       next-auth:
         specifier: 5.0.0-beta.32
-        version: 5.0.0-beta.32(next@15.5.22(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 5.0.0-beta.32(next@15.5.22(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(nodemailer@10.0.0)(react@19.2.8)
       node-cron:
         specifier: ^4.6.0
         version: 4.6.0
+      nodemailer:
+        specifier: ^10.0.0
+        version: 10.0.0
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
@@ -63,6 +66,9 @@ importers:
       '@types/node':
         specifier: ^26.1.2
         version: 26.1.2
+      '@types/nodemailer':
+        specifier: ^8.0.1
+        version: 8.0.1
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
@@ -1147,6 +1153,9 @@ packages:
   '@types/node@26.1.2':
     resolution: {integrity: sha512-Vu4a5UFA9rIIFJ7rB/Vaafh9lrCQszopTCx6KjFboXTGQbPNasehVR5TEiithSDGyd1DEiUByggTZsg8jukeIg==}
 
+  '@types/nodemailer@8.0.1':
+    resolution: {integrity: sha512-PxpaInm8V1JQDd4j0ds5HfvWQk8JupS1C0Picb96QJsrrRDjBH+DlK7L4ZdNSqNULhiZRQHc40nLVShaGxXAMw==}
+
   '@types/react-dom@19.2.4':
     resolution: {integrity: sha512-Bsc+QHgp+P/F02XDzNCY9jnZNCUuLki36KT7VKrTXXLdHf+vHMNZnW1rVu5DNW/rCK+fya3DATySbLM4yhtKUw==}
     peerDependencies:
@@ -1688,6 +1697,10 @@ packages:
     resolution: {integrity: sha512-Si/bzYiKRHOB8/a99T2+SDGN582ONDMSTlJr5oCkT6GtnqPjZ2s10eoQRYkW9ZHwjVxONL+W8Fb+qR0AHMQsdg==}
     engines: {node: '>=20'}
 
+  nodemailer@10.0.0:
+    resolution: {integrity: sha512-wdv+hXBg0iIPIOf108FaZyTxqjQpCvQeAJt9pHHTooPy/y3vQtI9eiImM9AIVKR3e/0FeMA1oueNfBjFJcaK+Q==}
+    engines: {node: '>=20.0.0'}
+
   oauth4webapi@3.8.6:
     resolution: {integrity: sha512-iwemM91xz8nryHti2yTmg5fhyEMVOkOXwHNqbvcATjyajb5oQxCQzrNOA6uElRHuMhQQTKUyFKV9y/CNyg25BQ==}
 
@@ -2046,13 +2059,15 @@ snapshots:
       is-potential-custom-element-name: 1.0.1
       lru-cache: 11.5.2
 
-  '@auth/core@0.41.3':
+  '@auth/core@0.41.3(nodemailer@10.0.0)':
     dependencies:
       '@panva/hkdf': 1.2.1
       jose: 6.2.7
       oauth4webapi: 3.8.6
       preact: 10.24.3
       preact-render-to-string: 6.5.11(preact@10.24.3)
+    optionalDependencies:
+      nodemailer: 10.0.0
 
   '@babel/code-frame@7.29.7':
     dependencies:
@@ -2687,6 +2702,10 @@ snapshots:
     dependencies:
       undici-types: 8.3.0
 
+  '@types/nodemailer@8.0.1':
+    dependencies:
+      '@types/node': 26.1.2
+
   '@types/react-dom@19.2.4(@types/react@19.2.18)':
     dependencies:
       '@types/react': 19.2.18
@@ -3091,11 +3110,13 @@ snapshots:
 
   nanoid@3.3.16: {}
 
-  next-auth@5.0.0-beta.32(next@15.5.22(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
+  next-auth@5.0.0-beta.32(next@15.5.22(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(nodemailer@10.0.0)(react@19.2.8):
     dependencies:
-      '@auth/core': 0.41.3
+      '@auth/core': 0.41.3(nodemailer@10.0.0)
       next: 15.5.22(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react: 19.2.8
+    optionalDependencies:
+      nodemailer: 10.0.0
 
   next@15.5.22(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
@@ -3121,6 +3142,8 @@ snapshots:
       - babel-plugin-macros
 
   node-cron@4.6.0: {}
+
+  nodemailer@10.0.0: {}
 
   oauth4webapi@3.8.6: {}
 

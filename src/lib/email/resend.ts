@@ -2,17 +2,14 @@
 // key or a provider error returns { sent: false, reason } rather than throwing,
 // so a report send can never take down the job that produced it.
 
-export interface SendResult {
-  sent: boolean;
-  id?: string;
-  reason?: string;
-}
+import type { EmailMessage, EmailSender, SendResult } from "./sender";
+export type { SendResult };
 
 export async function sendEmail(
   msg: { to: string; from: string; subject: string; html: string; text?: string },
   deps: { apiKey?: string; fetchImpl?: typeof fetch },
 ): Promise<SendResult> {
-  if (!deps.apiKey) return { sent: false, reason: "no RESEND_API_KEY configured" };
+  if (!deps.apiKey) return { sent: false, reason: "no Resend API key configured" };
   const fetchImpl = deps.fetchImpl ?? fetch;
   try {
     const res = await fetchImpl("https://api.resend.com/emails", {
@@ -28,5 +25,15 @@ export async function sendEmail(
     return { sent: true, id: j.id };
   } catch (e) {
     return { sent: false, reason: String((e as Error)?.message ?? e) };
+  }
+}
+
+export class ResendEmailSender implements EmailSender {
+  constructor(private cfg: { apiKey: string; from: string; fetchImpl?: typeof fetch }) {}
+  send(msg: EmailMessage): Promise<SendResult> {
+    return sendEmail(
+      { to: msg.to, from: msg.from ?? this.cfg.from, subject: msg.subject, html: msg.html, text: msg.text },
+      { apiKey: this.cfg.apiKey, fetchImpl: this.cfg.fetchImpl },
+    );
   }
 }

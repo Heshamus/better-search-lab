@@ -19,7 +19,7 @@ describe("sendEmail", () => {
   it("fails soft (no throw) when the API key is absent", async () => {
     const out = await sendEmail({ to: "a@b.com", from: "x@h.io", subject: "s", html: "h" }, {});
     expect(out.sent).toBe(false);
-    expect(out.reason).toMatch(/RESEND/);
+    expect(out.reason).toMatch(/Resend/);
   });
 
   it("returns the error reason on a non-OK response", async () => {
@@ -27,5 +27,18 @@ describe("sendEmail", () => {
     const out = await sendEmail({ to: "a@b.com", from: "x@h.io", subject: "s", html: "h" }, { apiKey: "k", fetchImpl });
     expect(out.sent).toBe(false);
     expect(out.reason).toMatch(/422/);
+  });
+});
+
+import { ResendEmailSender } from "@/lib/email/resend";
+
+describe("ResendEmailSender", () => {
+  it("wraps sendEmail with the configured key and From", async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ id: "eml_9" }), { status: 200 })) as unknown as typeof fetch;
+    const sender = new ResendEmailSender({ apiKey: "re_key", from: "Lab <r@example.com>", fetchImpl });
+    const out = await sender.send({ to: "a@example.com", subject: "s", html: "h" });
+    expect(out).toEqual({ sent: true, id: "eml_9" });
+    const body = JSON.parse((fetchImpl as any).mock.calls[0][1].body);
+    expect(body).toMatchObject({ from: "Lab <r@example.com>", to: "a@example.com" });
   });
 });
