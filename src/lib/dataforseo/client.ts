@@ -39,12 +39,19 @@ export class DataForSeoClient {
     this.fetchImpl = cfg.fetchImpl ?? fetch; this.maxRetries = cfg.maxRetries ?? 3;
   }
   async post<T>(path: string, body: unknown): Promise<T> {
+    return this.request<T>("POST", path, JSON.stringify(body));
+  }
+  /** GET verb for the read-only appendix endpoints (user_data, locations…). */
+  async get<T>(path: string): Promise<T> {
+    return this.request<T>("GET", path);
+  }
+  private async request<T>(method: "GET" | "POST", path: string, body?: string): Promise<T> {
     const auth = "Basic " + btoa(`${this.login}:${this.password}`);
     for (let attempt = 0; ; attempt++) {
       const r = await this.fetchImpl(BASE + path, {
-        method: "POST",
+        method,
         headers: { Authorization: auth, "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        ...(body !== undefined ? { body } : {}),
       });
       if (r.ok) return (await r.json()) as T;
       const retryable = r.status === 429 || r.status >= 500;

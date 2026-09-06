@@ -30,3 +30,19 @@ describe("DataForSeoClient", () => {
     await expect(c.post("/v3/test", [])).rejects.toBeInstanceOf(DataForSeoError);
   });
 });
+
+describe("DataForSeoClient.get", () => {
+  it("sends Basic auth on GET and retries once on 5xx", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("{}", { status: 503 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    const c = new DataForSeoClient({ login: "L", password: "P", fetchImpl, maxRetries: 1 });
+    expect(await c.get<{ ok: boolean }>("/v3/appendix/user_data")).toEqual({ ok: true });
+    const [url, init] = fetchImpl.mock.calls[0];
+    expect(String(url)).toBe("https://api.dataforseo.com/v3/appendix/user_data");
+    expect(init.method).toBe("GET");
+    expect(init.headers.Authorization).toBe("Basic " + btoa("L:P"));
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+});

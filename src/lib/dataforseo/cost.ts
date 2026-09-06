@@ -16,6 +16,7 @@ const PRICES: Record<string, number> = {
   "/v3/backlinks/summary/live": 0.02,
   "/v3/backlinks/referring_domains/live": 0.02,
   "/v3/backlinks/anchors/live": 0.02,
+  "/v3/appendix/user_data": 0,
   [LLM_CHAT_ENDPOINT]: 0.003, // ~one reasoning chat call
 };
 export function estimateCost(endpoint: string, _rows: number): number {
