@@ -27,6 +27,8 @@ export default defineConfig({
     // and tries to run both under THIS config/environment instead of mcp's
     // own. Run mcp's suite from inside mcp/: `cd mcp && npx vitest run`.
     exclude: ["**/node_modules/**", "**/.git/**", "mcp/**"],
+    // tests/postgres/** is matched by the default include and self-skips
+    // (describe.skipIf) unless TEST_DATABASE_URL is set — see tests/postgres/README.md.
     // Every DB test builds a fresh PGlite via drizzle-kit `pushSchema`
     // (introspect + diff + apply the whole schema). Under vitest's parallel
     // file execution, dozens of concurrent pushSchema calls contend and blow
