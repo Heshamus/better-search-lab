@@ -1,24 +1,29 @@
 // Live E2E for the Reddit Conversations feature: run the REAL production scan
 // (redditConversationsHandler → Apify + DeepSeek judge + Perplexity + DeepSeek
-// draft → store) for the HarperFlow project, print what it surfaced, then build
-// + send the actual digest email. Run in the deployed container:
+// draft → store) for a project, print what it surfaced, then build + send the
+// actual digest email. Run in the deployed container:
 //   docker compose run --rm -v /opt/seo-platform/app/scripts:/app/scripts seo-worker \
-//     pnpm exec tsx scripts/verify-reddit-scan.ts
+//     pnpm exec tsx scripts/verify-reddit-scan.ts <domain>
 import { db } from "../src/db/client";
 import { projects } from "../src/db/schema";
-import { loadEnv } from "../src/config/env";
+import { getConfig } from "../src/lib/config/resolve";
+import { makeEmailSender } from "../src/lib/config/clients";
 import { redditConversationsHandler } from "../src/lib/jobs/handlers/reddit-conversations";
 import { listLatestConversations } from "../src/lib/reddit/conversations-store";
 import { buildConversationsEmail } from "../src/lib/reddit/email";
-import { sendEmail } from "../src/lib/email/resend";
 
 const bare = (d: string): string => d.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "");
 
 async function main() {
-  const env = loadEnv();
+  const cfg = await getConfig(db, { fresh: true });
+  const email = makeEmailSender(cfg);
   const rows = await db.select().from(projects);
-  const proj = rows.find((p) => /harperflow/i.test(p.domain)) ?? rows[0];
-  if (!proj) { console.log("no project found"); process.exit(1); }
+  const wanted = process.argv[2];
+  const proj = wanted ? rows.find((p) => p.domain.includes(wanted)) : rows[0];
+  if (!proj) {
+    console.error("usage: pnpm exec tsx scripts/verify-reddit-scan.ts <domain>");
+    process.exit(1);
+  }
   console.log(`project: ${proj.id}  ${proj.domain}`);
 
   console.log("running the real scan (Apify + DeepSeek + Perplexity — this takes a couple minutes)...");
@@ -37,18 +42,13 @@ async function main() {
   }
 
   if (stored.length) {
-    const email = buildConversationsEmail({ domain: bare(proj.domain), conversations: stored, appUrl: env.APP_URL });
-    const sres = await sendEmail(
-      {
-        to: env.REPORT_EMAIL_TO ?? "hesham@betterbrainlab.org",
-        from: env.REPORT_EMAIL_FROM ?? "Better Search Lab <reports@harperflow.io>",
-        subject: email.subject,
-        html: email.html,
-        text: email.text,
-      },
-      { apiKey: env.RESEND_API_KEY },
-    );
-    console.log(`\nEMAIL "${email.subject}"  →  ${JSON.stringify(sres)}`);
+    const digest = buildConversationsEmail({ domain: bare(proj.domain), conversations: stored, appUrl: cfg.app.url });
+    if (!email || !cfg.email.reportTo) {
+      console.log("email not configured — skipping send");
+    } else {
+      const sres = await email.send({ to: cfg.email.reportTo, subject: digest.subject, html: digest.html, text: digest.text });
+      console.log(`\nEMAIL "${digest.subject}"  →  ${JSON.stringify(sres)}`);
+    }
   } else {
     console.log("\nno conversations stored → nothing to email");
   }

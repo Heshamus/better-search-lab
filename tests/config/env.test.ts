@@ -3,7 +3,6 @@ import { loadEnv } from "@/config/env";
 
 const ok = {
   DATABASE_URL: "postgres://u:p@localhost:5432/db",
-  DATAFORSEO_LOGIN: "login", DATAFORSEO_PASSWORD: "pw",
   AUTH_SECRET: "x".repeat(32),
 };
 
@@ -31,9 +30,5 @@ describe("loadEnv", () => {
   it("passes ENCRYPTION_KEY through when present", () => {
     expect(loadEnv({ ...ok, ENCRYPTION_KEY: "abc" }).ENCRYPTION_KEY).toBe("abc");
     expect(loadEnv(ok).ENCRYPTION_KEY).toBeUndefined();
-  });
-  it("accepts optional Apify config", () => {
-    const env = loadEnv({ ...ok, APIFY_API_KEY: "apify_xxx", APIFY_REDDIT_ACTOR: "trudax~reddit-scraper" });
-    expect(env.APIFY_API_KEY).toBe("apify_xxx");
   });
 });

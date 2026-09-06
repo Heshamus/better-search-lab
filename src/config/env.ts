@@ -1,42 +1,19 @@
 import { z } from "zod";
 
-// Bootstrap env: what a process needs before it can reach the database, plus —
-// until Task 11 of the M1 Part 1 plan finishes migrating call sites — the
-// integration variables that older code still reads directly. Integration
-// settings are declared once in src/lib/config/registry.ts; the env names there
-// act as overrides of the in-app Settings → Integrations values.
+// Bootstrap env: the only variables a process needs before it can reach the
+// database. Every integration credential is a Setting (src/lib/config/registry.ts)
+// — configurable in Settings → Integrations, or overridden by the env var named
+// there. Nothing else in the app may read process.env for configuration.
 const Schema = z.object({
   DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, "must be a postgres:// URL"),
   AUTH_SECRET: z.string().min(32, "must be at least 32 characters"),
   // Optional 32-byte base64 key for settings encryption; absent → derived from AUTH_SECRET.
   ENCRYPTION_KEY: z.string().optional(),
-  // "true" / "1" boots the read-only demo dataset (Plan 2).
+  // "true" / "1" boots the read-only demo dataset.
   DEMO_MODE: z
     .string()
     .optional()
     .transform((v) => v === "true" || v === "1"),
-
-  // --- transitional: still read directly by code that Task 9–11 migrate ---
-  DATAFORSEO_LOGIN: z.string().min(1),
-  DATAFORSEO_PASSWORD: z.string().min(1),
-  DEEPSEEK_API_KEY: z.string().optional(),
-  GOOGLE_CLIENT_ID: z.string().optional(),
-  GOOGLE_CLIENT_SECRET: z.string().optional(),
-  GOOGLE_REDIRECT_URI: z.string().optional(),
-  GOOGLE_SA_KEY: z.string().optional(),
-  EDENAI_API_KEY: z.string().optional(),
-  EDEN_SONAR_MODEL: z.string().optional(),
-  EDEN_CHATGPT_MODEL: z.string().optional(),
-  EDEN_GEMINI_MODEL: z.string().optional(),
-  RESEND_API_KEY: z.string().optional(),
-  REPORT_EMAIL_TO: z.string().optional(),
-  REPORT_EMAIL_FROM: z.string().optional(),
-  APP_URL: z.string().optional(),
-  APIFY_API_KEY: z.string().optional(),
-  APIFY_REDDIT_ACTOR: z.string().optional(),
-  REDDIT_CLIENT_ID: z.string().optional(),
-  REDDIT_CLIENT_SECRET: z.string().optional(),
-  REDDIT_USER_AGENT: z.string().optional(),
 });
 export type Env = z.infer<typeof Schema>;
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {

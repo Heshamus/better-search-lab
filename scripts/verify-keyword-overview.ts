@@ -4,14 +4,15 @@
 // volume + 12-month history + trend + a real CSV, end to end.
 //   docker compose run --rm -v /opt/seo-platform/app/scripts:/app/scripts seo-worker \
 //     pnpm exec tsx scripts/verify-keyword-overview.ts
-import { DataForSeoClient } from "../src/lib/dataforseo/client";
 import { keywordOverviewBulk } from "../src/lib/dataforseo/labs";
 import { buildKeywordCsv } from "../src/lib/keyword-csv";
-import { loadEnv } from "../src/config/env";
+import { db } from "../src/db/client";
+import { getConfig } from "../src/lib/config/resolve";
+import { makeDataForSeoClient, NOT_CONFIGURED } from "../src/lib/config/clients";
 
 async function main() {
-  const env = loadEnv();
-  const client = new DataForSeoClient({ login: env.DATAFORSEO_LOGIN, password: env.DATAFORSEO_PASSWORD });
+  const client = makeDataForSeoClient(await getConfig(db, { fresh: true }));
+  if (!client) { console.error(NOT_CONFIGURED.dataforseo); process.exit(1); }
   const keywords = ["project management software", "notion alternative", "best crm", "time tracking app", "asana vs monday"];
 
   const { rows, rowsBilled } = await keywordOverviewBulk(client, { keywords, locationCode: 2840, languageCode: "en" });

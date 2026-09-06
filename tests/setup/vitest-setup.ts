@@ -1,8 +1,6 @@
-// Test-only fallback env. `??=` never overrides a real value. DATAFORSEO_* stay
-// until Task 11 shrinks the bootstrap schema; AUTH_SECRET must be ≥ 32 chars.
+// Test-only fallback env. `??=` never overrides a real value. AUTH_SECRET must
+// be ≥ 32 chars.
 process.env.DATABASE_URL ??= "postgres://test:test@localhost:5432/test";
-process.env.DATAFORSEO_LOGIN ??= "test";
-process.env.DATAFORSEO_PASSWORD ??= "test";
 process.env.AUTH_SECRET ??= "test_auth_secret_0123456789_abcdefghijklmnop";
 
 // Global Vitest setup. Runs for every test file regardless of environment

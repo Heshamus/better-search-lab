@@ -6,31 +6,27 @@ import { db } from "../src/db/client";
 import { projects } from "../src/db/schema";
 import { getScanHistory } from "../src/lib/ai-visibility/store";
 import { buildWeeklyReport } from "../src/lib/ai-visibility/report";
-import { sendEmail } from "../src/lib/email/resend";
-import { loadEnv } from "../src/config/env";
+import { getConfig } from "../src/lib/config/resolve";
+import { makeEmailSender } from "../src/lib/config/clients";
 
 const bare = (d: string): string => d.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "");
 
 async function main() {
-  const env = loadEnv();
+  const cfg = await getConfig(db, { fresh: true });
+  const email = makeEmailSender(cfg);
   const all = await db.select().from(projects);
   let sent = 0;
   for (const project of all) {
     const history = await getScanHistory(db, project.id, 2);
     if (!history.length) continue;
-    const report = buildWeeklyReport({ domain: bare(project.domain), latest: history[0], previous: history[1] ?? null, appUrl: env.APP_URL });
-    const res = await sendEmail(
-      {
-        to: env.REPORT_EMAIL_TO ?? "hesham@betterbrainlab.org",
-        from: env.REPORT_EMAIL_FROM ?? "Better Search Lab <reports@harperflow.io>",
-        subject: report.subject,
-        html: report.html,
-        text: report.text,
-      },
-      { apiKey: env.RESEND_API_KEY },
-    );
-    console.log(`${project.domain} → to=${env.REPORT_EMAIL_TO ?? "hesham@betterbrainlab.org"} :: ${JSON.stringify(res)} :: subject="${report.subject}"`);
-    if (res.sent) sent += 1;
+    const report = buildWeeklyReport({ domain: bare(project.domain), latest: history[0], previous: history[1] ?? null, appUrl: cfg.app.url });
+    if (!email || !cfg.email.reportTo) {
+      console.log("email not configured — skipping send");
+    } else {
+      const res = await email.send({ to: cfg.email.reportTo, subject: report.subject, html: report.html, text: report.text });
+      console.log(`${project.domain} → to=${cfg.email.reportTo} :: ${JSON.stringify(res)} :: subject="${report.subject}"`);
+      if (res.sent) sent += 1;
+    }
   }
   console.log(`done: ${sent} email(s) sent`);
   process.exit(0);

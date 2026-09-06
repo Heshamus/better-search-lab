@@ -5,14 +5,16 @@
 //   docker compose run --rm -v /opt/seo-platform/app/scripts:/app/scripts seo-worker \
 //     pnpm exec tsx scripts/probe-apify-reddit.ts
 import { scrapeReddit } from "../src/lib/reddit/apify";
-import { loadEnv } from "../src/config/env";
+import { db } from "../src/db/client";
+import { getConfig } from "../src/lib/config/resolve";
+import { NOT_CONFIGURED } from "../src/lib/config/clients";
 
 async function main() {
-  const env = loadEnv();
-  if (!env.APIFY_API_KEY) { console.error("APIFY_API_KEY not set in env"); process.exit(1); }
+  const cfg = await getConfig(db, { fresh: true });
+  if (!cfg.apify.configured) { console.error(NOT_CONFIGURED.apify); process.exit(1); }
 
   const posts = await scrapeReddit(
-    { apiKey: env.APIFY_API_KEY, actor: env.APIFY_REDDIT_ACTOR },
+    { apiKey: cfg.apify.apiKey!, actor: cfg.apify.redditActor },
     { searches: ["best seo audit tool"], subredditUrls: ["https://www.reddit.com/r/SEO/"], sort: "New", time: "week", maxItems: 8 },
   );
 

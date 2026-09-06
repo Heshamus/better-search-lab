@@ -14,10 +14,10 @@ import {
   type NewConversation,
 } from "@/lib/reddit/conversations-store";
 import { buildConversationsEmail } from "@/lib/reddit/email";
-import { sendEmail } from "@/lib/email/resend";
 import { logApiUsage, LLM_CHAT_ENDPOINT } from "@/lib/dataforseo/cost";
 import type { RedditPost } from "@/lib/reddit/apify";
 import type { ChatMessage } from "@/lib/llm/provider";
+import type { EmailSender } from "@/lib/email/sender";
 
 // Orchestrates the per-project Reddit Conversations pipeline (this file) and
 // the self-healing daily pass that runs it across every project + emails the
@@ -170,22 +170,6 @@ export async function scanProjectConversations(deps: {
 
 const RECENCY_MS = 20 * 3_600_000; // ~daily, self-healing (mirrors runDailyRedditRadar / runWeeklyAiVisibility)
 
-export interface ConversationRadarEnv {
-  APIFY_API_KEY?: string;
-  REDDIT_CLIENT_ID?: string;
-  REDDIT_CLIENT_SECRET?: string;
-  DEEPSEEK_API_KEY?: string;
-  RESEND_API_KEY?: string;
-  REPORT_EMAIL_TO?: string;
-  REPORT_EMAIL_FROM?: string;
-  APP_URL?: string;
-}
-
-type SendEmailImpl = (
-  msg: { to: string; from: string; subject: string; html: string; text?: string },
-  opts: { apiKey?: string; fetchImpl?: typeof fetch },
-) => Promise<{ sent: boolean; reason?: string }>;
-
 const bareDomain = (d: string): string => d.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "");
 
 /**
@@ -194,30 +178,27 @@ const bareDomain = (d: string): string => d.replace(/^https?:\/\//, "").replace(
  * and — when it surfaces at least one conversation — email the digest
  * (best-effort: a Resend failure still leaves the conversations stored, since
  * storage happens inside scanProjectConversations before the email is attempted).
- * Off entirely when APIFY_API_KEY or DEEPSEEK_API_KEY is absent (mirrors
- * runWeeklyAiVisibility's EDENAI_API_KEY gate, and redditConversationsHandler's
- * own both-keys guard for the on-demand path) — the judge+draft steps need
- * DeepSeek, so there's no point paying for the Apify scrape without it.
+ * `enabled` is decided by the caller: an AI assistant plus at least one fetch
+ * source.
  * Fail-soft per project — one project's thrown error (e.g. a DeepSeek outage
  * mid-run) never aborts the rest of the pass.
  */
 export async function runDailyConversationRadar(deps: {
   db: any;
   now: Date;
-  env: ConversationRadarEnv;
+  enabled: boolean;
+  email: EmailSender | null;
+  reportTo?: string;
+  appUrl?: string;
   scrape: (input: ConversationScrapeInput) => Promise<RedditPost[]>;
   ask?: (model: string, prompt: string) => Promise<{ answer: string; citations: string[] }>;
   chat: (m: ChatMessage[]) => Promise<string>;
-  crawl?: (domain: string) => Promise<string>; // key-pages summary for a project's knowledge-brief seed
-  sendEmailImpl?: SendEmailImpl;
+  crawl?: (domain: string) => Promise<string>;
 }): Promise<{ scanned: string[]; emailed: string[] }> {
-  const { db, now, env } = deps;
+  const { db, now } = deps;
   const scanned: string[] = [];
   const emailed: string[] = [];
-  // Fetch source = official Reddit API OR Apify; the judge/draft steps need
-  // DeepSeek, so there's no point fetching without it.
-  const canFetch = env.APIFY_API_KEY || (env.REDDIT_CLIENT_ID && env.REDDIT_CLIENT_SECRET);
-  if (!canFetch || !env.DEEPSEEK_API_KEY) return { scanned, emailed }; // feature off
+  if (!deps.enabled) return { scanned, emailed }; // feature off
 
   const all = await db.select().from(projects);
   for (const project of all) {
@@ -242,20 +223,14 @@ export async function runDailyConversationRadar(deps: {
       continue;
     }
     if (rows.length === 0) continue; // nothing worth joining today — no email
+    if (!deps.email || !deps.reportTo) {
+      console.warn("[reddit-conversations] digest not emailed for", project.id, "- email or recipient not configured");
+      continue;
+    }
 
-    const digest = buildConversationsEmail({ domain, conversations: rows, appUrl: env.APP_URL });
+    const digest = buildConversationsEmail({ domain, conversations: rows, appUrl: deps.appUrl });
     try {
-      const sendImpl = deps.sendEmailImpl ?? sendEmail;
-      const res = await sendImpl(
-        {
-          to: env.REPORT_EMAIL_TO ?? "hesham@betterbrainlab.org",
-          from: env.REPORT_EMAIL_FROM ?? "Better Search Lab <reports@harperflow.io>",
-          subject: digest.subject,
-          html: digest.html,
-          text: digest.text,
-        },
-        { apiKey: env.RESEND_API_KEY },
-      );
+      const res = await deps.email.send({ to: deps.reportTo, subject: digest.subject, html: digest.html, text: digest.text });
       if (res.sent) emailed.push(project.id);
       else console.warn("[reddit-conversations] email not sent for", project.id, "-", res.reason);
     } catch (e) {

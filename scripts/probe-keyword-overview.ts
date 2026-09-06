@@ -5,8 +5,9 @@
 // Writes a trimmed { tasks:[{ status_code, result:[{ items }] }] } fixture and
 // prints a concise shape summary (no giant dump).
 import { readFileSync, writeFileSync } from "node:fs";
-import { DataForSeoClient } from "../src/lib/dataforseo/client";
-import { loadEnv } from "../src/config/env";
+import { db } from "../src/db/client";
+import { getConfig } from "../src/lib/config/resolve";
+import { makeDataForSeoClient, NOT_CONFIGURED } from "../src/lib/config/clients";
 
 const FIXTURE = "src/lib/dataforseo/fixtures/keyword-overview-bulk-live.json";
 
@@ -29,8 +30,8 @@ function loadDotenv(path = ".env") {
 
 async function main() {
   loadDotenv();
-  const env = loadEnv();
-  const client = new DataForSeoClient({ login: env.DATAFORSEO_LOGIN, password: env.DATAFORSEO_PASSWORD });
+  const client = makeDataForSeoClient(await getConfig(db, { fresh: true }));
+  if (!client) { console.error(NOT_CONFIGURED.dataforseo); process.exit(1); }
   const resp = await client.post<any>("/v3/dataforseo_labs/google/keyword_overview/live", [
     { keywords: ["project management software", "notion alternative"], location_code: 2840, language_code: "en" },
   ]);

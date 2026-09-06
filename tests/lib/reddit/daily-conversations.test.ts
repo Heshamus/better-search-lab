@@ -12,6 +12,7 @@ import {
 } from "@/lib/reddit/daily-conversations";
 import type { RedditPost } from "@/lib/reddit/apify";
 import type { ChatMessage } from "@/lib/llm/provider";
+import type { EmailMessage, SendResult } from "@/lib/email/sender";
 
 let close: (() => Promise<void>) | undefined;
 afterEach(() => close?.());
@@ -161,118 +162,72 @@ describe("scanProjectConversations", () => {
 });
 
 describe("runDailyConversationRadar", () => {
-  it("no-ops when APIFY_API_KEY is absent", async () => {
-    const t = await createTestDb();
-    close = t.close;
-    await createProject(t.db, { name: "HF", domain: "example.com" });
-    const scrape = vi.fn();
-    const out = await runDailyConversationRadar({
-      db: t.db,
-      now: new Date(),
-      env: { DEEPSEEK_API_KEY: "k" },
-      scrape,
-      chat: vi.fn(),
-    });
-    expect(out).toEqual({ scanned: [], emailed: [] });
-    expect(scrape).not.toHaveBeenCalled();
-  });
+  const sender = () => ({ send: vi.fn(async (_msg: EmailMessage): Promise<SendResult> => ({ sent: true, id: "eml_1" })) });
 
-  it("no-ops when DEEPSEEK_API_KEY is absent, even with APIFY_API_KEY set (no billed scrape without a judge)", async () => {
+  it("does nothing when disabled (no fetch source, or no AI assistant — the caller decides)", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "example.com" });
-    // A working brief so the run would otherwise proceed to scrape — a real
-    // config, not a crashing stub, so a missing gate is what fails this test,
-    // not an unrelated chat-stub error caught by the per-project try/catch.
+    const p = await createProject(t.db, { name: "Site", domain: "example.com" });
     await saveRedditConfig(t.db, p.id, { knowledgeBrief: "We build SEO tools.", subreddits: ["SEO"] });
     const scrape = vi.fn(async () => []);
-    const chat = makeChat();
-    const out = await runDailyConversationRadar({
-      db: t.db,
-      now: new Date(),
-      env: { APIFY_API_KEY: "k" },
-      scrape,
-      chat,
-    });
+    const out = await runDailyConversationRadar({ db: t.db, now: new Date(), enabled: false, email: null, scrape, chat: makeChat() });
     expect(out).toEqual({ scanned: [], emailed: [] });
     expect(scrape).not.toHaveBeenCalled();
   });
 
-  it("scans a due project and emails the digest via sendEmailImpl", async () => {
+  it("scans a due project and emails the digest to the configured recipient", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "example.com" });
+    const p = await createProject(t.db, { name: "Site", domain: "example.com" });
     await saveRedditConfig(t.db, p.id, { knowledgeBrief: "We build SEO tools.", subreddits: ["SEO"] });
 
     const scrape = vi.fn(async () => [post()]);
     const ask = vi.fn(async () => ({ answer: "facts", citations: [] as string[] }));
-    const chat = makeChat();
-    const sendEmailImpl = vi.fn(
-      async (msg: { to: string; from: string; subject: string; html: string; text?: string }, _opts: { apiKey?: string }) => ({
-        sent: true,
-        id: "eml_1",
-      }),
-    );
-
-    const out = await runDailyConversationRadar({
-      db: t.db,
-      now: new Date(),
-      env: { APIFY_API_KEY: "k", DEEPSEEK_API_KEY: "k" },
-      scrape,
-      ask,
-      chat,
-      sendEmailImpl,
-    });
+    const email = sender();
+    const out = await runDailyConversationRadar({ db: t.db, now: new Date(), enabled: true, email, reportTo: "ops@example.com", appUrl: "https://bsl.example", scrape, ask, chat: makeChat() });
 
     expect(out.scanned).toEqual([p.id]);
     expect(out.emailed).toEqual([p.id]);
-    expect(sendEmailImpl).toHaveBeenCalledOnce();
-    const [msg] = sendEmailImpl.mock.calls[0];
+    expect(email.send).toHaveBeenCalledOnce();
+    const [msg] = email.send.mock.calls[0];
+    expect(msg.to).toBe("ops@example.com");
     expect(msg.subject).toContain("Reddit conversation");
     expect(msg.html).toContain("example.com");
+    expect(msg.html).toContain("https://bsl.example/reddit");
   });
 
-  it("still leaves conversations stored when the email send fails", async () => {
+  it("does not email without a recipient, and still leaves conversations stored when the send fails", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "example.com" });
+    const p = await createProject(t.db, { name: "Site", domain: "example.com" });
     await saveRedditConfig(t.db, p.id, { knowledgeBrief: "We build SEO tools.", subreddits: ["SEO"] });
 
-    const scrape = vi.fn(async () => [post()]);
-    const chat = makeChat();
-    const sendEmailImpl = vi.fn(async () => {
-      throw new Error("resend down");
-    });
+    const silent = sender();
+    const noRecipient = await runDailyConversationRadar({ db: t.db, now: new Date(), enabled: true, email: silent, scrape: vi.fn(async () => [post()]), chat: makeChat() });
+    expect(noRecipient.scanned).toEqual([p.id]);
+    expect(noRecipient.emailed).toEqual([]);
+    expect(silent.send).not.toHaveBeenCalled();
 
-    const out = await runDailyConversationRadar({
-      db: t.db,
-      now: new Date(),
-      env: { APIFY_API_KEY: "k", DEEPSEEK_API_KEY: "k" },
-      scrape,
-      chat,
-      sendEmailImpl,
-    });
-
-    expect(out.scanned).toEqual([p.id]);
+    const t2 = await createTestDb();
+    const p2 = await createProject(t2.db, { name: "Site", domain: "example.com" });
+    await saveRedditConfig(t2.db, p2.id, { knowledgeBrief: "We build SEO tools.", subreddits: ["SEO"] });
+    const failing = { send: vi.fn(async () => { throw new Error("smtp down"); }) };
+    const out = await runDailyConversationRadar({ db: t2.db, now: new Date(), enabled: true, email: failing, reportTo: "ops@example.com", scrape: vi.fn(async () => [post()]), chat: makeChat() });
+    expect(out.scanned).toEqual([p2.id]);
     expect(out.emailed).toEqual([]); // send failed
-    const stored = await listLatestConversations(t.db, p.id, 10);
+    const stored = await listLatestConversations(t2.db, p2.id, 10);
     expect(stored).toHaveLength(1); // but it was already saved before the email attempt
+    await t2.close();
   });
 
   it("skips a project scanned within the last ~20h", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "example.com" });
+    const p = await createProject(t.db, { name: "Site", domain: "example.com" });
     await saveConversations(t.db, p.id, "2026-08-06", [{ threadUrl: "https://www.reddit.com/r/x/1" }]);
 
     const scrape = vi.fn();
-    const out = await runDailyConversationRadar({
-      db: t.db,
-      now: new Date(),
-      env: { APIFY_API_KEY: "k", DEEPSEEK_API_KEY: "k" },
-      scrape,
-      chat: vi.fn(),
-    });
+    const out = await runDailyConversationRadar({ db: t.db, now: new Date(), enabled: true, email: null, scrape, chat: vi.fn() });
     expect(out.scanned).toEqual([]);
     expect(scrape).not.toHaveBeenCalled();
   });

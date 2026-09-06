@@ -1,14 +1,11 @@
-// Standalone worker process (runs as the seo-worker container / a separate Railway "worker" service).
-//
-// Uses RELATIVE imports (not the `@/` tsconfig alias) on purpose: `tsx worker/index.ts` does
-// not resolve tsconfig `paths` at runtime, so `@/...` imports would crash with
-// "Cannot find module '@/...'" the moment this file is executed directly. The rest of the
-// app (Next.js, Vitest via vite-tsconfig-paths) resolves `@/` fine — only this entrypoint
-// needs to route around it.
+// Standalone worker process (the seo-worker container / a separate Railway "worker" service).
 //
 // Two responsibilities: (1) run scheduled jobs on a cron (registerSchedules), and (2) drain
-// the on-demand job QUEUE — the pending jobs that HTTP routes enqueue instead of running
-// inline (which timed out at the auth proxy). See src/lib/jobs/queue.ts.
+// the on-demand job QUEUE that HTTP routes enqueue (src/lib/jobs/queue.ts).
+//
+// Every job resolves its clients from a FRESH config read at its start (spec §8.4): this
+// process cannot see the web process's cache invalidation, so a key saved in Settings must
+// be re-read here, not cached. That is what makes "takes effect on the next job" true.
 import cron from "node-cron";
 import { registerSchedules } from "../src/lib/jobs/scheduler";
 import { db } from "../src/db/client";
@@ -34,58 +31,52 @@ import { redditConversationsHandler } from "../src/lib/jobs/handlers/reddit-conv
 import { runDailyConversationRadar } from "../src/lib/reddit/daily-conversations";
 import { makeConversationScrape } from "../src/lib/reddit/scrape-source";
 import { fetchSite } from "../src/lib/crawl/fetch-site";
-import { EdenClient } from "../src/lib/ai-visibility/engines";
-import { DataForSeoClient } from "../src/lib/dataforseo/client";
-import { OpenAICompatibleProvider } from "../src/lib/llm/openai-compatible";
+import { getConfig } from "../src/lib/config/resolve";
+import { conversationFetchEnv, makeChatProvider, makeDataForSeoClient, makeEdenClient, makeEmailSender, NOT_CONFIGURED } from "../src/lib/config/clients";
+import type { AppConfig } from "../src/lib/config/app-config";
+import type { DataForSeoClient } from "../src/lib/dataforseo/client";
 import { loadEnv } from "../src/config/env";
 
+loadEnv(); // fail fast on a bad bootstrap env
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// Plain-text summary of a project's own site, for seeding its Reddit knowledge
-// & voice brief (ensureKnowledgeBrief's `crawl` dep). fetchSite already strips
-// to HTML per page; this collapses that HTML to bounded plain text — a local
-// helper rather than deepseek.ts's stripTags, which is private to that module.
+// Plain-text summary of a project's own site, for seeding its Reddit knowledge & voice brief.
 function htmlToText(pages: { html: string }[]): string {
-  return pages
-    .map((p) => p.html)
-    .join(" ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 3000);
+  return pages.map((p) => p.html).join(" ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 3000);
 }
 
-// Clients built once at module scope — shared by the cron run() and the queue drain.
-const env = loadEnv();
-const client = new DataForSeoClient({ login: env.DATAFORSEO_LOGIN, password: env.DATAFORSEO_PASSWORD });
-const llm = env.DEEPSEEK_API_KEY ? new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: env.DEEPSEEK_API_KEY, model: "deepseek-v4-pro" }) : null;
+const freshConfig = (): Promise<AppConfig> => getConfig(db, { fresh: true });
 
-// Composite refresh: the "Refresh data" button enqueues ONE job that runs
-// rankings → gaps → opportunities in order (opportunities reads the fresh gaps).
-function refreshAllHandler(): JobHandler {
-  const rank = rankRefreshHandler(client);
-  const gaps = gapRefreshHandler(client);
-  const opps = weeklyOpportunitiesHandler();
+/** Wrap a DataForSEO-backed handler so it resolves the client from fresh config at run time. */
+function withDataForSeo(build: (client: DataForSeoClient, cfg: AppConfig) => JobHandler): JobHandler {
   return async (ctx) => {
-    const a = await rank(ctx);
-    const b = await gaps(ctx);
-    const c = await opps(ctx);
-    return { rows: a.rows + b.rows + c.rows, cost: a.cost + b.cost + c.cost };
+    const cfg = await freshConfig();
+    const client = makeDataForSeoClient(cfg);
+    if (!client) throw new Error(NOT_CONFIGURED.dataforseo);
+    return build(client, cfg)(ctx);
   };
 }
 
-// Maps an enqueued job's `type` to the handler that runs it. Any type not listed
-// here is failed with a clear "no handler" error by drainOnce.
+// Composite refresh: ONE job that runs rankings → gaps → opportunities in order.
+function refreshAllHandler(): JobHandler {
+  return withDataForSeo((client) => async (ctx) => {
+    const a = await rankRefreshHandler(client)(ctx);
+    const b = await gapRefreshHandler(client)(ctx);
+    const c = await weeklyOpportunitiesHandler()(ctx);
+    return { rows: a.rows + b.rows + c.rows, cost: a.cost + b.cost + c.cost };
+  });
+}
+
 function resolveHandler(type: string): JobHandler | null {
   switch (type) {
-    case "profile_site": return profileSiteHandler(client, { llm });
-    case "rank_refresh": return rankRefreshHandler(client);
-    case "gap_refresh": return gapRefreshHandler(client);
+    case "profile_site": return withDataForSeo((client, cfg) => profileSiteHandler(client, { llm: makeChatProvider(cfg) }));
+    case "rank_refresh": return withDataForSeo((client) => rankRefreshHandler(client));
+    case "gap_refresh": return withDataForSeo((client) => gapRefreshHandler(client));
     case "weekly_opportunities": return weeklyOpportunitiesHandler();
-    case "competitor_intel": return competitorIntelHandler(client);
+    case "competitor_intel": return withDataForSeo((client) => competitorIntelHandler(client));
     case "site_audit": return siteAuditHandler();
-    case "backlinks_refresh": return backlinksRefreshHandler(client);
-    case "organic_keywords_refresh": return organicKeywordsRefreshHandler(client);
+    case "backlinks_refresh": return withDataForSeo((client) => backlinksRefreshHandler(client));
+    case "organic_keywords_refresh": return withDataForSeo((client) => organicKeywordsRefreshHandler(client));
     case "gsc_sync": return gscSyncHandler();
     case "ga_sync": return gaSyncHandler();
     case "ai_visibility_scan": return aiVisibilityScanHandler();
@@ -99,43 +90,53 @@ async function run() {
   const today = new Date().toISOString().slice(0, 10);
   await runJob(db, { type: "health", date: today, handler: healthHandler });
 
+  const cfg = await freshConfig(); // once per tick
+  const client = makeDataForSeoClient(cfg);
   const allProjects = await db.select().from(projectsTable);
   const due = dueProjects(allProjects, today);
-  for (const pid of due.rankRefresh) {
-    await runJob(db, { type: "rank_refresh", projectId: pid, date: today, handler: rankRefreshHandler(client) });
-  }
-  for (const pid of due.metricsRefresh) {
-    await runJob(db, { type: "keyword_metrics_refresh", projectId: pid, date: today, handler: metricsRefreshHandler(client) });
-  }
-  // Must run BEFORE weekly_opportunities: fresh competitor_gaps rows need to exist
-  // this same tick so the shortlist's gap detector has signals to read.
-  for (const pid of due.gaps) {
-    await runJob(db, { type: "gap_refresh", projectId: pid, date: today, handler: gapRefreshHandler(client) });
-  }
-  for (const pid of due.opportunities) {
-    await runJob(db, { type: "weekly_opportunities", projectId: pid, date: today, handler: weeklyOpportunitiesHandler() });
+
+  if (!client) {
+    console.warn("[worker]", NOT_CONFIGURED.dataforseo, "— skipping scheduled refreshes this tick");
+  } else {
+    for (const pid of due.rankRefresh) {
+      await runJob(db, { type: "rank_refresh", projectId: pid, date: today, handler: rankRefreshHandler(client) });
+    }
+    for (const pid of due.metricsRefresh) {
+      await runJob(db, { type: "keyword_metrics_refresh", projectId: pid, date: today, handler: metricsRefreshHandler(client) });
+    }
+    // Must run BEFORE weekly_opportunities: fresh competitor_gaps rows need to exist this tick.
+    for (const pid of due.gaps) {
+      await runJob(db, { type: "gap_refresh", projectId: pid, date: today, handler: gapRefreshHandler(client) });
+    }
+    for (const pid of due.opportunities) {
+      await runJob(db, { type: "weekly_opportunities", projectId: pid, date: today, handler: weeklyOpportunitiesHandler() });
+    }
   }
 
-  // Self-healing weekly AI-visibility: scan Google-connected projects not scanned
-  // in 7 days and email the week-over-week report (email is best-effort).
+  const email = makeEmailSender(cfg);
+
   await runWeeklyAiVisibility({
     db,
     now: new Date(),
-    env,
+    enabled: cfg.edenai.configured,
+    email,
+    reportTo: cfg.email.reportTo,
+    appUrl: cfg.app.url,
     scan: (pid) => runJob(db, { type: "ai_visibility_scan", projectId: pid, date: today, handler: aiVisibilityScanHandler() }).then(() => undefined),
   }).catch((e) => console.error("[worker] weekly ai-visibility pass failed:", e));
 
-  // Self-healing daily Reddit "conversations worth joining" pass (Apify gather →
-  // prefilter → DeepSeek fit+edge judge → Perplexity+DeepSeek draft → store →
-  // email digest). Supersedes the old SerpApi radar, which has been retired
-  // (see git history for src/lib/reddit/{serpapi,radar,relevance,daily,store}.ts).
+  const chat = makeChatProvider(cfg);
+  const eden = makeEdenClient(cfg);
   await runDailyConversationRadar({
     db,
     now: new Date(),
-    env,
-    scrape: makeConversationScrape(env),
-    ask: env.EDENAI_API_KEY ? (m, p) => new EdenClient(env.EDENAI_API_KEY!).ask(m, p) : undefined,
-    chat: (msgs) => new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: env.DEEPSEEK_API_KEY!, model: "deepseek-v4-pro" }).chat(msgs),
+    enabled: !!chat && (cfg.reddit.configured || cfg.apify.configured),
+    email,
+    reportTo: cfg.email.reportTo,
+    appUrl: cfg.app.url,
+    scrape: makeConversationScrape(conversationFetchEnv(cfg)),
+    ask: eden ? (m, p) => eden.ask(m, p) : undefined,
+    chat: (msgs) => (chat ? chat.chat(msgs) : Promise.reject(new Error(NOT_CONFIGURED.llm))),
     crawl: async (domain) => {
       const r = await fetchSite("https://" + domain);
       if (r.failed) return "";
@@ -144,10 +145,7 @@ async function run() {
   }).catch((e) => console.error("[worker] daily reddit conversations pass failed:", e));
 }
 
-// Drain the on-demand queue continuously: run one job to completion, immediately
-// look for the next; when the queue is empty, reap any stalled job and idle 2s.
-// Single-consumer (one job at a time) — a slow job briefly delays the next, which
-// for this single-tenant tool is fine and also paces external API usage.
+// Drain the on-demand queue continuously (single consumer; see queue.ts).
 async function queueLoop() {
   for (;;) {
     try {
