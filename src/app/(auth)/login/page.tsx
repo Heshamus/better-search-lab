@@ -2,17 +2,11 @@ import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { countUsers } from "@/lib/auth/users";
 import { resolveSessionUser } from "@/lib/auth/session";
+import { safeCallback } from "@/lib/auth/safe-callback";
 import { LoginForm } from "@/components/login-form";
 import { Logo } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
-
-const DEFAULT_CALLBACK_URL = "/overview";
-
-/** Only same-origin paths may be used as a post-login destination. */
-function safeCallback(raw: string | undefined): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : DEFAULT_CALLBACK_URL;
-}
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ callbackUrl?: string; reason?: string }> }) {
   if ((await countUsers(db)) === 0) redirect("/setup"); // first run

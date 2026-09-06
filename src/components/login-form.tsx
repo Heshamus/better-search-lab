@@ -23,6 +23,7 @@ export function LoginForm({ callbackUrl, reason }: { callbackUrl: string; reason
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const notice = reason && Object.hasOwn(REASON_COPY, reason) ? REASON_COPY[reason] : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,7 +46,7 @@ export function LoginForm({ callbackUrl, reason }: { callbackUrl: string; reason
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      {reason && REASON_COPY[reason] ? <p className="rounded-lg bg-neutral-800/60 px-3 py-2 text-sm text-neutral-300">{REASON_COPY[reason]}</p> : null}
+      {notice ? <p className="rounded-lg bg-neutral-800/60 px-3 py-2 text-sm text-neutral-300">{notice}</p> : null}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="login-email" className="eyebrow">Email</label>
         <input id="login-email" type="email" required autoComplete="email" className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />

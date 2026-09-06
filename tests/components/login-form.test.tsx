@@ -46,4 +46,11 @@ describe("LoginForm", () => {
     render(<LoginForm callbackUrl="/overview" reason="signed-out" />);
     expect(screen.getByText(/signed out/i)).toBeInTheDocument();
   });
+  it("renders nothing for unknown reasons, including prototype keys", () => {
+    for (const reason of ["something-unexpected", "constructor", "__proto__", "toString"]) {
+      const { container } = render(<LoginForm callbackUrl="/overview" reason={reason} />);
+      expect(container.querySelector("p")).toBeNull();
+      cleanup();
+    }
+  });
 });
