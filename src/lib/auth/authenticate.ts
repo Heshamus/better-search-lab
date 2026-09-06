@@ -14,14 +14,20 @@ export type AuthOutcome =
   | { ok: false; reason: "invalid" | "rate_limited" };
 
 /**
- * The client address as reported by the trusted reverse proxy. The proxy APPENDS
- * the address it saw to x-forwarded-for, so the rightmost hop is the one it
- * wrote and the leftmost is whatever the client claimed. With no proxy header
- * there is no trustworthy address, and the caller skips the per-IP key.
+ * The client address as reported by the trusted reverse proxies. Each trusted
+ * proxy APPENDS the address it saw to x-forwarded-for, so the rightmost entry
+ * was written by the proxy nearest the app and everything to its left may have
+ * been claimed by the client. With `hops` trusted proxies in front of the app
+ * (Traefik → oauth2-proxy → app is 2), the header ends `client, traefik-ip` and
+ * the client is the hops-th entry from the right — anything further left is
+ * attacker-controlled. A header shorter than the configured hop count means the
+ * topology is not what was configured; the leftmost entry is then the closest
+ * honest guess. With no proxy header at all there is no trustworthy address,
+ * and the caller skips the per-IP key rather than sharing one bucket.
  */
-export function clientIp(headers: Headers | undefined): string | undefined {
+export function clientIp(headers: Headers | undefined, hops = 1): string | undefined {
   const forwarded = headers?.get("x-forwarded-for")?.split(",").map((s) => s.trim()).filter(Boolean);
-  if (forwarded?.length) return forwarded[forwarded.length - 1];
+  if (forwarded?.length) return forwarded.length >= hops ? forwarded[forwarded.length - hops] : forwarded[0];
   return headers?.get("x-real-ip")?.trim() || undefined;
 }
 

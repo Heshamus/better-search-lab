@@ -10,7 +10,9 @@ vi.mock("@/lib/reddit/conversations-store", () => ({
 }));
 vi.mock("@/lib/config/resolve", async () => {
   const { buildConfig } = await vi.importActual<typeof import("@/lib/config/resolve")>("@/lib/config/resolve");
-  return { getConfig: vi.fn(async () => buildConfig({ stored: [], env: { DATAFORSEO_LOGIN: "x", DATAFORSEO_PASSWORD: "y" } })) };
+  // buildConfig is re-exported so a test can hand getConfig a DIFFERENT config
+  // (e.g. one with DataForSEO unconfigured) without reaching for the real DB.
+  return { buildConfig, getConfig: vi.fn(async () => buildConfig({ stored: [], env: { DATAFORSEO_LOGIN: "x", DATAFORSEO_PASSWORD: "y" } })) };
 });
 vi.mock("@/lib/dataforseo/labs", () => ({
   keywordOverviewBulk: vi.fn(async () => ({
@@ -20,6 +22,8 @@ vi.mock("@/lib/dataforseo/labs", () => ({
 }));
 vi.mock("@/lib/dataforseo/cost", () => ({ logApiUsage: vi.fn() }));
 
+import { getConfig, buildConfig } from "@/lib/config/resolve";
+import { NOT_CONFIGURED } from "@/lib/config/clients";
 import { requireApiToken } from "@/lib/api-guard";
 import { listProjects } from "@/lib/projects";
 import { listOpportunities } from "@/lib/opportunities";
@@ -147,6 +151,14 @@ describe("GET /api/mcp/keyword-overview (project-agnostic)", () => {
     (requireApiToken as any).mockResolvedValueOnce(new Response("Unauthorized", { status: 401 }));
     const res = await get(keywordOverviewGet, "http://x/api/mcp/keyword-overview?keywords=a");
     expect(res.status).toBe(401);
+    expect(keywordOverviewBulk).not.toHaveBeenCalled();
+  });
+
+  it("503s with the NOT_CONFIGURED message when DataForSEO is unconfigured (never a fake 200 {})", async () => {
+    (getConfig as any).mockResolvedValueOnce(buildConfig({ stored: [], env: {} }));
+    const res = await get(keywordOverviewGet, "http://x/api/mcp/keyword-overview?keywords=a");
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({ error: NOT_CONFIGURED.dataforseo });
     expect(keywordOverviewBulk).not.toHaveBeenCalled();
   });
 });

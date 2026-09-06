@@ -4,6 +4,12 @@ import { authConfig, isPublicPath } from "@/auth.config";
 const authorized = authConfig.callbacks!.authorized!;
 const req = (pathname: string) => ({ nextUrl: { pathname } }) as any;
 
+describe("auth.config trustHost", () => {
+  it("trusts the forwarded host so a self-hosted deploy needs no AUTH_TRUST_HOST", () => {
+    expect(authConfig.trustHost).toBe(true);
+  });
+});
+
 describe("auth.config authorized", () => {
   it("passes the public paths through without a session", () => {
     for (const p of ["/login", "/setup", "/api/health", "/api/auth/callback/credentials"]) {

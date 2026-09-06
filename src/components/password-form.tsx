@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
 
@@ -8,6 +9,7 @@ const inputClass =
 
 /** Own-password change. Success bumps session_version server-side, so we sign out explicitly. */
 export function PasswordForm() {
+  const router = useRouter();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -29,7 +31,10 @@ export function PasswordForm() {
         setError(body.error ?? "Could not change the password.");
         return;
       }
-      await signOut({ callbackUrl: "/login?reason=password-changed" });
+      // Client-side sign-out then our own navigation: Auth.js's redirect
+      // resolves against the server's internal origin (see AppShell).
+      await signOut({ redirect: false });
+      router.push("/login?reason=password-changed");
     } catch {
       setError("Network error — please try again.");
     } finally {

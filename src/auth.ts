@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { authConfig } from "./auth.config";
 import { db } from "@/db/client";
 import { authenticate, clientIp } from "@/lib/auth/authenticate";
+import { loadEnv } from "@/config/env";
 
 /** Surfaces to the login form as `code: "rate_limited"`. */
 class RateLimitedError extends CredentialsSignin {
@@ -24,7 +25,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials, req) {
         const email = typeof credentials?.email === "string" ? credentials.email : "";
         const password = typeof credentials?.password === "string" ? credentials.password : "";
-        const outcome = await authenticate(db, { email, password, ip: clientIp(req?.headers) });
+        const ip = clientIp(req?.headers, loadEnv().TRUSTED_PROXY_HOPS);
+        const outcome = await authenticate(db, { email, password, ip });
         if (!outcome.ok) {
           if (outcome.reason === "rate_limited") throw new RateLimitedError();
           return null;

@@ -4,10 +4,12 @@ import { render, screen, cleanup, fireEvent, waitFor } from "@testing-library/re
 
 const signOut = vi.fn();
 vi.mock("next-auth/react", () => ({ signOut: (...args: unknown[]) => signOut(...args) }));
+const push = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
 import { PasswordForm } from "@/components/password-form";
 
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); signOut.mockClear(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); signOut.mockClear(); push.mockClear(); });
 
 function fill(current: string, next: string, confirm = next) {
   fireEvent.change(screen.getByLabelText(/current password/i), { target: { value: current } });
@@ -16,13 +18,14 @@ function fill(current: string, next: string, confirm = next) {
 }
 
 describe("PasswordForm", () => {
-  it("posts and then signs out to the login page with a reason", async () => {
+  it("posts and then signs out client-side, routing to the login page with a reason", async () => {
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
     render(<PasswordForm />);
     fill("old old old old", "new new new new");
     fireEvent.click(screen.getByRole("button", { name: /change password/i }));
-    await waitFor(() => expect(signOut).toHaveBeenCalledWith({ callbackUrl: "/login?reason=password-changed" }));
+    await waitFor(() => expect(signOut).toHaveBeenCalledWith({ redirect: false }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/login?reason=password-changed"));
     expect(JSON.parse((fetchMock.mock.calls[0] as any)[1].body)).toEqual({ currentPassword: "old old old old", newPassword: "new new new new" });
   });
   it("blocks a mismatch client-side and shows server errors", async () => {

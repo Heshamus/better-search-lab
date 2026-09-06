@@ -14,6 +14,15 @@ const Schema = z.object({
     .string()
     .optional()
     .transform((v) => v === "true" || v === "1"),
+  // How many trusted proxies sit in front of the app. Each one APPENDS the
+  // address it saw to x-forwarded-for, so the client is the Nth entry from the
+  // right — see clientIp() in src/lib/auth/authenticate.ts. Default 1 (the
+  // single-proxy deployment the compose file ships). An env var that is present
+  // but empty (`TRUSTED_PROXY_HOPS=` in a compose file) counts as "not set".
+  TRUSTED_PROXY_HOPS: z.preprocess(
+    (v) => (v === undefined || v === "" ? 1 : v),
+    z.coerce.number().int("must be a whole number").min(1, "must be at least 1"),
+  ),
 });
 export type Env = z.infer<typeof Schema>;
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {
@@ -22,6 +31,19 @@ export function loadEnv(source: Record<string, string | undefined> = process.env
     throw new Error(
       "Invalid env: " + parsed.error.issues.map((i) => `${i.path.join(".")} (${i.message})`).join(", "),
     );
+  }
+  // Auth.js builds its redirect base from the origin the server sees, which
+  // inside a container is the internal one — an observed sign-out sent the
+  // browser to http://localhost:3000/login. An operator who already configured
+  // APP_URL (for report links) has told us the public origin, so it doubles as
+  // the auth base URL. Never overrides an explicitly set AUTH_URL/NEXTAUTH_URL.
+  if (!process.env.AUTH_URL && !process.env.NEXTAUTH_URL && /^https?:\/\//i.test(process.env.APP_URL ?? "")) {
+    try {
+      const u = new URL(process.env.APP_URL!);
+      if (u.protocol === "http:" || u.protocol === "https:") process.env.AUTH_URL = process.env.APP_URL;
+    } catch {
+      // A malformed APP_URL is not a bootstrap failure — reports just omit links.
+    }
   }
   return parsed.data;
 }

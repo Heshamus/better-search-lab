@@ -69,4 +69,16 @@ describe("clientIp", () => {
     expect(clientIp(new Headers())).toBeUndefined();
     expect(clientIp(undefined)).toBeUndefined();
   });
+
+  it("counts hops from the right when more than one trusted proxy is in front of the app", () => {
+    // Traefik -> oauth2-proxy -> app: each trusted hop appends the address it
+    // saw, so with hops = 2 the client is the second-from-the-right entry.
+    expect(clientIp(new Headers({ "x-forwarded-for": "client, p1" }), 2)).toBe("client");
+    expect(clientIp(new Headers({ "x-forwarded-for": "spoofed, client, p1" }), 2)).toBe("client");
+  });
+
+  it("falls back to the leftmost entry when the header is shorter than the configured hop count", () => {
+    expect(clientIp(new Headers({ "x-forwarded-for": "only-one" }), 2)).toBe("only-one");
+    expect(clientIp(new Headers({ "x-forwarded-for": "a, b" }), 5)).toBe("a");
+  });
 });

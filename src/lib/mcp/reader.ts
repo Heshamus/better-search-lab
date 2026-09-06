@@ -22,6 +22,11 @@ export function mcpRoute(read: (req: Request) => Promise<unknown>) {
     if (denied) return denied;
     try {
       const data = await read(req);
+      // A read that already decided its own HTTP answer (keyword-overview's
+      // 503 when DataForSEO is unconfigured) hands back a Response — pass it
+      // through verbatim. Serialising it would send an honest failure as
+      // `200 {}`, which is exactly the lie mcpRoute exists to prevent.
+      if (data instanceof Response) return data;
       return NextResponse.json(data);
     } catch (e) {
       if (e instanceof MissingParamError) {

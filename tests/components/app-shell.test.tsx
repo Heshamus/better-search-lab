@@ -1,15 +1,17 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen, cleanup, fireEvent } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent, waitFor } from "@testing-library/react";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/rankings", useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
+const push = vi.fn();
+const refresh = vi.fn();
+vi.mock("next/navigation", () => ({ usePathname: () => "/rankings", useRouter: () => ({ push, refresh }) }));
 const signOut = vi.fn();
 vi.mock("next-auth/react", () => ({ signOut: (...args: unknown[]) => signOut(...args) }));
 vi.mock("@/components/site-switcher", () => ({ SiteSwitcher: () => <div data-testid="switcher" /> }));
 
 import { AppShell } from "@/components/app-shell";
 
-afterEach(() => { cleanup(); signOut.mockClear(); });
+afterEach(() => { cleanup(); signOut.mockClear(); push.mockClear(); refresh.mockClear(); });
 
 describe("AppShell", () => {
   it("renders the nav with the active page, the page title, the account chip, and children", () => {
@@ -21,9 +23,11 @@ describe("AppShell", () => {
     expect(screen.getByText("page body")).toBeInTheDocument();
     expect(screen.getByTestId("switcher")).toBeInTheDocument();
   });
-  it("signs out to the login page", () => {
+  it("signs out client-side and routes to /login itself (no Auth.js redirect)", async () => {
     render(<AppShell user={{ email: "m@example.com", role: "member" }}><p /></AppShell>);
     fireEvent.click(screen.getByRole("button", { name: /sign out/i }));
-    expect(signOut).toHaveBeenCalledWith({ callbackUrl: "/login" });
+    await waitFor(() => expect(signOut).toHaveBeenCalledWith({ redirect: false }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/login"));
+    expect(refresh).toHaveBeenCalled();
   });
 });

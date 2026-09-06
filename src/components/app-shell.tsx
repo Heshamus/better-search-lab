@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { AppNav, NAV } from "@/components/app-nav";
 import { SiteSwitcher } from "@/components/site-switcher";
@@ -9,6 +9,8 @@ import { Logo } from "@/components/icons";
 // The client half of the dashboard frame. The active nav slug comes from
 // usePathname() (a shared layout has no server-side way to know which child
 // rendered it); the session check lives in the server layout that mounts this.
+// `{children}` arrives already rendered by the server layout, so this client
+// boundary frames the pages without pulling any of them into the client bundle.
 const VALID_SLUGS: Set<string> = new Set(NAV.map(([slug]) => slug));
 
 function activeSlugFromPathname(pathname: string | null): string {
@@ -17,6 +19,7 @@ function activeSlugFromPathname(pathname: string | null): string {
 }
 
 export function AppShell({ user, children }: { user: { email: string; role: "admin" | "member" }; children: React.ReactNode }) {
+  const router = useRouter();
   const active = activeSlugFromPathname(usePathname());
   const activeLabel = NAV.find(([slug]) => slug === active)?.[1] ?? "";
 
@@ -40,7 +43,15 @@ export function AppShell({ user, children }: { user: { email: string; role: "adm
           </div>
           <button
             type="button"
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            // Sign out client-side and navigate ourselves: Auth.js's own
+            // redirect builds its target from the origin the server sees,
+            // which inside a container is http://localhost:3000 — a browser
+            // error page for anyone outside it.
+            onClick={async () => {
+              await signOut({ redirect: false });
+              router.push("/login");
+              router.refresh();
+            }}
             className="self-start rounded-lg border border-neutral-700 px-2.5 py-1 text-xs font-medium text-neutral-300 transition-colors hover:bg-neutral-800/60"
           >
             Sign out
