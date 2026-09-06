@@ -18,17 +18,13 @@ Full design: `docs/superpowers/specs/2026-08-06-better-search-lab-mcp-design.md`
 - A Better Search Lab access token, minted from **Settings → MCP access
   token → Generate token** in the deployed app (owner-only, session-guarded).
 
-## Build
+## Install
 
-```bash
-cd mcp
-npm i
-npm run build
-```
+No clone needed:
 
-This produces `mcp/dist/server.js`. `npm i` also creates `mcp/node_modules`
-and `mcp/package-lock.json` — the lockfile is committed, `node_modules/` and
-`dist/` are not (see `mcp/.gitignore`).
+    npx @better-search-lab/mcp
+
+(or `npm i -g @better-search-lab/mcp` and run `better-search-lab-mcp`). To develop against this repo instead: `cd mcp && npm i && npm run build`, then run `node dist/server.js`.
 
 ## Configuration
 
@@ -37,30 +33,24 @@ Set via environment variables:
 | Var | Required | Default | Meaning |
 |---|---|---|---|
 | `BSL_TOKEN` | **yes** | — | Bearer token minted in Settings. The server refuses to start (prints to stderr, exits non-zero) if this is missing. |
-| `BSL_URL` | no | `https://seo-web.supergenius.cloud` | Base URL of the deployed Better Search Lab instance. Override for local dev against `http://localhost:3000` etc. |
+| `BSL_URL` | no | `http://localhost:3000` | Set this to your deployed install's URL. |
 
 ## Register with a coding agent
-
-Add to the agent's MCP server config (for Claude Code / Claude Desktop this
-is the `mcpServers` object in its settings JSON):
 
 ```json
 {
   "mcpServers": {
     "better-search-lab": {
-      "command": "node",
-      "args": ["/absolute/path/to/seo-platform/mcp/dist/server.js"],
+      "command": "npx",
+      "args": ["-y", "@better-search-lab/mcp"],
       "env": {
+        "BSL_URL": "https://your-install.example.com",
         "BSL_TOKEN": "bsl_your_minted_token_here"
       }
     }
   }
 }
 ```
-
-Replace `/absolute/path/to/seo-platform` with the actual clone path, and
-`BSL_TOKEN` with a token minted from Settings. Add `"BSL_URL": "..."` to the
-`env` block too if pointing at anything other than the production default.
 
 ## Tools
 

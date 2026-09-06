@@ -19,10 +19,12 @@ import { z } from "zod";
 // Config
 // ---------------------------------------------------------------------------
 
-export const DEFAULT_BSL_URL = "https://seo-web.supergenius.cloud";
+export const DEFAULT_BSL_URL = "http://localhost:3000";
 
 /** Read fresh on every call (not cached at import time) so tests can stub
- * `process.env` per-case without any module-reload gymnastics. */
+ * `process.env` per-case without any module-reload gymnastics. The default
+ * above points at a local dev server; a deployed install must set
+ * `BSL_URL` to its own URL. */
 function resolveBaseUrl(): string {
   const configured = process.env.BSL_URL?.trim();
   return configured ? configured : DEFAULT_BSL_URL;

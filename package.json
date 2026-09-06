@@ -1,8 +1,8 @@
 {
-  "name": "seo-platform",
-  "version": "0.1.0",
+  "name": "better-search-lab",
+  "version": "1.0.0-rc.1",
   "private": true,
-  "description": "Internal, self-hosted SEO platform powered by the DataForSEO API.",
+  "description": "Self-hosted SEO and AI-search visibility platform: rank tracking, keyword research, competitors, backlinks, audits, an opportunity engine, and an MCP server — powered by DataForSEO.",
   "type": "module",
   "scripts": {
     "dev": "next dev",
@@ -14,7 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts"
   },
-  "license": "UNLICENSED",
+  "license": "AGPL-3.0-only",
   "packageManager": "pnpm@10.32.1",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
