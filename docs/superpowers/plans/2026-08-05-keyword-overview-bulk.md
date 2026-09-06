@@ -266,7 +266,7 @@ main().catch((e) => { console.error(e); process.exit(1); });
 Run where DataForSEO creds exist (the VPS worker container has them):
 
 ```bash
-# on the VPS (72.62.165.110), from /opt/seo-platform after rsync, OR locally if a local env has creds:
+# on the VPS (203.0.113.10), from /opt/seo-platform after rsync, OR locally if a local env has creds:
 docker compose run --rm seo-worker pnpm exec tsx scripts/probe-keyword-overview.ts
 ```
 
@@ -966,8 +966,8 @@ git commit -m "feat(keywords): Keyword Overview page — bulk table, sparkline, 
 ```bash
 cd ~/TheProjects/seo-platform && rsync -az --delete \
   --exclude '.git' --exclude 'node_modules' --exclude '.next' --exclude '.env*' --exclude '.superpowers' --exclude '.worktrees' \
-  -e "ssh -i $HOME/.ssh/id_ed25519" ./ root@72.62.165.110:/opt/seo-platform/app/
-ssh -i ~/.ssh/id_ed25519 root@72.62.165.110 'cd /opt/seo-platform && docker compose build seo-web 2>&1 | tail -1 && docker compose up -d seo-web seo-worker 2>&1 | tail -2'
+  -e "ssh -i $HOME/.ssh/id_ed25519" ./ root@203.0.113.10:/opt/seo-platform/app/
+ssh -i ~/.ssh/id_ed25519 root@203.0.113.10 'cd /opt/seo-platform && docker compose build seo-web 2>&1 | tail -1 && docker compose up -d seo-web seo-worker 2>&1 | tail -2'
 ```
 
 - [ ] **Step 2: Browser E2E** at `https://seo.example.com/keyword-overview`

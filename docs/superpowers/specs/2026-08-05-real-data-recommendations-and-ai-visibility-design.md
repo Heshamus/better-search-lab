@@ -103,7 +103,7 @@ sequenced actions and is cached per-sync (no per-page-load LLM calls).
 ### Phase 1 testing
 - Unit: each new detector (with/without first-party data), the first-party input builder,
   the scoring re-base fallback, the advisor prompt-shape. pglite for store reads.
-- Live: after deploy, `/overview` renders real Northwind.io numbers + a real action list;
+- Live: after deploy, `/overview` renders real example-site.com numbers + a real action list;
   zero console errors; verified from the browser origin.
 
 ---
@@ -154,7 +154,7 @@ bounded). Cost recorded through the existing usage/cost system (N queries × 3 e
 - Unit: `EdenClient` (mocked fetch, citation parsing), `extract` named/cited edge cases
   (brand-substring guard), the hybrid query builder (70/30 split, dedup, fallback), scan
   aggregation. A tiny live Eden smoke (1 query, 1 engine) during build to confirm the key.
-- Live: real scan for Northwind.io; dashboard shows real cited/named counts; trend row
+- Live: real scan for example-site.com; dashboard shows real cited/named counts; trend row
   persists; zero console errors.
 
 ---
@@ -180,5 +180,5 @@ consumes Phase 1's GSC data path.
   + monthly only, surfaced in usage/cost. No per-page-load calls.
 - **Query matching (keyword↔GSC query)**: normalized exact-match first; fuzzy left for a
   later pass to avoid over-engineering.
-- **New-site sparsity**: Northwind.io has thin organic data; recommendations will be few
+- **New-site sparsity**: example-site.com has thin organic data; recommendations will be few
   but honest. The engine already degrades gracefully.

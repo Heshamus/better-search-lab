@@ -328,7 +328,7 @@ export function detectContentVsRanking(input: DetectorInput): Candidate[] {
 
 ### Phase 1 deploy + live-verify (fold into Task 7)
 - [ ] rsync → build image → `docker compose up -d seo-web seo-worker` (no migration this phase).
-- [ ] Browser: `/overview` renders real Northwind.io GSC/GA numbers + a real action list; console clean; screenshot for the owner.
+- [ ] Browser: `/overview` renders real example-site.com GSC/GA numbers + a real action list; console clean; screenshot for the owner.
 
 ---
 
@@ -445,7 +445,7 @@ export function detectContentVsRanking(input: DetectorInput): Candidate[] {
 - [ ] **Step 1:** Add `EDENAI_API_KEY` to the box compose `x-app-env` anchor (key already in `.env`); `docker compose config -q` to validate.
 - [ ] **Step 2:** rsync → `docker compose build seo-web` → `docker compose run --rm seo-web pnpm db:migrate` (0013) → verify `ai_visibility_snapshots` exists → `docker compose up -d seo-web seo-worker` (loads `EDENAI_API_KEY`).
 - [ ] **Step 3:** Confirm worker registered `ai_visibility_scan`, clean start.
-- [ ] **Step 4:** Trigger one real scan for Northwind.io; verify a snapshot row with real named/cited counts; `/ai-visibility` renders real numbers; console clean; screenshot for the owner.
+- [ ] **Step 4:** Trigger one real scan for example-site.com; verify a snapshot row with real named/cited counts; `/ai-visibility` renders real numbers; console clean; screenshot for the owner.
 - [ ] **Step 5:** Final commit if any fixups; report both phases live-verified.
 
 ---

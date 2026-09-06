@@ -646,7 +646,7 @@ Run: `pnpm exec tsc --noEmit` · `pnpm exec vitest run` · `NODE_OPTIONS=--max-o
 
 rsync the repo to `/opt/seo-platform/app/` (excludes per the deploy memory: `.git/ node_modules/ .next/ .env* .superpowers/ .worktrees/ /mcp/ tsconfig.tsbuildinfo`), then apply the migration and rebuild:
 ```bash
-ssh root@72.62.165.110 'cd /opt/seo-platform && docker compose run --rm seo-web pnpm db:migrate && docker compose build seo-web && docker compose up -d seo-web seo-worker'
+ssh root@203.0.113.10 'cd /opt/seo-platform && docker compose run --rm seo-web pnpm db:migrate && docker compose build seo-web && docker compose up -d seo-web seo-worker'
 ```
 Confirm the `organic_keywords` table exists on the box DB and `seo-web` logs "Ready".
 
