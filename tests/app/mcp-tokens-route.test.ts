@@ -106,3 +106,13 @@ describe("DELETE /api/mcp-tokens", () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe("mcp-tokens are admin-only", () => {
+  it("403s a member on every verb", async () => {
+    (resolveSessionUser as any).mockResolvedValue({ id: "m", email: "m@example.com", role: "member" });
+    expect((await POST(postReq({ label: "x" }))).status).toBe(403);
+    expect((await GET()).status).toBe(403);
+    expect((await DELETE(deleteReq("http://x/api/mcp-tokens?id=t1"))).status).toBe(403);
+    (resolveSessionUser as any).mockResolvedValue({ id: "u1", email: "test@example.com", role: "admin" });
+  });
+});
