@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { z } from "zod";
 
 /**
- * Standalone stdio MCP server for Better Search Lab (seo-platform).
+ * Standalone stdio MCP server for Better Search Lab.
  *
  * This package is a THIN HTTP CLIENT — it does not import the Next app or
  * anything under `src/*`. It talks to the already-deployed, already-guarded

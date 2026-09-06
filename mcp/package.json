@@ -9,7 +9,7 @@
   "publishConfig": { "access": "public" },
   "engines": { "node": ">=20" },
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
     "test": "vitest run",
     "prepublishOnly": "npm run build"

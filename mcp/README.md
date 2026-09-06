@@ -1,4 +1,4 @@
-# @seo-platform/mcp
+# @better-search-lab/mcp
 
 A standalone, in-repo **stdio MCP server** that exposes Better Search Lab's
 read-only `/api/mcp/*` endpoints to coding agents (Claude Code, Claude
@@ -16,7 +16,7 @@ Full design: `docs/superpowers/specs/2026-08-06-better-search-lab-mcp-design.md`
 
 - Node.js 20+
 - A Better Search Lab access token, minted from **Settings → MCP access
-  token → Generate token** in the deployed app (owner-only, session-guarded).
+  token → Generate token** in the deployed app (admin-only, session-guarded).
 
 ## Install
 
