@@ -6,8 +6,11 @@ import { buildConfig, getConfig, envOverriddenKeys } from "@/lib/config/resolve"
 import { emptyConfig } from "@/lib/config/app-config";
 import { invalidateConfigCache } from "@/lib/config/cache";
 
-let close: () => Promise<void>;
-afterEach(() => close?.());
+let close: (() => Promise<void>) | undefined;
+afterEach(async () => {
+  await close?.();
+  close = undefined; // the pure describe blocks never open a db; never close one twice
+});
 
 const key = deriveKey("test_auth_secret_0123456789_abcdefghijklmnop");
 const stored = (entries: Record<string, string>) =>
@@ -116,16 +119,17 @@ describe("getConfig (db + cache)", () => {
   it("reads the store, caches, and invalidates on write or fresh:true", async () => {
     const t = await createTestDb(); close = t.close;
     invalidateConfigCache();
-    await writeSettings(t.db, key, { "dataforseo.login": "a", "dataforseo.password": "b" }, null);
+    await writeSettings(t.db, key, { "llm.model": "a", "llm.provider": "deepseek", "llm.apiKey": "sk" }, null);
     const first = await getConfig(t.db);
-    expect(first.dataforseo.configured).toBe(true);
+    expect(first.llm.model).toBe("a");
+    expect(first.llm.configured).toBe(true);
 
     // Bypass the store's own invalidation to prove the cache is in play.
-    await t.db.execute("update settings set value = 'zzz' where key = 'dataforseo.login'");
-    expect((await getConfig(t.db)).dataforseo.login).toBe("a"); // cached
-    expect((await getConfig(t.db, { fresh: true })).dataforseo.login).toBe("zzz"); // fresh read
-    await writeSettings(t.db, key, { "dataforseo.login": "c" }, null);
-    expect((await getConfig(t.db)).dataforseo.login).toBe("c"); // write invalidated
+    await t.db.execute("update settings set value = 'zzz' where key = 'llm.model'");
+    expect((await getConfig(t.db)).llm.model).toBe("a"); // cached
+    expect((await getConfig(t.db, { fresh: true })).llm.model).toBe("zzz"); // fresh read
+    await writeSettings(t.db, key, { "llm.model": "c" }, null);
+    expect((await getConfig(t.db)).llm.model).toBe("c"); // write invalidated
   });
 });
 

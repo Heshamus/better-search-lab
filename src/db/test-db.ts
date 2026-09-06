@@ -8,11 +8,5 @@ export async function createTestDb() {
   const db = drizzle(pg, { schema });
   const { apply } = await pushSchema(schema, db as any); // create tables from schema
   await apply();
-  return { db, close: async () => {
-    try {
-      await pg.close();
-    } catch {
-      // Already closed or in the process of closing; ignore
-    }
-  } };
+  return { db, close: () => pg.close() };
 }
