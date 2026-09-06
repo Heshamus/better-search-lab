@@ -2,16 +2,11 @@ import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { authConfig } from "./auth.config";
 import { db } from "@/db/client";
-import { authenticate } from "@/lib/auth/authenticate";
+import { authenticate, clientIp } from "@/lib/auth/authenticate";
 
 /** Surfaces to the login form as `code: "rate_limited"`. */
 class RateLimitedError extends CredentialsSignin {
   code = "rate_limited";
-}
-
-function clientIp(req: Request | undefined): string {
-  const forwarded = req?.headers?.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || req?.headers?.get("x-real-ip") || "unknown";
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -29,7 +24,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials, req) {
         const email = typeof credentials?.email === "string" ? credentials.email : "";
         const password = typeof credentials?.password === "string" ? credentials.password : "";
-        const outcome = await authenticate(db, { email, password, ip: clientIp(req) });
+        const outcome = await authenticate(db, { email, password, ip: clientIp(req?.headers) });
         if (!outcome.ok) {
           if (outcome.reason === "rate_limited") throw new RateLimitedError();
           return null;

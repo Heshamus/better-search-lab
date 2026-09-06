@@ -13,9 +13,21 @@ export type AuthOutcome =
   | { ok: true; user: { id: string; email: string; role: Role; sv: number } }
   | { ok: false; reason: "invalid" | "rate_limited" };
 
+/**
+ * The client address as reported by the trusted reverse proxy. The proxy APPENDS
+ * the address it saw to x-forwarded-for, so the rightmost hop is the one it
+ * wrote and the leftmost is whatever the client claimed. With no proxy header
+ * there is no trustworthy address, and the caller skips the per-IP key.
+ */
+export function clientIp(headers: Headers | undefined): string | undefined {
+  const forwarded = headers?.get("x-forwarded-for")?.split(",").map((s) => s.trim()).filter(Boolean);
+  if (forwarded?.length) return forwarded[forwarded.length - 1];
+  return headers?.get("x-real-ip")?.trim() || undefined;
+}
+
 export async function authenticate(
   db: any,
-  input: { email: string; password: string; ip: string },
+  input: { email: string; password: string; ip?: string },
   deps: { limiter?: SlidingWindowLimiter; compareImpl?: (password: string, hash: string) => Promise<boolean> } = {},
 ): Promise<AuthOutcome> {
   const limiter = deps.limiter ?? loginLimiter;
@@ -23,7 +35,9 @@ export async function authenticate(
   const email = input.email.trim().toLowerCase();
   if (!email || !input.password) return { ok: false, reason: "invalid" };
 
-  const keys = [`email:${email}`, `ip:${input.ip}`];
+  // Without a trustworthy client address there is no per-IP bucket: a shared
+  // "unknown" bucket would let one attacker lock every user out.
+  const keys = [`email:${email}`, ...(input.ip ? [`ip:${input.ip}`] : [])];
   if (keys.some((k) => !limiter.check(k).allowed)) return { ok: false, reason: "rate_limited" };
 
   const user = await findUserByEmail(db, email);

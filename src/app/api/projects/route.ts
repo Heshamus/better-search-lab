@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { requireSession } from "@/lib/api-guard";
 import { db } from "@/db/client";
 import { createProject, listProjects } from "@/lib/projects";
 
 export async function GET() {
-  const session = await auth();
-  if (!session) return new Response("Unauthorized", { status: 401 });
+  const denied = await requireSession(); if (denied) return denied;
 
   const rows = await listProjects(db);
   return NextResponse.json(rows);
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session) return new Response("Unauthorized", { status: 401 });
+  const denied = await requireSession(); if (denied) return denied;
 
   const body = await request.json();
   const project = await createProject(db, body);
