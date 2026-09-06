@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { createTestDb } from "@/db/test-db";
 import { createProject } from "@/lib/projects";
 import { DataForSeoClient } from "@/lib/dataforseo/client";
-import { DeepSeekClient } from "@/lib/llm/deepseek";
+import { OpenAICompatibleProvider } from "@/lib/llm/openai-compatible";
 import { profileSiteHandler } from "@/lib/jobs/handlers/profile-site";
 import { runJob } from "@/lib/jobs/runner";
 import { listProfileCandidates } from "@/lib/profile";
@@ -70,7 +70,7 @@ async function runProfile(fetchImpl: typeof fetch): Promise<string[]> {
   const t = await createTestDb(); close = t.close;
   const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
   const client = new DataForSeoClient({ login: "x", password: "y", fetchImpl });
-  const llm = new DeepSeekClient({ apiKey: "sk-test", fetchImpl });
+  const llm = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk-test", model: "deepseek-v4-pro", fetchImpl });
   const status = await runJob(t.db, {
     type: "profile_site", projectId: p.id, date: "2026-08-04-relevance",
     handler: profileSiteHandler(client, { fetchImpl, llm }),

@@ -3,7 +3,7 @@ import { projects } from "@/db/schema";
 import { assembleOpportunities } from "@/lib/core/opportunity-engine";
 import { loadDetectorInput, mondayOf, upsertOpportunities } from "@/lib/opportunities";
 import { loadEnv } from "@/config/env";
-import { DeepSeekClient } from "@/lib/llm/deepseek";
+import { OpenAICompatibleProvider } from "@/lib/llm/openai-compatible";
 import { summarizeActions } from "@/lib/llm/advisor";
 
 /**
@@ -37,7 +37,7 @@ export function weeklyOpportunitiesHandler() {
     // call leaves the engine's own `why` untouched.
     const env = loadEnv();
     if (env.DEEPSEEK_API_KEY && results.length) {
-      const client = new DeepSeekClient({ apiKey: env.DEEPSEEK_API_KEY });
+      const client = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: env.DEEPSEEK_API_KEY, model: "deepseek-v4-pro" });
       const actions = await summarizeActions(results, { chat: (m) => client.chat(m) });
       results.forEach((r, i) => {
         if (actions[i]) r.why = actions[i];

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { DeepSeekClient, extractNicheSeeds, judgeRelevance } from "@/lib/llm/deepseek";
+import { extractNicheSeeds, judgeRelevance } from "@/lib/llm/niche";
+import { OpenAICompatibleProvider } from "@/lib/llm/openai-compatible";
 
 // A canned OpenAI-compatible chat-completion whose message carries BOTH the
 // reasoning trace and the final answer. `content` is what extractNicheSeeds must
@@ -13,39 +14,15 @@ function completion(content: string, reasoning = "some chain-of-thought here") {
   );
 }
 
-const PAGES = [{ url: "https://harperflow.io/", html: "<html><head><title>AI SEO Automation for Webflow</title></head><body><h1>Programmatic GEO content</h1></body></html>" }];
-
-describe("DeepSeekClient.chat", () => {
-  it("sends Bearer auth + the reasoning model and returns message.content (not reasoning_content)", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(completion("hello answer"));
-    const c = new DeepSeekClient({ apiKey: "sk-test", fetchImpl });
-    const out = await c.chat([{ role: "user", content: "hi" }]);
-    expect(out).toBe("hello answer"); // content, NOT reasoning_content
-    const [url, init] = fetchImpl.mock.calls[0];
-    expect(String(url)).toContain("api.deepseek.com/chat/completions");
-    expect(init.headers.Authorization).toBe("Bearer sk-test");
-    const sent = JSON.parse(init.body);
-    expect(sent.model).toBe("deepseek-v4-pro");
-    expect(sent.max_tokens).toBe(4000); // generous so reasoning + JSON both fit
-  });
-
-  it("retries once on 429 then succeeds", async () => {
-    const fetchImpl = vi.fn()
-      .mockResolvedValueOnce(new Response("{}", { status: 429 }))
-      .mockResolvedValueOnce(completion("ok"));
-    const c = new DeepSeekClient({ apiKey: "sk", fetchImpl });
-    expect(await c.chat([{ role: "user", content: "x" }])).toBe("ok");
-    expect(fetchImpl).toHaveBeenCalledTimes(2);
-  });
-});
+const PAGES = [{ url: "https://example-site.com/", html: "<html><head><title>AI SEO Automation for Webflow</title></head><body><h1>Programmatic GEO content</h1></body></html>" }];
 
 describe("extractNicheSeeds", () => {
   it("parses seeds + nicheTerms from the model's JSON content", async () => {
     const content = '{"seeds":["ai seo content automation","webflow programmatic seo"],"nicheTerms":["seo","webflow","content","automation","geo"]}';
     const fetchImpl = vi.fn().mockResolvedValue(completion(content));
-    const client = new DeepSeekClient({ apiKey: "sk", fetchImpl });
+    const client = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk", model: "deepseek-v4-pro", fetchImpl });
 
-    const { seeds, nicheTerms } = await extractNicheSeeds(client, { pages: PAGES, domain: "harperflow.io" });
+    const { seeds, nicheTerms } = await extractNicheSeeds(client, { pages: PAGES, domain: "example-site.com" });
     expect(seeds).toEqual(["ai seo content automation", "webflow programmatic seo"]);
     expect(nicheTerms).toEqual(["seo", "webflow", "content", "automation", "geo"]);
   });
@@ -53,34 +30,34 @@ describe("extractNicheSeeds", () => {
   it("tolerates ```json fences around the object", async () => {
     const content = "```json\n{\"seeds\":[\"webflow seo\"],\"nicheTerms\":[\"seo\",\"webflow\"]}\n```";
     const fetchImpl = vi.fn().mockResolvedValue(completion(content));
-    const client = new DeepSeekClient({ apiKey: "sk", fetchImpl });
-    const { seeds, nicheTerms } = await extractNicheSeeds(client, { pages: PAGES, domain: "harperflow.io" });
+    const client = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk", model: "deepseek-v4-pro", fetchImpl });
+    const { seeds, nicheTerms } = await extractNicheSeeds(client, { pages: PAGES, domain: "example-site.com" });
     expect(seeds).toEqual(["webflow seo"]);
     expect(nicheTerms).toEqual(["seo", "webflow"]);
   });
 
   it("throws on empty/garbage content (caller falls back to heuristic seeds)", async () => {
-    const client = new DeepSeekClient({ apiKey: "sk", fetchImpl: vi.fn().mockResolvedValue(completion("")) });
+    const client = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk", model: "deepseek-v4-pro", fetchImpl: vi.fn().mockResolvedValue(completion("")) });
     await expect(extractNicheSeeds(client, { pages: PAGES, domain: "d.io" })).rejects.toThrow();
 
-    const client2 = new DeepSeekClient({ apiKey: "sk", fetchImpl: vi.fn().mockResolvedValue(completion("I could not analyze this site.")) });
+    const client2 = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk", model: "deepseek-v4-pro", fetchImpl: vi.fn().mockResolvedValue(completion("I could not analyze this site.")) });
     await expect(extractNicheSeeds(client2, { pages: PAGES, domain: "d.io" })).rejects.toThrow();
   });
 
   it("throws when the JSON parses but the arrays are empty", async () => {
-    const client = new DeepSeekClient({ apiKey: "sk", fetchImpl: vi.fn().mockResolvedValue(completion('{"seeds":[],"nicheTerms":[]}')) });
+    const client = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk", model: "deepseek-v4-pro", fetchImpl: vi.fn().mockResolvedValue(completion('{"seeds":[],"nicheTerms":[]}')) });
     await expect(extractNicheSeeds(client, { pages: PAGES, domain: "d.io" })).rejects.toThrow();
   });
 });
 
-const NICHE = { domain: "harperflow.io", seeds: ["webflow seo automation"], nicheTerms: ["seo", "webflow", "geo"] };
+const NICHE = { domain: "example-site.com", seeds: ["webflow seo automation"], nicheTerms: ["seo", "webflow", "geo"] };
 
 describe("judgeRelevance", () => {
   it("maps returned indices back to the EXACT original candidates", async () => {
     // 1-based indices → keep candidates 1 and 3; the token-bridge "people search"
     // (index 2, shares "search" with the niche) is dropped by the semantic judge.
     const fetchImpl = vi.fn().mockResolvedValue(completion('{"relevant":[1,3]}'));
-    const client = new DeepSeekClient({ apiKey: "sk", fetchImpl });
+    const client = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk", model: "deepseek-v4-pro", fetchImpl });
     const { kept, calls, unjudged } = await judgeRelevance(client, {
       ...NICHE, candidates: ["webflow seo", "people search", "geo content"],
     });
@@ -96,7 +73,7 @@ describe("judgeRelevance", () => {
     const fetchImpl = vi.fn()
       .mockResolvedValueOnce(completion('{"relevant":[1]}'))   // batch 1 → "kw-0"
       .mockResolvedValueOnce(completion('{"relevant":[1]}'));  // batch 2 → "kw-80"
-    const client = new DeepSeekClient({ apiKey: "sk", fetchImpl });
+    const client = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk", model: "deepseek-v4-pro", fetchImpl });
     const { kept, calls, unjudged } = await judgeRelevance(client, { ...NICHE, candidates });
     expect(calls).toBe(2);
     expect(fetchImpl).toHaveBeenCalledTimes(2);
@@ -106,7 +83,7 @@ describe("judgeRelevance", () => {
 
   it("ignores out-of-range and non-integer indices (conservative)", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(completion('{"relevant":[0,2,99,1.5,"x"]}'));
-    const client = new DeepSeekClient({ apiKey: "sk", fetchImpl });
+    const client = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk", model: "deepseek-v4-pro", fetchImpl });
     const { kept } = await judgeRelevance(client, { ...NICHE, candidates: ["a", "b", "c"] });
     // Only 2 is a valid 1-based index → "b". 0, 99, 1.5, "x" are all discarded.
     expect([...kept]).toEqual(["b"]);
@@ -116,7 +93,7 @@ describe("judgeRelevance", () => {
     // Malformed-but-parseable answer: the caller decides (drop / token-gate),
     // rather than judgeRelevance nuking the whole run.
     const fetchImpl = vi.fn().mockResolvedValue(completion('{"kept":[1]}'));
-    const client = new DeepSeekClient({ apiKey: "sk", fetchImpl });
+    const client = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk", model: "deepseek-v4-pro", fetchImpl });
     const { kept, calls, unjudged } = await judgeRelevance(client, { ...NICHE, candidates: ["a", "b"] });
     expect(kept.size).toBe(0);
     expect(calls).toBe(1); // the call WAS billed (chat returned), so it must be counted
@@ -128,7 +105,7 @@ describe("judgeRelevance", () => {
     const fetchImpl = vi.fn()
       .mockResolvedValueOnce(completion('{"relevant":[1]}'))   // batch 1 (kw-0..79) → keep kw-0
       .mockResolvedValueOnce(completion("not json at all"));   // batch 2 (kw-80..129) → fails
-    const client = new DeepSeekClient({ apiKey: "sk", fetchImpl });
+    const client = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk", model: "deepseek-v4-pro", fetchImpl });
     const { kept, calls, unjudged } = await judgeRelevance(client, { ...NICHE, candidates });
     expect([...kept]).toEqual(["kw-0"]);           // batch 1's verdict survives
     expect(calls).toBe(2);                          // both calls billed
@@ -137,7 +114,7 @@ describe("judgeRelevance", () => {
 
   it("treats an empty 'relevant' array as 'nothing relevant here' (not a failure)", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(completion('{"relevant":[]}'));
-    const client = new DeepSeekClient({ apiKey: "sk", fetchImpl });
+    const client = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk", model: "deepseek-v4-pro", fetchImpl });
     const { kept, calls, unjudged } = await judgeRelevance(client, { ...NICHE, candidates: ["a", "b"] });
     expect(kept.size).toBe(0);
     expect(calls).toBe(1);
@@ -146,7 +123,7 @@ describe("judgeRelevance", () => {
 
   it("does no work and makes no call for an empty candidate list", async () => {
     const fetchImpl = vi.fn();
-    const client = new DeepSeekClient({ apiKey: "sk", fetchImpl });
+    const client = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk", model: "deepseek-v4-pro", fetchImpl });
     const { kept, calls, unjudged } = await judgeRelevance(client, { ...NICHE, candidates: [] });
     expect(kept.size).toBe(0);
     expect(calls).toBe(0);

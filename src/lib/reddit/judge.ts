@@ -1,5 +1,5 @@
 import type { RedditPost } from "./apify";
-import type { ChatMessage } from "@/lib/llm/deepseek";
+import type { ChatMessage } from "@/lib/llm/provider";
 import { mapLimit } from "@/lib/async/map-limit";
 
 // One batched DeepSeek call that scores every candidate Reddit post on `fit`

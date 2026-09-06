@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { judgeConversations } from "@/lib/reddit/judge";
 import type { RedditPost } from "@/lib/reddit/apify";
-import type { ChatMessage } from "@/lib/llm/deepseek";
+import type { ChatMessage } from "@/lib/llm/provider";
 
 function makePost(overrides: Partial<RedditPost> = {}): RedditPost {
   return {

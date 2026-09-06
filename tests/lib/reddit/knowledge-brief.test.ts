@@ -3,7 +3,7 @@ import { createTestDb } from "@/db/test-db";
 import { createProject } from "@/lib/projects";
 import { getRedditConfig, saveRedditConfig } from "@/lib/reddit/reddit-config";
 import { ensureKnowledgeBrief } from "@/lib/reddit/knowledge-brief";
-import type { ChatMessage } from "@/lib/llm/deepseek";
+import type { ChatMessage } from "@/lib/llm/provider";
 
 let close: (() => Promise<void>) | undefined;
 afterEach(() => close?.());

@@ -1,5 +1,5 @@
 import type { RedditPost } from "./apify";
-import type { ChatMessage } from "@/lib/llm/deepseek";
+import type { ChatMessage } from "@/lib/llm/provider";
 
 // Drafts ONE Reddit reply per candidate thread. Two dependencies, both
 // optional-ish in effect: `ask` (Perplexity, via Eden) grounds the reply in

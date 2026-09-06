@@ -36,7 +36,7 @@ import { makeConversationScrape } from "../src/lib/reddit/scrape-source";
 import { fetchSite } from "../src/lib/crawl/fetch-site";
 import { EdenClient } from "../src/lib/ai-visibility/engines";
 import { DataForSeoClient } from "../src/lib/dataforseo/client";
-import { DeepSeekClient } from "../src/lib/llm/deepseek";
+import { OpenAICompatibleProvider } from "../src/lib/llm/openai-compatible";
 import { loadEnv } from "../src/config/env";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -58,7 +58,7 @@ function htmlToText(pages: { html: string }[]): string {
 // Clients built once at module scope — shared by the cron run() and the queue drain.
 const env = loadEnv();
 const client = new DataForSeoClient({ login: env.DATAFORSEO_LOGIN, password: env.DATAFORSEO_PASSWORD });
-const llm = env.DEEPSEEK_API_KEY ? new DeepSeekClient({ apiKey: env.DEEPSEEK_API_KEY }) : null;
+const llm = env.DEEPSEEK_API_KEY ? new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: env.DEEPSEEK_API_KEY, model: "deepseek-v4-pro" }) : null;
 
 // Composite refresh: the "Refresh data" button enqueues ONE job that runs
 // rankings → gaps → opportunities in order (opportunities reads the fresh gaps).
@@ -135,7 +135,7 @@ async function run() {
     env,
     scrape: makeConversationScrape(env),
     ask: env.EDENAI_API_KEY ? (m, p) => new EdenClient(env.EDENAI_API_KEY!).ask(m, p) : undefined,
-    chat: (msgs) => new DeepSeekClient({ apiKey: env.DEEPSEEK_API_KEY! }).chat(msgs),
+    chat: (msgs) => new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: env.DEEPSEEK_API_KEY!, model: "deepseek-v4-pro" }).chat(msgs),
     crawl: async (domain) => {
       const r = await fetchSite("https://" + domain);
       if (r.failed) return "";

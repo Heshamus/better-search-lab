@@ -15,9 +15,9 @@ import {
 } from "@/lib/reddit/conversations-store";
 import { buildConversationsEmail } from "@/lib/reddit/email";
 import { sendEmail } from "@/lib/email/resend";
-import { logApiUsage, DEEPSEEK_CHAT_ENDPOINT } from "@/lib/dataforseo/cost";
+import { logApiUsage, LLM_CHAT_ENDPOINT } from "@/lib/dataforseo/cost";
 import type { RedditPost } from "@/lib/reddit/apify";
-import type { ChatMessage } from "@/lib/llm/deepseek";
+import type { ChatMessage } from "@/lib/llm/provider";
 
 // Orchestrates the per-project Reddit Conversations pipeline (this file) and
 // the self-healing daily pass that runs it across every project + emails the
@@ -133,7 +133,7 @@ export async function scanProjectConversations(deps: {
   // and fail the whole scan closed. Judge every candidate (subreddit AND
   // search-derived — the working results historically came from searches).
   const judgements = await judgeConversations(candidates, { brief, chat: deps.chat });
-  await logApiUsage(db, { endpoint: DEEPSEEK_CHAT_ENDPOINT, rows: Math.ceil(candidates.length / 10) });
+  await logApiUsage(db, { endpoint: LLM_CHAT_ENDPOINT, rows: Math.ceil(candidates.length / 10) });
 
   const postByUrl = new Map(candidates.map((p) => [p.url, p]));
   const kept = judgements
@@ -146,7 +146,7 @@ export async function scanProjectConversations(deps: {
   for (const { judgement, post } of kept) {
     const draft = await draftReply(post, { brief, ask: deps.ask, chat: deps.chat });
     if (deps.ask) await logApiUsage(db, { endpoint: PERPLEXITY_ENDPOINT, rows: 1 });
-    await logApiUsage(db, { endpoint: DEEPSEEK_CHAT_ENDPOINT, rows: 1 }); // this draft's chat call
+    await logApiUsage(db, { endpoint: LLM_CHAT_ENDPOINT, rows: 1 }); // this draft's chat call
 
     const postedAt = post.createdAt && !Number.isNaN(Date.parse(post.createdAt)) ? new Date(post.createdAt) : null;
     rows.push({

@@ -4,9 +4,10 @@ import { fetchSite } from "@/lib/crawl/fetch-site";
 import { extractSeeds } from "@/lib/crawl/extract-seeds";
 import { keywordIdeas, rankedKeywords } from "@/lib/dataforseo/labs";
 import { saveProfileCandidates, type ProfileCandidateInput } from "@/lib/profile";
-import { logApiUsage, estimateCost, DEEPSEEK_CHAT_ENDPOINT } from "@/lib/dataforseo/cost";
+import { logApiUsage, estimateCost, LLM_CHAT_ENDPOINT } from "@/lib/dataforseo/cost";
 import type { DataForSeoClient } from "@/lib/dataforseo/client";
-import { extractNicheSeeds, judgeRelevance, type DeepSeekClient } from "@/lib/llm/deepseek";
+import { extractNicheSeeds, judgeRelevance } from "@/lib/llm/niche";
+import type { ChatProvider } from "@/lib/llm/provider";
 import { buildNicheProfile, relevanceScore, DEFAULT_RELEVANCE_THRESHOLD } from "@/lib/core/relevance";
 import { normalizeDomain } from "@/lib/competitors";
 
@@ -42,7 +43,7 @@ function gateByTokenOverlap(all: ProfileCandidateInput[], profile: Set<string>):
 
 export function profileSiteHandler(
   client: DataForSeoClient,
-  opts?: { fetchImpl?: typeof fetch; llm?: DeepSeekClient | null },
+  opts?: { fetchImpl?: typeof fetch; llm?: ChatProvider | null },
 ) {
   return async (ctx: { db: any; projectId?: string }) => {
     const { db, projectId } = ctx;
@@ -93,8 +94,8 @@ export function profileSiteHandler(
     // Log the niche-extraction call's spend (one chat request). Logged OUTSIDE the
     // extraction try above so a usage-insert failure can't discard a good niche.
     if (llmNiche) {
-      await logApiUsage(db, { endpoint: DEEPSEEK_CHAT_ENDPOINT, rows: 1, projectId });
-      cost += estimateCost(DEEPSEEK_CHAT_ENDPOINT, 1);
+      await logApiUsage(db, { endpoint: LLM_CHAT_ENDPOINT, rows: 1, projectId });
+      cost += estimateCost(LLM_CHAT_ENDPOINT, 1);
     }
 
     // 2. Our own rankings (works even when the crawl failed → the new-site path).
@@ -152,8 +153,8 @@ export function profileSiteHandler(
         });
         // Log every BILLED batch call (counted even for a garbled response), so
         // LLM spend is never silent — even when the judge later degrades.
-        for (let i = 0; i < calls; i++) await logApiUsage(db, { endpoint: DEEPSEEK_CHAT_ENDPOINT, rows: 1, projectId });
-        cost += calls * estimateCost(DEEPSEEK_CHAT_ENDPOINT, 1);
+        for (let i = 0; i < calls; i++) await logApiUsage(db, { endpoint: LLM_CHAT_ENDPOINT, rows: 1, projectId });
+        cost += calls * estimateCost(LLM_CHAT_ENDPOINT, 1);
 
         if (expansionKeywords.length > 0 && unjudged.length === expansionKeywords.length) {
           // Every batch failed → the judge is unavailable, not "nothing relevant".

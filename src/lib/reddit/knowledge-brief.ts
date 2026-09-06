@@ -1,5 +1,5 @@
 import { getRedditConfig, saveRedditConfig } from "@/lib/reddit/reddit-config";
-import type { ChatMessage } from "@/lib/llm/deepseek";
+import type { ChatMessage } from "@/lib/llm/provider";
 
 // Auto-seeds the per-project Reddit knowledge & voice brief + suggested
 // subreddits, once, the first time Reddit Conversations needs them for a

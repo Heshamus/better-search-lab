@@ -11,7 +11,7 @@ import {
   type ConversationScrapeInput,
 } from "@/lib/reddit/daily-conversations";
 import type { RedditPost } from "@/lib/reddit/apify";
-import type { ChatMessage } from "@/lib/llm/deepseek";
+import type { ChatMessage } from "@/lib/llm/provider";
 
 let close: (() => Promise<void>) | undefined;
 afterEach(() => close?.());

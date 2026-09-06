@@ -5,7 +5,8 @@ import { makeConversationScrape, conversationFetchConfigured } from "@/lib/reddi
 import { scanProjectConversations } from "@/lib/reddit/daily-conversations";
 import { fetchSite } from "@/lib/crawl/fetch-site";
 import { EdenClient } from "@/lib/ai-visibility/engines";
-import { DeepSeekClient, type ChatMessage } from "@/lib/llm/deepseek";
+import { OpenAICompatibleProvider } from "@/lib/llm/openai-compatible";
+import type { ChatMessage } from "@/lib/llm/provider";
 
 const bareDomain = (d: string): string => d.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "");
 
@@ -44,7 +45,7 @@ export function redditConversationsHandler(opts?: { fetchImpl?: typeof fetch }) 
     const ask = env.EDENAI_API_KEY
       ? (model: string, prompt: string) => new EdenClient(env.EDENAI_API_KEY!, opts?.fetchImpl).ask(model, prompt)
       : undefined;
-    const deepseek = new DeepSeekClient({ apiKey: env.DEEPSEEK_API_KEY, fetchImpl: opts?.fetchImpl });
+    const deepseek = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: env.DEEPSEEK_API_KEY, model: "deepseek-v4-pro", fetchImpl: opts?.fetchImpl });
     const chat = (msgs: ChatMessage[]) => deepseek.chat(msgs);
     const crawl = async () => {
       const r = await fetchSite("https://" + domain, { fetchImpl: opts?.fetchImpl });

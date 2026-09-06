@@ -1,4 +1,4 @@
-import type { ChatMessage } from "@/lib/llm/deepseek";
+import type { ChatMessage } from "@/lib/llm/provider";
 import type { EngineResult } from "@/lib/core/opportunity-engine";
 
 export type ChatFn = (messages: ChatMessage[]) => Promise<string>;

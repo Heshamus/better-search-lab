@@ -1,64 +1,7 @@
-// DeepSeek chat client (OpenAI-compatible) used to extract a TIGHT niche from a
-// crawl so keyword expansion stays on-topic instead of exploding into the broad
-// generic category. Optional: profiling degrades to heuristic seeds when no key
-// is configured or the call fails, so this never becomes a hard dependency.
-//
-// deepseek-v4-pro is a REASONING model. Its response carries BOTH
-// choices[0].message.reasoning_content (the thinking) AND
-// choices[0].message.content (the final answer). We read `content`, never
-// reasoning_content. A stingy max_tokens gets eaten by the reasoning pass and
-// returns empty content + finish_reason:"length", so we budget generously.
+import type { ChatProvider } from "./provider";
 
-export class DeepSeekError extends Error {
-  constructor(
-    msg: string,
-    readonly status: number,
-    readonly body?: unknown,
-  ) {
-    super(msg);
-  }
-}
-
-export interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
-}
-
-const BASE = "https://api.deepseek.com";
-const ENDPOINT = "/chat/completions";
-const MODEL = "deepseek-v4-pro";
-const MAX_TOKENS = 4000; // generous: reasoning + the JSON answer must both fit
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-export class DeepSeekClient {
-  private apiKey: string;
-  private fetchImpl: typeof fetch;
-  constructor(cfg: { apiKey: string; fetchImpl?: typeof fetch }) {
-    this.apiKey = cfg.apiKey;
-    this.fetchImpl = cfg.fetchImpl ?? fetch;
-  }
-
-  // Returns the model's final answer text (message.content). Retries once on a
-  // 429 / 5xx (transient), then surfaces the failure so callers fall back.
-  async chat(messages: ChatMessage[]): Promise<string> {
-    const body = { model: MODEL, messages, max_tokens: MAX_TOKENS };
-    for (let attempt = 0; ; attempt++) {
-      const r = await this.fetchImpl(BASE + ENDPOINT, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (r.ok) {
-        const json = (await r.json()) as any;
-        // Read the ANSWER, not the reasoning trace.
-        return json?.choices?.[0]?.message?.content ?? "";
-      }
-      const retryable = r.status === 429 || r.status >= 500;
-      if (retryable && attempt < 1) { await sleep(200 * 2 ** attempt); continue; }
-      throw new DeepSeekError(`DeepSeek ${r.status}`, r.status, await r.json().catch(() => undefined));
-    }
-  }
-}
+// Niche extraction + relevance judging for auto-profiling. Provider-agnostic:
+// takes any ChatProvider. Moved out of the retired DeepSeek client module.
 
 const CORPUS_CAP = 6000;
 
@@ -183,7 +126,7 @@ function buildUserPrompt(domain: string, corpus: string): string {
  * (or absent) niche.
  */
 export async function extractNicheSeeds(
-  client: DeepSeekClient,
+  client: ChatProvider,
   p: { pages: { url: string; html: string }[]; domain: string },
 ): Promise<{ seeds: string[]; nicheTerms: string[] }> {
   const corpus = buildCorpus(p.pages);
@@ -257,7 +200,7 @@ function buildJudgePrompt(p: { domain: string; seeds: string[]; nicheTerms: stri
  * An empty `relevant` array is a valid "nothing here is relevant" (not a failure).
  */
 export async function judgeRelevance(
-  client: DeepSeekClient,
+  client: ChatProvider,
   p: { domain: string; seeds: string[]; nicheTerms: string[]; candidates: string[] },
 ): Promise<{ kept: Set<string>; calls: number; unjudged: string[] }> {
   const batches: string[][] = [];

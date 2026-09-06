@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { projects } from "@/db/schema";
 import { loadEnv } from "@/config/env";
 import { getGscData } from "@/lib/google/store";
-import { DeepSeekClient } from "@/lib/llm/deepseek";
+import { OpenAICompatibleProvider } from "@/lib/llm/openai-compatible";
 import { EdenClient, measuredEngines } from "@/lib/ai-visibility/engines";
 import { buildQueries } from "@/lib/ai-visibility/queries";
 import { runScan } from "@/lib/ai-visibility/scan";
@@ -45,7 +45,7 @@ function parseStringArray(content: string): string[] {
 }
 
 /** DeepSeek buyer-question generator (fail-soft → []). Brand names excluded. */
-async function generateBuyerQuestions(client: DeepSeekClient, ctx: { domain: string; hints: string[]; count: number }): Promise<string[]> {
+async function generateBuyerQuestions(client: OpenAICompatibleProvider, ctx: { domain: string; hints: string[]; count: number }): Promise<string[]> {
   try {
     const content = await client.chat([
       {
@@ -91,7 +91,7 @@ export function aiVisibilityScanHandler(opts?: { fetchImpl?: typeof fetch }) {
 
     const generate = async (): Promise<string[]> => {
       if (!env.DEEPSEEK_API_KEY) return [];
-      const ds = new DeepSeekClient({ apiKey: env.DEEPSEEK_API_KEY });
+      const ds = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: env.DEEPSEEK_API_KEY, model: "deepseek-v4-pro" });
       return generateBuyerQuestions(ds, { domain, hints: gscQueries.slice(0, 8), count: Math.ceil(SCAN_TOTAL * 0.3) });
     };
 
