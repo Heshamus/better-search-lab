@@ -1,11 +1,10 @@
 import { eq } from "drizzle-orm";
 import { projects } from "@/db/schema";
-import { loadEnv } from "@/config/env";
-import { makeConversationScrape, conversationFetchConfigured } from "@/lib/reddit/scrape-source";
+import { getConfig } from "@/lib/config/resolve";
+import { conversationFetchEnv, makeChatProvider, makeEdenClient, NOT_CONFIGURED } from "@/lib/config/clients";
+import { makeConversationScrape } from "@/lib/reddit/scrape-source";
 import { scanProjectConversations } from "@/lib/reddit/daily-conversations";
 import { fetchSite } from "@/lib/crawl/fetch-site";
-import { EdenClient } from "@/lib/ai-visibility/engines";
-import { OpenAICompatibleProvider } from "@/lib/llm/openai-compatible";
 import type { ChatMessage } from "@/lib/llm/provider";
 
 const bareDomain = (d: string): string => d.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "");
@@ -13,7 +12,7 @@ const bareDomain = (d: string): string => d.replace(/^https?:\/\//, "").replace(
 // Plain-text summary of the project's own site, for seeding its Reddit
 // knowledge & voice brief (ensureKnowledgeBrief's `crawl` dep). fetchSite
 // already strips to HTML per page; this collapses that HTML to bounded plain
-// text — a local helper rather than deepseek.ts's stripTags, which is private
+// text — a local helper rather than niche.ts's stripTags, which is private
 // to that module.
 function htmlToText(pages: { html: string }[]): string {
   return pages
@@ -33,27 +32,26 @@ function htmlToText(pages: { html: string }[]): string {
 export function redditConversationsHandler(opts?: { fetchImpl?: typeof fetch }) {
   return async (ctx: { db: any; projectId?: string }) => {
     const { db, projectId } = ctx;
-    const env = loadEnv();
-    if (!conversationFetchConfigured(env)) throw new Error("Reddit Conversations isn't configured on this instance (needs a Reddit app or APIFY_API_KEY)");
-    if (!env.DEEPSEEK_API_KEY) throw new Error("Reddit Conversations needs DEEPSEEK_API_KEY configured on this instance");
+    const cfg = await getConfig(db, { fresh: true });
+    if (!cfg.reddit.configured && !cfg.apify.configured) throw new Error(NOT_CONFIGURED.reddit);
+    const chatProvider = makeChatProvider(cfg, opts?.fetchImpl);
+    if (!chatProvider) throw new Error(`Reddit Conversations needs an AI assistant. ${NOT_CONFIGURED.llm}`);
 
     const [project] = await db.select().from(projects).where(eq(projects.id, projectId!));
     if (!project) throw new Error("project not found");
     const domain = bareDomain(project.domain);
 
-    const scrape = makeConversationScrape(env, opts?.fetchImpl);
-    const ask = env.EDENAI_API_KEY
-      ? (model: string, prompt: string) => new EdenClient(env.EDENAI_API_KEY!, opts?.fetchImpl).ask(model, prompt)
-      : undefined;
-    const deepseek = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: env.DEEPSEEK_API_KEY, model: "deepseek-v4-pro", fetchImpl: opts?.fetchImpl });
-    const chat = (msgs: ChatMessage[]) => deepseek.chat(msgs);
+    const scrape = makeConversationScrape(conversationFetchEnv(cfg), opts?.fetchImpl);
+    const eden = makeEdenClient(cfg, opts?.fetchImpl);
+    const ask = eden ? (model: string, prompt: string) => eden.ask(model, prompt) : undefined;
+    const chat = (msgs: ChatMessage[]) => chatProvider.chat(msgs);
     const crawl = async () => {
       const r = await fetchSite("https://" + domain, { fetchImpl: opts?.fetchImpl });
       if (r.failed) return "";
       return htmlToText(r.pages);
     };
 
-    const rows = await scanProjectConversations({ db, projectId: projectId!, domain, env, scrape, ask, chat, crawl });
+    const rows = await scanProjectConversations({ db, projectId: projectId!, domain, scrape, ask, chat, crawl });
     return { rows: rows.length, cost: 0 };
   };
 }

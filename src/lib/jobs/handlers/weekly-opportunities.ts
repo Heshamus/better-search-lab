@@ -2,8 +2,8 @@ import { eq } from "drizzle-orm";
 import { projects } from "@/db/schema";
 import { assembleOpportunities } from "@/lib/core/opportunity-engine";
 import { loadDetectorInput, mondayOf, upsertOpportunities } from "@/lib/opportunities";
-import { loadEnv } from "@/config/env";
-import { OpenAICompatibleProvider } from "@/lib/llm/openai-compatible";
+import { getConfig } from "@/lib/config/resolve";
+import { makeChatProvider } from "@/lib/config/clients";
 import { summarizeActions } from "@/lib/llm/advisor";
 
 /**
@@ -35,10 +35,9 @@ export function weeklyOpportunitiesHandler() {
     // opportunities), so both /overview and /opportunities show sequenced actions
     // with zero per-render LLM cost. Env-gated + fail-soft: no key or a failed
     // call leaves the engine's own `why` untouched.
-    const env = loadEnv();
-    if (env.DEEPSEEK_API_KEY && results.length) {
-      const client = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: env.DEEPSEEK_API_KEY, model: "deepseek-v4-pro" });
-      const actions = await summarizeActions(results, { chat: (m) => client.chat(m) });
+    const chat = makeChatProvider(await getConfig(db, { fresh: true }));
+    if (chat && results.length) {
+      const actions = await summarizeActions(results, { chat: (m) => chat.chat(m) });
       results.forEach((r, i) => {
         if (actions[i]) r.why = actions[i];
       });

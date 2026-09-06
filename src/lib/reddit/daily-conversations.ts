@@ -93,7 +93,6 @@ export async function scanProjectConversations(deps: {
   db: any;
   projectId: string;
   domain: string;
-  env: unknown; // accepted for parity with runDailyConversationRadar's deps; not consumed directly
   scrape: (input: ConversationScrapeInput) => Promise<RedditPost[]>;
   ask?: (model: string, prompt: string) => Promise<{ answer: string; citations: string[] }>;
   chat: (m: ChatMessage[]) => Promise<string>;
@@ -232,7 +231,6 @@ export async function runDailyConversationRadar(deps: {
         db,
         projectId: project.id,
         domain,
-        env,
         scrape: deps.scrape,
         ask: deps.ask,
         chat: deps.chat,

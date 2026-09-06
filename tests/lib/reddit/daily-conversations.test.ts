@@ -71,7 +71,6 @@ describe("scanProjectConversations", () => {
       db: t.db,
       projectId: p.id,
       domain: "example.com",
-      env: {},
       scrape,
       ask,
       chat,
@@ -102,7 +101,6 @@ describe("scanProjectConversations", () => {
       db: t.db,
       projectId: p.id,
       domain: "example.com",
-      env: {},
       scrape,
       chat,
     });
@@ -126,7 +124,6 @@ describe("scanProjectConversations", () => {
       db: t.db,
       projectId: p.id,
       domain: "example.com",
-      env: {},
       scrape,
       chat,
       crawl,
@@ -153,7 +150,6 @@ describe("scanProjectConversations", () => {
       db: t.db,
       projectId: p.id,
       domain: "example.com",
-      env: {},
       scrape,
       chat,
     });

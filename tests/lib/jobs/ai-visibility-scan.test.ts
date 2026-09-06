@@ -49,6 +49,6 @@ describe("aiVisibilityScanHandler", () => {
     const t = await createTestDb();
     close = t.close;
     const p = await createProject(t.db, { name: "X", domain: "x.io" });
-    await expect(aiVisibilityScanHandler()({ db: t.db, projectId: p.id })).rejects.toThrow(/configured/);
+    await expect(aiVisibilityScanHandler()({ db: t.db, projectId: p.id })).rejects.toThrow(/Settings → Integrations/);
   });
 });

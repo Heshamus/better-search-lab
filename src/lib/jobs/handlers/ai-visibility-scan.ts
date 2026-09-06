@@ -1,12 +1,13 @@
 import { eq } from "drizzle-orm";
 import { projects } from "@/db/schema";
-import { loadEnv } from "@/config/env";
+import { getConfig } from "@/lib/config/resolve";
+import { edenModels, makeChatProvider, makeEdenClient, NOT_CONFIGURED } from "@/lib/config/clients";
 import { getGscData } from "@/lib/google/store";
-import { OpenAICompatibleProvider } from "@/lib/llm/openai-compatible";
-import { EdenClient, measuredEngines } from "@/lib/ai-visibility/engines";
+import { measuredEngines } from "@/lib/ai-visibility/engines";
 import { buildQueries } from "@/lib/ai-visibility/queries";
 import { runScan } from "@/lib/ai-visibility/scan";
 import { saveScan } from "@/lib/ai-visibility/store";
+import type { ChatProvider } from "@/lib/llm/provider";
 
 // Rough blended Eden cost per answer across the three engines (sonar is the
 // priciest; the others are cents). Conservative so we never under-report spend.
@@ -45,7 +46,7 @@ function parseStringArray(content: string): string[] {
 }
 
 /** DeepSeek buyer-question generator (fail-soft → []). Brand names excluded. */
-async function generateBuyerQuestions(client: OpenAICompatibleProvider, ctx: { domain: string; hints: string[]; count: number }): Promise<string[]> {
+async function generateBuyerQuestions(client: ChatProvider, ctx: { domain: string; hints: string[]; count: number }): Promise<string[]> {
   try {
     const content = await client.chat([
       {
@@ -76,8 +77,9 @@ async function generateBuyerQuestions(client: OpenAICompatibleProvider, ctx: { d
 export function aiVisibilityScanHandler(opts?: { fetchImpl?: typeof fetch }) {
   return async (ctx: { db: any; projectId?: string }) => {
     const { db, projectId } = ctx;
-    const env = loadEnv();
-    if (!env.EDENAI_API_KEY) throw new Error("AI-Visibility isn't configured on this instance (EDENAI_API_KEY missing)");
+    const cfg = await getConfig(db, { fresh: true });
+    const eden = makeEdenClient(cfg, opts?.fetchImpl);
+    if (!eden) throw new Error(`AI Visibility isn't connected. ${NOT_CONFIGURED.edenai}`);
 
     const [project] = await db.select().from(projects).where(eq(projects.id, projectId!));
     if (!project) throw new Error("project not found");
@@ -90,18 +92,17 @@ export function aiVisibilityScanHandler(opts?: { fetchImpl?: typeof fetch }) {
       .filter((k) => typeof k === "string" && k.length >= 3 && !isBrandQuery(k, name, domain) && !isJunkQuery(k));
 
     const generate = async (): Promise<string[]> => {
-      if (!env.DEEPSEEK_API_KEY) return [];
-      const ds = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: env.DEEPSEEK_API_KEY, model: "deepseek-v4-pro" });
-      return generateBuyerQuestions(ds, { domain, hints: gscQueries.slice(0, 8), count: Math.ceil(SCAN_TOTAL * 0.3) });
+      const chat = makeChatProvider(cfg, opts?.fetchImpl);
+      if (!chat) return [];
+      return generateBuyerQuestions(chat, { domain, hints: gscQueries.slice(0, 8), count: Math.ceil(SCAN_TOTAL * 0.3) });
     };
 
     const queries = await buildQueries({ gscQueries, generate, total: SCAN_TOTAL });
     if (!queries.length) throw new Error("no queries to scan — connect Search Console or add tracked keywords first");
 
-    const eden = new EdenClient(env.EDENAI_API_KEY, opts?.fetchImpl);
     const data = await runScan({
       queries,
-      engines: measuredEngines(env),
+      engines: measuredEngines(edenModels(cfg)),
       prospect: { name, domain },
       ask: (model, prompt) => eden.ask(model, prompt),
     });
