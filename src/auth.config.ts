@@ -1,23 +1,20 @@
 import type { NextAuthConfig } from "next-auth";
 
-// Edge-safe half of the Auth.js config. Imported by `middleware.ts`, which by
-// default runs on the Edge runtime — so this file (and everything it
-// transitively imports) MUST stay free of Node-only APIs. In particular:
-// no `@/db/client` (the `postgres` driver needs Node TCP/TLS sockets) and no
-// `bcryptjs` password verification. Those live only in `src/auth.ts`, which
-// is loaded by Node.js-runtime code (Server Actions, Route Handlers) and is
-// never imported here.
-//
-// Session reads in Middleware only need to verify the signed session JWT
-// (via AUTH_SECRET) — they never re-run `authorize()` — so this minimal
-// config (no providers, just `pages` + the `authorized` gate) is sufficient
-// for the login guard.
+// Edge-safe half of the Auth.js config (imported by middleware.ts — no DB, no
+// bcrypt). Middleware only verifies the JWT signature and is a fast pre-filter:
+// the authority is resolveSessionUser() (src/lib/auth/session.ts), which every
+// page layout and API guard runs against the users table (spec §9.5).
+
+/** Paths reachable without a session. API routes self-guard inside their handlers. */
+export function isPublicPath(pathname: string): boolean {
+  return pathname === "/login" || pathname === "/setup" || pathname.startsWith("/api/");
+}
+
 export const authConfig = {
-  pages: {
-    signIn: "/login",
-  },
+  pages: { signIn: "/login" },
   callbacks: {
-    authorized({ auth }) {
+    authorized({ auth, request }) {
+      if (isPublicPath(request.nextUrl.pathname)) return true;
       return !!auth?.user;
     },
   },

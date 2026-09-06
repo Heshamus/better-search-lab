@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // each route enqueues the RIGHT job type and returns the id, fast.
 vi.mock("@/lib/jobs/queue", () => ({ enqueueJob: vi.fn(async () => "job-123") }));
 // requireSession() → auth(); stub a truthy session so requests reach enqueue.
-vi.mock("@/auth", () => ({ auth: vi.fn(async () => ({ user: { email: "test@example.com" } })) }));
+vi.mock("@/lib/auth/session", () => ({ resolveSessionUser: vi.fn(async () => ({ id: "u1", email: "test@example.com", role: "admin" })) }));
 
 import { enqueueJob } from "@/lib/jobs/queue";
 import { POST as profilePost } from "@/app/api/projects/[id]/profile/route";

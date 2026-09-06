@@ -9,13 +9,10 @@ import { authConfig } from "@/auth.config";
 export const { auth: middleware } = NextAuth(authConfig);
 export default middleware;
 
-// Route groups like `(app)` don't appear in the URL — its pages
-// (opportunities, rankings, keywords, ...) live at the site root. So "guard
-// the (app) group" means: protect everything except the public `/login`
-// page, the Auth.js endpoints under `/api/auth`, and Next.js internals.
-// `/api/projects` and other API routes are intentionally NOT matched here —
-// per the Task 11 design they enforce their own 401 via `auth()` inside the
-// route handler.
+// Run on every path except Next internals and static files (anything with a
+// dot). Public paths are decided in auth.config.ts#isPublicPath, not here, so
+// there is exactly one list — and no more substring matching that let a
+// hypothetical /login-* route bypass the guard.
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|login).*)"],
+  matcher: ["/((?!_next/|.*\\..*).*)"],
 };

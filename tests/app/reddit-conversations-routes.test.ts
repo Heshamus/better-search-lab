@@ -9,7 +9,7 @@ vi.mock("@/lib/reddit/reddit-config", () => ({
   getRedditConfig: vi.fn(async () => ({ knowledgeBrief: "b", subreddits: ["SEO"] })),
   saveRedditConfig: vi.fn(),
 }));
-vi.mock("@/auth", () => ({ auth: vi.fn(async () => ({ user: { email: "test@example.com" } })) }));
+vi.mock("@/lib/auth/session", () => ({ resolveSessionUser: vi.fn(async () => ({ id: "u1", email: "test@example.com", role: "admin" })) }));
 
 import { enqueueJob } from "@/lib/jobs/queue";
 import { updateConversationStatus } from "@/lib/reddit/conversations-store";

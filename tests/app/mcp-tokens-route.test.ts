@@ -10,10 +10,10 @@ vi.mock("@/lib/api-tokens", () => ({
   ]),
   revokeApiToken: vi.fn(),
 }));
-vi.mock("@/auth", () => ({ auth: vi.fn(async () => ({ user: { email: "test@example.com" } })) }));
+vi.mock("@/lib/auth/session", () => ({ resolveSessionUser: vi.fn(async () => ({ id: "u1", email: "test@example.com", role: "admin" })) }));
 
 import { createApiToken, listApiTokens, revokeApiToken } from "@/lib/api-tokens";
-import { auth } from "@/auth";
+import { resolveSessionUser } from "@/lib/auth/session";
 import { POST, GET, DELETE } from "@/app/api/mcp-tokens/route";
 
 const postReq = (body: unknown) =>
@@ -61,7 +61,7 @@ describe("POST /api/mcp-tokens", () => {
   });
 
   it("401s when unauthenticated and never mints a token", async () => {
-    (auth as any).mockResolvedValueOnce(null);
+    (resolveSessionUser as any).mockResolvedValueOnce(null);
     const res = await POST(postReq({ label: "x" }));
     expect(res.status).toBe(401);
     expect(createApiToken).not.toHaveBeenCalled();
@@ -78,7 +78,7 @@ describe("GET /api/mcp-tokens", () => {
   });
 
   it("401s when unauthenticated", async () => {
-    (auth as any).mockResolvedValueOnce(null);
+    (resolveSessionUser as any).mockResolvedValueOnce(null);
     const res = await GET();
     expect(res.status).toBe(401);
   });
@@ -101,7 +101,7 @@ describe("DELETE /api/mcp-tokens", () => {
   });
 
   it("401s when unauthenticated", async () => {
-    (auth as any).mockResolvedValueOnce(null);
+    (resolveSessionUser as any).mockResolvedValueOnce(null);
     const res = await DELETE(deleteReq("http://x/api/mcp-tokens?id=t1"));
     expect(res.status).toBe(401);
   });

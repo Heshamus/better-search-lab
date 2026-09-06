@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("@/auth", () => ({ auth: vi.fn(async () => ({ user: { email: "t@example.com" } })) }));
+vi.mock("@/lib/auth/session", () => ({ resolveSessionUser: vi.fn(async () => ({ id: "u1", email: "test@example.com", role: "admin" })) }));
 vi.mock("@/lib/config/resolve", async () => {
   const { buildConfig } = await vi.importActual<typeof import("@/lib/config/resolve")>("@/lib/config/resolve");
   return { getConfig: vi.fn(async () => buildConfig({ stored: [], env: { DATAFORSEO_LOGIN: "x", DATAFORSEO_PASSWORD: "y" } })) };
@@ -14,7 +14,7 @@ vi.mock("@/lib/dataforseo/labs", () => ({
   })),
 }));
 
-import { auth } from "@/auth";
+import { resolveSessionUser } from "@/lib/auth/session";
 import { logApiUsage } from "@/lib/dataforseo/cost";
 import { keywordOverviewBulk } from "@/lib/dataforseo/labs";
 import { POST } from "@/app/api/keyword-overview/route";
@@ -22,11 +22,11 @@ import { POST } from "@/app/api/keyword-overview/route";
 const post = (body: unknown) =>
   POST(new Request("http://x/api/keyword-overview", { method: "POST", body: JSON.stringify(body), headers: { "content-type": "application/json" } }) as any);
 
-beforeEach(() => { (logApiUsage as any).mockClear(); (keywordOverviewBulk as any).mockClear(); (auth as any).mockResolvedValue({ user: { email: "t@example.com" } }); });
+beforeEach(() => { (logApiUsage as any).mockClear(); (keywordOverviewBulk as any).mockClear(); (resolveSessionUser as any).mockResolvedValue({ user: { email: "t@example.com" } }); });
 
 describe("POST /api/keyword-overview", () => {
   it("401s when unauthenticated", async () => {
-    (auth as any).mockResolvedValueOnce(null);
+    (resolveSessionUser as any).mockResolvedValueOnce(null);
     const res = await post({ keywords: ["a"], locationCode: 2840, languageCode: "en" });
     expect(res.status).toBe(401);
     expect(keywordOverviewBulk).not.toHaveBeenCalled();

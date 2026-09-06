@@ -1,10 +1,18 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { compare } from "bcryptjs";
-import { sql } from "drizzle-orm";
 import { authConfig } from "./auth.config";
 import { db } from "@/db/client";
-import { users } from "@/db/schema";
+import { authenticate } from "@/lib/auth/authenticate";
+
+/** Surfaces to the login form as `code: "rate_limited"`. */
+class RateLimitedError extends CredentialsSignin {
+  code = "rate_limited";
+}
+
+function clientIp(req: Request | undefined): string {
+  const forwarded = req?.headers?.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return forwarded || req?.headers?.get("x-real-ip") || "unknown";
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -15,35 +23,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      // Keep this thin: look up the user, verify the bcrypt hash, then
-      // delegate the allowlist check to the pure, unit-tested `isAllowed`.
-      // All three must pass or we return null (Auth.js's "auth failed").
-      async authorize(credentials) {
-        const email = typeof credentials?.email === "string" ? credentials.email : undefined;
-        const password = typeof credentials?.password === "string" ? credentials.password : undefined;
-        if (!email || !password) return null;
-
-        // Case-insensitive lookup: `isAllowed` is deliberately
-        // case-insensitive, but a plain `eq(users.email, email)` is not —
-        // if a stored row's casing differs from what the user types, that
-        // exact-match lookup fails and `authorize` rejects at the "no user"
-        // gate before `isAllowed` is ever consulted, locking out an
-        // allowlisted user. Normalize at the query layer instead of
-        // assuming stored casing (we don't control how `users` rows get
-        // seeded).
-        const normalizedEmail = email.trim().toLowerCase();
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(sql`lower(${users.email}) = ${normalizedEmail}`)
-          .limit(1);
-        if (!user) return null;
-
-        const passwordValid = await compare(password, user.passwordHash);
-        if (!passwordValid) return null;
-
-        return { id: user.id, email: user.email };
+      // Everything that matters lives in authenticate() (rate limit, constant
+      // time, case-insensitive lookup, session version); this only maps its
+      // outcome onto Auth.js's contract: a user, null, or a coded error.
+      async authorize(credentials, req) {
+        const email = typeof credentials?.email === "string" ? credentials.email : "";
+        const password = typeof credentials?.password === "string" ? credentials.password : "";
+        const outcome = await authenticate(db, { email, password, ip: clientIp(req) });
+        if (!outcome.ok) {
+          if (outcome.reason === "rate_limited") throw new RateLimitedError();
+          return null;
+        }
+        return { id: outcome.user.id, email: outcome.user.email, sv: outcome.user.sv };
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    jwt({ token, user }) {
+      if (user) {
+        token.sub = user.id;
+        token.sv = user.sv;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      session.user.id = token.sub ?? "";
+      session.sv = typeof token.sv === "number" ? token.sv : undefined;
+      return session;
+    },
+  },
 });
