@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { compare, hash } from "bcryptjs";
 import { users } from "@/db/schema";
 
@@ -142,7 +142,18 @@ export async function changeOwnPassword(db: any, id: string, input: { currentPas
   const [row] = await db.select({ passwordHash: users.passwordHash }).from(users).where(eq(users.id, id));
   if (!row) throw new UserNotFoundError("user not found");
   if (!(await compare(input.currentPassword, row.passwordHash))) throw new InvalidPasswordError("current password is incorrect");
-  await resetUserPassword(db, id, input.newPassword);
+  const passwordHash = await hash(input.newPassword, BCRYPT_COST);
+  await withUsersLock(db, async (tx) => {
+    // Optimistic guard: replace only the hash we just verified. If an admin
+    // reset landed in between, the credential we checked is stale and must not
+    // win — the update matches zero rows and we report it as a wrong password.
+    const updated = await tx
+      .update(users)
+      .set({ passwordHash, sessionVersion: sql`${users.sessionVersion} + 1` })
+      .where(and(eq(users.id, id), eq(users.passwordHash, row.passwordHash)))
+      .returning({ id: users.id });
+    if (updated.length === 0) throw new InvalidPasswordError("current password is incorrect");
+  });
 }
 
 /** Best-effort bookkeeping; a failure here must never block sign-in. */

@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { compare } from "bcryptjs";
 import { createTestDb } from "@/db/test-db";
 import {
-  AdminAlreadyExistsError, EmailTakenError, InvalidPasswordError, LastAdminError, SelfDeleteError, WeakPasswordError,
+  AdminAlreadyExistsError, EmailTakenError, InvalidPasswordError, LastAdminError, SelfDeleteError, UserNotFoundError, WeakPasswordError,
   changeOwnPassword, countUsers, createFirstAdmin, createUser, deleteUser, findUserByEmail, listUsers, normalizeEmail,
   resetUserPassword, touchLastLogin, updateUserRole,
 } from "@/lib/auth/users";
@@ -77,5 +77,15 @@ describe("users", () => {
     const a = await createFirstAdmin(t.db, { email: "a@example.com", password: PW });
     await touchLastLogin(t.db, a.id);
     expect((await listUsers(t.db))[0].lastLoginAt).toBeInstanceOf(Date);
+  });
+
+  it("raises UserNotFoundError for an unknown id on every per-user mutation", async () => {
+    const t = await createTestDb(); close = t.close;
+    await createFirstAdmin(t.db, { email: "a@example.com", password: PW });
+    const ghost = "00000000-0000-4000-8000-000000000000";
+    await expect(updateUserRole(t.db, ghost, "member")).rejects.toBeInstanceOf(UserNotFoundError);
+    await expect(resetUserPassword(t.db, ghost, "another strong one")).rejects.toBeInstanceOf(UserNotFoundError);
+    await expect(deleteUser(t.db, ghost, { actorId: "11111111-1111-4111-8111-111111111111" })).rejects.toBeInstanceOf(UserNotFoundError);
+    await expect(changeOwnPassword(t.db, ghost, { currentPassword: PW, newPassword: "another strong one" })).rejects.toBeInstanceOf(UserNotFoundError);
   });
 });
