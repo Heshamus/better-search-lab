@@ -1,17 +1,25 @@
 import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, numeric, real, index, uniqueIndex, date, doublePrecision } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import type { AuditIssue } from "@/lib/audit/checks";
 import type { BacklinkSummary, ReferringDomain, Anchor } from "@/lib/dataforseo/backlinks";
 import type { GscTotals, GscTopRow, RisingQuery } from "@/lib/google/gsc";
 import type { GaTotals, GaChannelRow, GaPageRow } from "@/lib/google/analytics";
 import type { PerEngine, PerQuery, CitedSource } from "@/lib/ai-visibility/types";
 
-export const users = pgTable("users", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  email: text("email").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
-  role: text("role").notNull().default("member"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    email: text("email").notNull().unique(),
+    passwordHash: text("password_hash").notNull(),
+    role: text("role").notNull().default("member"), // admin | member
+    // Bumped on password reset/change; a JWT whose `sv` differs is dead (spec §9.5).
+    sessionVersion: integer("session_version").notNull().default(1),
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("users_email_lower_idx").on(sql`lower(${t.email})`)],
+);
 
 // In-app configuration (Settings → Integrations). One row per registry key
 // (src/lib/config/registry.ts). Secret values are stored AES-256-GCM encrypted

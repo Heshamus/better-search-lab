@@ -162,6 +162,20 @@
       "when": 1788651029415,
       "tag": "0022_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1788661933466,
+      "tag": "0023_users_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1788661937927,
+      "tag": "0024_promote_first_admin",
+      "breakpoints": true
     }
   ]
 }
