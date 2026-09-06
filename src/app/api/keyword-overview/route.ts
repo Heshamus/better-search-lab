@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/api-guard";
 import { db } from "@/db/client";
-import { DataForSeoClient } from "@/lib/dataforseo/client";
+import { getConfig } from "@/lib/config/resolve";
+import { makeDataForSeoClient, NOT_CONFIGURED } from "@/lib/config/clients";
 import { keywordOverviewBulk } from "@/lib/dataforseo/labs";
 import { parseKeywordList } from "@/lib/keyword-list";
 import { logApiUsage } from "@/lib/dataforseo/cost";
-import { loadEnv } from "@/config/env";
 
 const KO_ENDPOINT = "/v3/dataforseo_labs/google/keyword_overview/live";
 
@@ -21,8 +21,8 @@ export async function POST(req: NextRequest) {
   const { keywords: parsed, dropped } = parseKeywordList(raw);
   if (parsed.length === 0) return NextResponse.json({ error: "no keywords" }, { status: 400 });
 
-  const env = loadEnv();
-  const client = new DataForSeoClient({ login: env.DATAFORSEO_LOGIN, password: env.DATAFORSEO_PASSWORD });
+  const client = makeDataForSeoClient(await getConfig(db));
+  if (!client) return NextResponse.json({ error: NOT_CONFIGURED.dataforseo }, { status: 503 });
   try {
     const { rows, rowsBilled } = await keywordOverviewBulk(client, {
       keywords: parsed,

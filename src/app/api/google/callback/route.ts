@@ -3,7 +3,7 @@ import { requireSession } from "@/lib/api-guard";
 import { db } from "@/db/client";
 import { projects } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { loadEnv } from "@/config/env";
+import { getConfig } from "@/lib/config/resolve";
 import { exchangeCode } from "@/lib/google/oauth";
 import { listSites, matchSite } from "@/lib/google/gsc";
 import { listGaProperties } from "@/lib/google/analytics";
@@ -17,9 +17,9 @@ import { enqueueJob } from "@/lib/jobs/queue";
 // wherever the user pressed Connect.
 export async function GET(req: Request) {
   const denied = await requireSession(); if (denied) return denied;
-  const env = loadEnv();
+  const { google } = await getConfig(db);
   const url = new URL(req.url);
-  const origin = env.GOOGLE_REDIRECT_URI ? new URL(env.GOOGLE_REDIRECT_URI).origin : url.origin;
+  const origin = google.redirectUri ? new URL(google.redirectUri).origin : url.origin;
   const [projectId, fromRaw] = (url.searchParams.get("state") ?? "").split("|");
   const from = fromRaw === "ga" ? "ga" : "gsc";
   const back = (q: string) => NextResponse.redirect(`${origin}/${from}${q}`);
@@ -27,15 +27,15 @@ export async function GET(req: Request) {
   const err = url.searchParams.get("error");
   const code = url.searchParams.get("code");
   if (err) return back(`?error=${encodeURIComponent(err)}`);
-  if (!code || !projectId || !env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET || !env.GOOGLE_REDIRECT_URI) {
+  if (!code || !projectId || !google.oauthReady || !google.clientId || !google.clientSecret || !google.redirectUri) {
     return back("?error=missing_params");
   }
 
   try {
     const { refreshToken, accessToken } = await exchangeCode({
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
-      redirectUri: env.GOOGLE_REDIRECT_URI,
+      clientId: google.clientId,
+      clientSecret: google.clientSecret,
+      redirectUri: google.redirectUri,
       code,
     });
     const [project] = await db.select().from(projects).where(eq(projects.id, projectId));

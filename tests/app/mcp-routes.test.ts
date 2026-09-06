@@ -8,7 +8,10 @@ vi.mock("@/lib/opportunities", () => ({ listOpportunities: vi.fn(async () => [{ 
 vi.mock("@/lib/reddit/conversations-store", () => ({
   listLatestConversations: vi.fn(async () => [{ id: "c1", threadUrl: "https://reddit.com/x" }]),
 }));
-vi.mock("@/config/env", () => ({ loadEnv: () => ({ DATAFORSEO_LOGIN: "x", DATAFORSEO_PASSWORD: "y" }) }));
+vi.mock("@/lib/config/resolve", async () => {
+  const { buildConfig } = await vi.importActual<typeof import("@/lib/config/resolve")>("@/lib/config/resolve");
+  return { getConfig: vi.fn(async () => buildConfig({ stored: [], env: { DATAFORSEO_LOGIN: "x", DATAFORSEO_PASSWORD: "y" } })) };
+});
 vi.mock("@/lib/dataforseo/labs", () => ({
   keywordOverviewBulk: vi.fn(async () => ({
     rows: [{ keyword: "a", searchVolume: 10, cpc: null, competition: null, difficulty: null, monthly: [], trendPct: null }],

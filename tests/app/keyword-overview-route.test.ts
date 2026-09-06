@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/auth", () => ({ auth: vi.fn(async () => ({ user: { email: "t@example.com" } })) }));
-vi.mock("@/config/env", () => ({ loadEnv: () => ({ DATAFORSEO_LOGIN: "x", DATAFORSEO_PASSWORD: "y" }) }));
+vi.mock("@/lib/config/resolve", async () => {
+  const { buildConfig } = await vi.importActual<typeof import("@/lib/config/resolve")>("@/lib/config/resolve");
+  return { getConfig: vi.fn(async () => buildConfig({ stored: [], env: { DATAFORSEO_LOGIN: "x", DATAFORSEO_PASSWORD: "y" } })) };
+});
 vi.mock("@/db/client", () => ({ db: {} }));
 vi.mock("@/lib/dataforseo/cost", () => ({ logApiUsage: vi.fn(async () => {}) }));
 vi.mock("@/lib/dataforseo/labs", () => ({
@@ -53,5 +56,14 @@ describe("POST /api/keyword-overview", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.rows).toHaveLength(1);
+  });
+
+  it("503s with a Settings pointer when DataForSEO is not configured", async () => {
+    const { getConfig } = await import("@/lib/config/resolve");
+    const { buildConfig } = await vi.importActual<typeof import("@/lib/config/resolve")>("@/lib/config/resolve");
+    (getConfig as any).mockResolvedValueOnce(buildConfig({ stored: [], env: {} }));
+    const res = await post({ keywords: "a" });
+    expect(res.status).toBe(503);
+    expect((await res.json()).error).toMatch(/Settings → Integrations/);
   });
 });

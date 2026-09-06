@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/api-guard";
 import { db } from "@/db/client";
-import { DataForSeoClient } from "@/lib/dataforseo/client";
+import { getConfig } from "@/lib/config/resolve";
+import { makeDataForSeoClient, NOT_CONFIGURED } from "@/lib/config/clients";
 import { keywordSuggestions } from "@/lib/dataforseo/labs";
 import { logApiUsage } from "@/lib/dataforseo/cost";
-import { loadEnv } from "@/config/env";
 import { saveResearchSearch } from "@/lib/research-history";
 
 export async function POST(req: NextRequest) {
   const denied = await requireSession(); if (denied) return denied;
   const { keywords, locationCode, languageCode, projectId } = await req.json();
-  const env = loadEnv();
-  const client = new DataForSeoClient({ login: env.DATAFORSEO_LOGIN, password: env.DATAFORSEO_PASSWORD });
+  const client = makeDataForSeoClient(await getConfig(db));
+  if (!client) return NextResponse.json({ error: NOT_CONFIGURED.dataforseo }, { status: 503 });
   // Phrase-match on the seed (keywords is the UI's one-seed array) so results are
   // ACTUALLY about the seed, not the broad word-overlap universe keyword_ideas returns.
   const seed = Array.isArray(keywords) ? keywords[0] : keywords;

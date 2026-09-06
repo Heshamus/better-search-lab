@@ -1,12 +1,11 @@
 import { cookies } from "next/headers";
 import { db } from "@/db/client";
 import { getCurrentProject } from "@/lib/current-project";
-import { loadEnv } from "@/config/env";
+import { getConfig } from "@/lib/config/resolve";
 import { listLatestConversations } from "@/lib/reddit/conversations-store";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState, IntegrationLink } from "@/components/empty-state";
 import { RedditConversations } from "@/components/reddit-conversations";
 import { RunConversationsScanButton } from "@/components/run-conversations-scan-button";
-import { conversationFetchConfigured } from "@/lib/reddit/scrape-source";
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +15,8 @@ export default async function TrendsPage() {
     return <EmptyState title="Create your first project in Settings" description="Add your site's domain in Settings to surface Reddit conversations worth joining." />;
   }
 
-  const env = loadEnv();
-  const configured = conversationFetchConfigured(env);
+  const cfg = await getConfig(db);
+  const configured = cfg.reddit.configured || cfg.apify.configured;
   const conversations = configured ? await listLatestConversations(db, project.id, 20) : [];
   // RedditConversations filters status !== "dismissed" internally and defers the
   // empty state to this page (its doc comment), so the branch below must count
@@ -42,8 +41,9 @@ export default async function TrendsPage() {
 
       {!configured ? (
         <EmptyState
-          title="Reddit Conversations needs an Apify key"
-          description="This instance needs an Apify key before it can scan Reddit for conversations worth joining."
+          title="Reddit Conversations isn't connected"
+          description="Connect the Reddit API (free) or Apify, plus an AI assistant, to surface threads worth joining."
+          action={<IntegrationLink group="reddit" label="Connect Reddit" />}
         />
       ) : visible.length ? (
         <RedditConversations conversations={conversations} projectId={project.id} />

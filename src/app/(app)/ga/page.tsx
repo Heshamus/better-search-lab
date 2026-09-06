@@ -1,11 +1,13 @@
 import { cookies } from "next/headers";
 import { db } from "@/db/client";
 import { getCurrentProject } from "@/lib/current-project";
-import { loadEnv, type Env } from "@/config/env";
+import { getConfig } from "@/lib/config/resolve";
+import { googleAuthConfig } from "@/lib/config/clients";
 import { getConnection, getGaData } from "@/lib/google/store";
 import { getGoogleAccessToken } from "@/lib/google/access-token";
+import type { GoogleAuthConfig } from "@/lib/google/access-token";
 import { listGaProperties, type GaProperty } from "@/lib/google/analytics";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState, IntegrationLink } from "@/components/empty-state";
 import { GaDashboard } from "@/components/ga-dashboard";
 import { GaPropertyPicker } from "@/components/ga-property-picker";
 import { RunGaSyncButton } from "@/components/run-ga-sync-button";
@@ -48,9 +50,9 @@ function ConnectPanel({ projectId, reconnect }: { projectId: string; reconnect?:
 
 // List GA4 properties for the picker. A 403 means the token lacks the analytics
 // scope (GSC-only) → the caller shows a reconnect prompt.
-async function loadGaProperties(refreshToken: string, env: Env): Promise<{ scopeMissing: boolean; properties: GaProperty[] }> {
+async function loadGaProperties(refreshToken: string, google: GoogleAuthConfig): Promise<{ scopeMissing: boolean; properties: GaProperty[] }> {
   try {
-    const token = await getGoogleAccessToken(env, refreshToken);
+    const token = await getGoogleAccessToken(google, refreshToken);
     return { scopeMissing: false, properties: await listGaProperties(token) };
   } catch (e: unknown) {
     return { scopeMissing: /\b403\b/.test(String((e as Error)?.message ?? "")), properties: [] };
@@ -63,8 +65,8 @@ export default async function GaPage({ searchParams }: { searchParams: Promise<{
     return <EmptyState title="Create your first project in Settings" description="Add your site's domain in Settings to connect Analytics." />;
   }
 
-  const env = loadEnv();
-  const configured = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_REDIRECT_URI);
+  const cfg = await getConfig(db);
+  const configured = cfg.google.oauthReady || Boolean(cfg.google.serviceAccountKey);
   const sp = await searchParams;
   const errorMsg = sp.error ? ERROR_COPY[sp.error] ?? `Couldn't connect: ${sp.error}` : null;
 
@@ -75,7 +77,7 @@ export default async function GaPage({ searchParams }: { searchParams: Promise<{
   let pickerProps: GaProperty[] = [];
   let scopeMissing = false;
   if (connection && !connection.gaPropertyId) {
-    const r = await loadGaProperties(connection.refreshToken, env);
+    const r = await loadGaProperties(connection.refreshToken, googleAuthConfig(cfg));
     scopeMissing = r.scopeMissing;
     pickerProps = r.properties;
   }
@@ -108,7 +110,11 @@ export default async function GaPage({ searchParams }: { searchParams: Promise<{
       ) : null}
 
       {!configured ? (
-        <EmptyState title="Analytics isn't configured" description="This instance needs Google OAuth credentials before Analytics can be connected." />
+        <EmptyState
+          title="Google isn't connected"
+          description="Add Google OAuth credentials (and an App URL) or a service-account key to connect Analytics."
+          action={<IntegrationLink group="google" label="Connect Google" />}
+        />
       ) : !connection ? (
         <ConnectPanel projectId={project.id} />
       ) : scopeMissing ? (

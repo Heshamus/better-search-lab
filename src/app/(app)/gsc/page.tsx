@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { db } from "@/db/client";
 import { getCurrentProject } from "@/lib/current-project";
-import { loadEnv } from "@/config/env";
+import { getConfig } from "@/lib/config/resolve";
 import { getConnection, getGscData } from "@/lib/google/store";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState, IntegrationLink } from "@/components/empty-state";
 import { GscDashboard } from "@/components/gsc-dashboard";
 import { RunGscSyncButton } from "@/components/run-gsc-sync-button";
 
@@ -48,8 +48,8 @@ export default async function GscPage({ searchParams }: { searchParams: Promise<
     );
   }
 
-  const env = loadEnv();
-  const configured = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_REDIRECT_URI);
+  const cfg = await getConfig(db);
+  const configured = cfg.google.oauthReady || Boolean(cfg.google.serviceAccountKey);
   const sp = await searchParams;
   const errorMsg = sp.error ? ERROR_COPY[sp.error] ?? `Couldn't connect: ${sp.error}` : null;
 
@@ -85,8 +85,9 @@ export default async function GscPage({ searchParams }: { searchParams: Promise<
 
       {!configured ? (
         <EmptyState
-          title="Search Console isn't configured"
-          description="This instance needs Google OAuth credentials before Search Console can be connected."
+          title="Google isn't connected"
+          description="Add Google OAuth credentials (and an App URL) or a service-account key to connect Search Console."
+          action={<IntegrationLink group="google" label="Connect Google" />}
         />
       ) : !connection ? (
         <ConnectPanel projectId={project.id} />

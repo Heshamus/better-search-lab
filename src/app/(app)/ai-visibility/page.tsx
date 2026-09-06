@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { db } from "@/db/client";
 import { getCurrentProject } from "@/lib/current-project";
-import { loadEnv } from "@/config/env";
+import { getConfig } from "@/lib/config/resolve";
 import { getLatestScan, getScanHistory } from "@/lib/ai-visibility/store";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState, IntegrationLink } from "@/components/empty-state";
 import { AiVisibilityDashboard } from "@/components/ai-visibility-dashboard";
 import { RunAiVisibilityButton } from "@/components/run-ai-visibility-button";
 
@@ -35,8 +35,8 @@ export default async function AiVisibilityPage() {
     return <EmptyState title="Create your first project in Settings" description="Add your site's domain in Settings to measure AI visibility." />;
   }
 
-  const env = loadEnv();
-  const configured = Boolean(env.EDENAI_API_KEY);
+  const cfg = await getConfig(db);
+  const configured = cfg.edenai.configured;
   const latest = configured ? await getLatestScan(db, project.id) : null;
   const history = latest ? await getScanHistory(db, project.id, 30) : [];
 
@@ -53,7 +53,11 @@ export default async function AiVisibilityPage() {
       </div>
 
       {!configured ? (
-        <EmptyState title="AI Visibility isn't configured" description="This instance needs an Eden AI key before AI visibility can be measured." />
+        <EmptyState
+          title="AI Visibility isn't connected"
+          description="Add an Eden AI key to measure whether Perplexity, ChatGPT and Gemini name or cite your site."
+          action={<IntegrationLink group="edenai" label="Connect Eden AI" />}
+        />
       ) : !latest ? (
         <ScanPanel projectId={project.id} />
       ) : (

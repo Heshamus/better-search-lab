@@ -19,27 +19,27 @@ function grantSpy(token: string) {
 }
 
 describe("isGoogleConfigured", () => {
-  it("true via a service account key", () => expect(isGoogleConfigured({ GOOGLE_SA_KEY: saKeyJson() } as any)).toBe(true));
-  it("true via client id+secret", () => expect(isGoogleConfigured({ GOOGLE_CLIENT_ID: "c", GOOGLE_CLIENT_SECRET: "s" } as any)).toBe(true));
-  it("false with neither", () => expect(isGoogleConfigured({} as any)).toBe(false));
+  it("true via a service account key", () => expect(isGoogleConfigured({ serviceAccountKey: saKeyJson() })).toBe(true));
+  it("true via client id+secret", () => expect(isGoogleConfigured({ clientId: "c", clientSecret: "s" })).toBe(true));
+  it("false with neither", () => expect(isGoogleConfigured({})).toBe(false));
 });
 
 describe("getGoogleAccessToken", () => {
-  it("prefers the service account (jwt-bearer, ignores the refresh token) when GOOGLE_SA_KEY is set", async () => {
+  it("prefers the service account (jwt-bearer, ignores the refresh token) when a service-account key is set", async () => {
     const { seen, fetchImpl } = grantSpy("sa-token");
-    const token = await getGoogleAccessToken({ GOOGLE_SA_KEY: saKeyJson() } as any, "ignored-refresh-token", fetchImpl);
+    const token = await getGoogleAccessToken({ serviceAccountKey: saKeyJson() }, "ignored-refresh-token", fetchImpl);
     expect(token).toBe("sa-token");
     expect(seen.grant).toBe("urn:ietf:params:oauth:grant-type:jwt-bearer");
   });
 
   it("falls back to the user refresh-token grant when no service account is configured", async () => {
     const { seen, fetchImpl } = grantSpy("user-token");
-    const token = await getGoogleAccessToken({ GOOGLE_CLIENT_ID: "c", GOOGLE_CLIENT_SECRET: "s" } as any, "rt", fetchImpl);
+    const token = await getGoogleAccessToken({ clientId: "c", clientSecret: "s" }, "rt", fetchImpl);
     expect(token).toBe("user-token");
     expect(seen.grant).toBe("refresh_token");
   });
 
   it("throws a connect-needed error when neither a SA nor a refresh token is available", async () => {
-    await expect(getGoogleAccessToken({ GOOGLE_CLIENT_ID: "c", GOOGLE_CLIENT_SECRET: "s" } as any, null)).rejects.toThrow(/not connected/);
+    await expect(getGoogleAccessToken({ clientId: "c", clientSecret: "s" }, null)).rejects.toThrow(/not connected/);
   });
 });

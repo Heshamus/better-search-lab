@@ -1,8 +1,8 @@
-import { DataForSeoClient } from "@/lib/dataforseo/client";
 import { keywordOverviewBulk } from "@/lib/dataforseo/labs";
 import { parseKeywordList } from "@/lib/keyword-list";
 import { MARKETS, DEFAULT_MARKET } from "@/lib/markets";
-import { loadEnv } from "@/config/env";
+import { getConfig } from "@/lib/config/resolve";
+import { makeDataForSeoClient, NOT_CONFIGURED } from "@/lib/config/clients";
 import { mcpRoute, MissingParamError } from "@/lib/mcp/reader";
 import { db } from "@/db/client";
 import { logApiUsage } from "@/lib/dataforseo/cost";
@@ -30,8 +30,8 @@ export const GET = mcpRoute(async (req) => {
   const marketLabel = searchParams.get("market");
   const market = MARKETS.find((m) => m.label === marketLabel) ?? DEFAULT_MARKET;
 
-  const env = loadEnv();
-  const client = new DataForSeoClient({ login: env.DATAFORSEO_LOGIN, password: env.DATAFORSEO_PASSWORD });
+  const client = makeDataForSeoClient(await getConfig(db));
+  if (!client) return Response.json({ error: NOT_CONFIGURED.dataforseo }, { status: 503 });
   const result = await keywordOverviewBulk(client, {
     keywords,
     locationCode: market.locationCode,
