@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { requireSessionUser } from "@/lib/api-guard";
-import { InvalidPasswordError, WeakPasswordError, changeOwnPassword, MIN_PASSWORD_LENGTH } from "@/lib/auth/users";
+import { InvalidPasswordError, WeakPasswordError, changeOwnPassword } from "@/lib/auth/users";
+import { PasswordSchema } from "@/lib/auth/schemas";
 
-const Body = z.object({
-  currentPassword: z.string().min(1),
-  newPassword: z.string().min(MIN_PASSWORD_LENGTH, `password must be at least ${MIN_PASSWORD_LENGTH} characters`),
-});
+const Body = z.object({ currentPassword: z.string().min(1), newPassword: PasswordSchema });
 
 // Bumps session_version, so every session of this user — including the
 // current one — is invalid afterwards; the form signs the user out (spec §9.5).

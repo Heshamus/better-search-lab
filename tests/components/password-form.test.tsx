@@ -41,4 +41,16 @@ describe("PasswordForm", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(/incorrect/);
     expect(signOut).not.toHaveBeenCalled();
   });
+  it("keeps you signed in and says so when the request never reaches the server", async () => {
+    const fetchMock = vi.fn(async () => { throw new TypeError("Failed to fetch"); });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<PasswordForm />);
+    fill("old old old old", "new new new new");
+    fireEvent.click(screen.getByRole("button", { name: /change password/i }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/network error/i);
+    expect(signOut).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+    // ...and the form is usable again rather than stuck on "Changing…".
+    expect(screen.getByRole("button", { name: /change password/i })).not.toBeDisabled();
+  });
 });

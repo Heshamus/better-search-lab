@@ -4,13 +4,14 @@ import { db } from "@/db/client";
 import { requireAdmin } from "@/lib/api-guard";
 import {
   LastAdminError, SelfDeleteError, UserNotFoundError, WeakPasswordError,
-  deleteUser, resetUserPassword, updateUserRole, MIN_PASSWORD_LENGTH,
+  deleteUser, resetUserPassword, updateUserRole,
 } from "@/lib/auth/users";
+import { PasswordSchema } from "@/lib/auth/schemas";
 
 const PatchBody = z
   .object({
     role: z.enum(["admin", "member"]).optional(),
-    password: z.string().min(MIN_PASSWORD_LENGTH, `password must be at least ${MIN_PASSWORD_LENGTH} characters`).optional(),
+    password: PasswordSchema.optional(),
   })
   .refine((b) => b.role !== undefined || b.password !== undefined, "nothing to update");
 
@@ -31,7 +32,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (parsed.data.password !== undefined) await resetUserPassword(db, id, parsed.data.password);
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return mapError(e) ?? Promise.reject(e);
+    // Rethrow, never `?? Promise.reject(e)`: that returns a rejected promise
+    // the framework awaits as the response body, losing the stack and any
+    // chance of a 500 with the real cause.
+    const mapped = mapError(e);
+    if (mapped) return mapped;
+    throw e;
   }
 }
 
@@ -42,6 +48,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     await deleteUser(db, id, { actorId: admin.id });
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return mapError(e) ?? Promise.reject(e);
+    const mapped = mapError(e);
+    if (mapped) return mapped;
+    throw e;
   }
 }

@@ -1,0 +1,39 @@
+// @vitest-environment jsdom
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
+
+// requireAdminUser bounces a member to /settings?error=admin_only. Without the
+// page reading that param the member lands on Settings with no idea why, which
+// reads as the app losing their click. Everything the page reads is mocked to
+// the empty case — the assertion here is only about the explanation banner.
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
+vi.mock("@/db/client", () => ({ db: {} }));
+vi.mock("@/lib/projects", () => ({ listProjects: vi.fn(async () => []) }));
+vi.mock("@/lib/current-project", () => ({ getCurrentProject: vi.fn(async () => null) }));
+vi.mock("@/lib/profile", () => ({ listProfileCandidates: vi.fn(async () => []) }));
+vi.mock("@/lib/competitors", () => ({ listCompetitors: vi.fn(async () => []) }));
+vi.mock("@/lib/reddit/reddit-config", () => ({
+  getRedditConfig: vi.fn(async () => ({ knowledgeBrief: null, subreddits: [] })),
+}));
+
+import SettingsPage from "@/app/(app)/settings/page";
+
+afterEach(() => cleanup());
+
+describe("Settings page admin_only notice", () => {
+  it("explains the bounce when a member was sent here from an admin-only section", async () => {
+    render(await SettingsPage({ searchParams: Promise.resolve({ error: "admin_only" }) }));
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent(/for admins/i);
+    expect(status).toHaveTextContent(/ask an admin/i);
+  });
+
+  it("renders nothing extra without the param, or with an unknown one", async () => {
+    render(await SettingsPage({ searchParams: Promise.resolve({}) }));
+    expect(screen.queryByRole("status")).toBeNull();
+    cleanup();
+    render(await SettingsPage({ searchParams: Promise.resolve({ error: "something_else" }) }));
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+});

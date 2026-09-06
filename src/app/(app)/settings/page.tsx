@@ -39,7 +39,11 @@ const sectionHeadingClass =
 // No-projects case (brief): with zero projects only the "Create a new project"
 // section renders (the edit section and roster are project-gated), so the
 // create form IS the primary content — no separate EmptyState wrapper.
-export default async function SettingsPage() {
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  // requireAdminUser() bounces a member here with ?error=admin_only. Saying so
+  // out loud is the difference between "the app ignored my click" and "that
+  // section needs an admin" — see src/lib/auth/session.ts.
+  const adminOnly = (await searchParams).error === "admin_only";
   const [allProjects, project] = await Promise.all([
     listProjects(db),
     getCurrentProject(db, (await cookies()).get("sp_project")?.value),
@@ -55,6 +59,12 @@ export default async function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-8">
+      {adminOnly ? (
+        <p role="status" className="rounded-lg bg-neutral-800/60 px-3 py-2 text-sm text-neutral-300">
+          That section is for admins. Ask an admin if you need an integration connected or a user added.
+        </p>
+      ) : null}
+
       {allProjects.length > 0 ? (
         <section className="flex flex-col gap-2">
           <h2 className={sectionHeadingClass}>Your projects</h2>

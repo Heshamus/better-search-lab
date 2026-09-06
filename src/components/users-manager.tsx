@@ -82,7 +82,10 @@ function UserRow({ user, isSelf }: { user: UserSummaryLike; isSelf: boolean }) {
         <span className="min-w-0 flex-1 truncate text-sm text-neutral-100">{user.email}{isSelf ? <span className="ml-2 text-xs text-neutral-500">(you)</span> : null}</span>
         <span className="flex items-center gap-1.5 text-xs text-neutral-400">
           Role
-          <select aria-label={`Role for ${user.email}`} className={inputClass} value={user.role} disabled={busy} onChange={(e) => void patch({ role: e.target.value }, null)}>
+          {/* Your own role is read-only here. The API already refuses to demote
+              the last admin, but a lone admin demoting themselves would lock
+              everyone out of Users and Integrations with no way back in. */}
+          <select aria-label={`Role for ${user.email}`} className={inputClass} value={user.role} disabled={busy || isSelf} title={isSelf ? "Ask another admin to change your role" : undefined} onChange={(e) => void patch({ role: e.target.value }, null)}>
             <option value="admin">admin</option>
             <option value="member">member</option>
           </select>
@@ -103,7 +106,7 @@ function UserRow({ user, isSelf }: { user: UserSummaryLike; isSelf: boolean }) {
       {resetting ? (
         <form className="flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); void patch({ password: newPassword }, "Password reset — they must sign in again."); }}>
           <label htmlFor={`pw-${user.id}`} className="text-xs text-neutral-400">New password</label>
-          <input id={`pw-${user.id}`} type="password" minLength={10} required className={inputClass} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+          <input id={`pw-${user.id}`} type="password" minLength={10} required autoComplete="new-password" className={inputClass} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
           <button type="submit" className={buttonClass} disabled={busy}>Save password</button>
         </form>
       ) : null}
@@ -150,7 +153,9 @@ function AddUserForm() {
           <input type="email" required className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
         <label className="flex flex-col gap-1 text-xs text-neutral-400">Initial password
-          <input type="password" required minLength={10} className={inputClass} value={password} onChange={(e) => setPassword(e.target.value)} />
+          {/* new-password, not a current one: a password manager offering the
+              admin's own credentials here would silently create the wrong user. */}
+          <input type="password" required minLength={10} autoComplete="new-password" className={inputClass} value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
         <label className="flex flex-col gap-1 text-xs text-neutral-400">New user role
           <select className={inputClass} value={role} onChange={(e) => setRole(e.target.value as "admin" | "member")}>

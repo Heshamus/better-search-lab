@@ -2,13 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { requireAdmin } from "@/lib/api-guard";
-import { EmailTakenError, WeakPasswordError, createUser, listUsers, MIN_PASSWORD_LENGTH } from "@/lib/auth/users";
+import { EmailTakenError, WeakPasswordError, createUser, listUsers } from "@/lib/auth/users";
+import { EmailSchema, PasswordSchema } from "@/lib/auth/schemas";
 
-const CreateBody = z.object({
-  email: z.string().trim().refine((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e), "must be an email address"),
-  password: z.string().min(MIN_PASSWORD_LENGTH, `password must be at least ${MIN_PASSWORD_LENGTH} characters`),
-  role: z.enum(["admin", "member"]),
-});
+const CreateBody = z.object({ email: EmailSchema, password: PasswordSchema, role: z.enum(["admin", "member"]) });
 
 export async function GET() {
   const admin = await requireAdmin(); if (admin instanceof Response) return admin;

@@ -64,12 +64,28 @@ describe("/api/users (admin)", () => {
     expect((await DELETE(json("DELETE", "http://x/api/users/admin-1"), params("admin-1"))).status).toBe(409);
   });
 
-  it("is admin-only: 403 for members, 401 for no session", async () => {
+  it("404s a DELETE of a user who is already gone, and 409s the last admin", async () => {
+    (deleteUser as any).mockRejectedValueOnce(new UserNotFoundError("no such user"));
+    const gone = await DELETE(json("DELETE", "http://x/api/users/zzz"), params("zzz"));
+    expect(gone.status).toBe(404);
+    expect((await gone.json()).error).toBe("no such user");
+    (deleteUser as any).mockRejectedValueOnce(new LastAdminError("cannot delete the last admin"));
+    const last = await DELETE(json("DELETE", "http://x/api/users/admin-1"), params("admin-1"));
+    expect(last.status).toBe(409);
+    expect((await last.json()).error).toBe("cannot delete the last admin");
+  });
+
+  it("is admin-only: 403 for members, 401 for no session — on PATCH too", async () => {
     (resolveSessionUser as any).mockResolvedValue({ id: "m", email: "m@example.com", role: "member" });
     expect((await GET()).status).toBe(403);
     expect((await POST(json("POST", "http://x/api/users", { email: "x@example.com", password: "correct horse battery", role: "member" }))).status).toBe(403);
+    expect((await PATCH(json("PATCH", "http://x/api/users/u2", { role: "admin" }), params("u2"))).status).toBe(403);
     (resolveSessionUser as any).mockResolvedValue(null);
     expect((await DELETE(json("DELETE", "http://x/api/users/u2"), params("u2"))).status).toBe(401);
+    expect((await PATCH(json("PATCH", "http://x/api/users/u2", { role: "admin" }), params("u2"))).status).toBe(401);
+    // A denied request must never reach the store, whatever the body says.
     expect(createUser).not.toHaveBeenCalled();
+    expect(updateUserRole).not.toHaveBeenCalled();
+    expect(deleteUser).not.toHaveBeenCalled();
   });
 });

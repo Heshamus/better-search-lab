@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildConfig } from "@/lib/config/resolve";
-import { makeChatProvider, makeDataForSeoClient, makeEdenClient, makeEmailSender, googleAuthConfig, conversationFetchEnv, edenModels } from "@/lib/config/clients";
+import { makeChatProvider, makeDataForSeoClient, makeEdenClient, makeEmailSender, googleAuthConfig, conversationFetchEnv, edenModels, NOT_CONFIGURED } from "@/lib/config/clients";
 import { DataForSeoClient } from "@/lib/dataforseo/client";
 import { OpenAICompatibleProvider } from "@/lib/llm/openai-compatible";
 import { AnthropicProvider } from "@/lib/llm/anthropic";
@@ -25,6 +25,11 @@ describe("client factories", () => {
     expect(makeEmailSender(cfg({ RESEND_API_KEY: "k", EMAIL_FROM: "r@example.com" }))).toBeInstanceOf(ResendEmailSender);
     expect(makeEmailSender(cfg({ EMAIL_PROVIDER: "smtp", SMTP_HOST: "h", SMTP_PORT: "587", EMAIL_FROM: "r@example.com" }))).toBeInstanceOf(SmtpEmailSender);
     expect(makeEdenClient(cfg({ EDENAI_API_KEY: "k" }))).toBeInstanceOf(EdenClient);
+  });
+  it("ends every NOT_CONFIGURED message with the same place to go and fix it", () => {
+    const messages = Object.values(NOT_CONFIGURED);
+    expect(messages.length).toBeGreaterThan(0);
+    for (const m of messages) expect(m).toMatch(/in Settings → Integrations\.$/);
   });
   it("maps google, reddit/apify and eden model settings into the shapes the libraries take", () => {
     expect(googleAuthConfig(cfg({ GOOGLE_CLIENT_ID: "c", GOOGLE_CLIENT_SECRET: "s" }))).toEqual({ clientId: "c", clientSecret: "s", serviceAccountKey: undefined });

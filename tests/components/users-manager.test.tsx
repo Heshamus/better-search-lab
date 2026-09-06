@@ -62,6 +62,48 @@ describe("UsersManager", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/users/m1", expect.objectContaining({ method: "DELETE" }));
   });
 
+  it("locks your own role select so you cannot demote yourself out of the admin UI", () => {
+    vi.stubGlobal("fetch", vi.fn());
+    render(<UsersManager users={[...users]} currentUserId="a1" />);
+    const mine = within(screen.getByTestId("user-row-a1")).getByLabelText(/role/i);
+    expect(mine).toBeDisabled();
+    expect(mine).toHaveAttribute("title", "Ask another admin to change your role");
+    expect(within(screen.getByTestId("user-row-m1")).getByLabelText(/role/i)).not.toBeDisabled();
+  });
+
+  it("keeps the row and sends nothing when a delete is cancelled", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<UsersManager users={[...users]} currentUserId="a1" />);
+    const row = screen.getByTestId("user-row-m1");
+    fireEvent.click(within(row).getByRole("button", { name: /^delete$/i }));
+    fireEvent.click(within(row).getByRole("button", { name: /cancel/i }));
+    expect(screen.getByTestId("user-row-m1")).toBeInTheDocument();
+    expect(within(row).getByRole("button", { name: /^delete$/i })).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("shows the server's error when adding a user hits a 409", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ error: "email already exists" }), { status: 409 }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<UsersManager users={[...users]} currentUserId="a1" />);
+    fireEvent.change(screen.getByLabelText(/new user email/i), { target: { value: "a@example.com" } });
+    fireEvent.change(screen.getByLabelText(/initial password/i), { target: { value: "correct horse battery" } });
+    fireEvent.click(screen.getByRole("button", { name: /add user/i }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/already exists/);
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("tells the password manager not to autofill the initial-password and reset fields", () => {
+    vi.stubGlobal("fetch", vi.fn());
+    render(<UsersManager users={[...users]} currentUserId="a1" />);
+    expect(screen.getByLabelText(/initial password/i)).toHaveAttribute("autocomplete", "new-password");
+    const row = screen.getByTestId("user-row-m1");
+    fireEvent.click(within(row).getByRole("button", { name: /reset password/i }));
+    expect(within(row).getByLabelText(/new password/i)).toHaveAttribute("autocomplete", "new-password");
+  });
+
   it("resets a password through the inline form", async () => {
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);

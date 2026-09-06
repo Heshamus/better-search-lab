@@ -73,4 +73,22 @@ describe("testIntegration", () => {
     const r = await testIntegration("apify", cfg({ APIFY_API_KEY: "k" }), { fetchImpl: vi.fn(async () => { throw new Error("ECONNRESET"); }) });
     expect(r).toEqual({ ok: false, detail: "ECONNRESET" });
   });
+  it("gives up on a provider that never answers, saying so in the detail", async () => {
+    // A hung provider must not leave the admin's Test button spinning forever.
+    const never = vi.fn(() => new Promise<Response>(() => {}));
+    const r = await testIntegration("apify", cfg({ APIFY_API_KEY: "k" }), { fetchImpl: never as any, timeoutMs: 5 });
+    expect(r.ok).toBe(false);
+    expect(r.detail).toMatch(/timed out after /);
+  });
+  it("passes an abort signal to the raw reddit and apify fetches so the socket is released", async () => {
+    const seen: Array<AbortSignal | undefined> = [];
+    const capture = vi.fn(async (_u: any, init?: any) => {
+      seen.push(init?.signal);
+      return ok({ access_token: "t", data: { username: "someone" } });
+    });
+    await testIntegration("reddit", cfg({ REDDIT_CLIENT_ID: "i", REDDIT_CLIENT_SECRET: "s" }), { fetchImpl: capture as any, timeoutMs: 1000 });
+    await testIntegration("apify", cfg({ APIFY_API_KEY: "k" }), { fetchImpl: capture as any, timeoutMs: 1000 });
+    expect(seen).toHaveLength(2);
+    for (const signal of seen) expect(signal).toBeInstanceOf(AbortSignal);
+  });
 });

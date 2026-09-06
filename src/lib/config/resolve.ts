@@ -60,6 +60,19 @@ export function envOverriddenKeys(env: EnvSource = process.env): string[] {
   return SETTINGS.filter((def) => nonEmpty(env[def.env]) !== undefined || def.legacyEnv?.some((n) => nonEmpty(env[n]) !== undefined)).map((d) => d.key);
 }
 
+/**
+ * The env var NAME currently overriding a setting, in the same precedence as
+ * buildConfig (registry name first, then legacy names). Telling an admin to
+ * edit LLM_API_KEY when what they actually set is DEEPSEEK_API_KEY sends them
+ * looking for a variable that is not in their .env.
+ */
+export function envOverrideName(key: string, env: EnvSource = process.env): string | undefined {
+  const def = SETTINGS.find((d) => d.key === key);
+  if (!def) return undefined;
+  if (nonEmpty(env[def.env]) !== undefined) return def.env;
+  return def.legacyEnv?.find((n) => nonEmpty(env[n]) !== undefined);
+}
+
 let warnedProblems = false;
 
 /**

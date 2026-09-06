@@ -43,10 +43,39 @@ describe("/api/settings/integrations", () => {
     expect((await put({ "nope.nope": "x" })).status).toBe(400);
   });
 
-  it("PUT refuses a key the environment overrides", async () => {
+  it("PUT refuses a key the environment overrides, naming the variable actually set", async () => {
     vi.stubEnv("LLM_MODEL", "from-env");
     const res = await put({ "llm.model": "from-ui" });
     expect(res.status).toBe(400);
-    expect((await res.json()).error).toMatch(/environment/);
+    expect((await res.json()).error).toMatch(/environment variable LLM_MODEL/);
+  });
+
+  it("PUT names the LEGACY env var when that is the one in effect", async () => {
+    // A pre-M1 .env sets DEEPSEEK_API_KEY, not LLM_API_KEY. Naming LLM_API_KEY
+    // would send the admin looking for a variable that is not there.
+    vi.stubEnv("DEEPSEEK_API_KEY", "sk-legacy");
+    const res = await put({ "llm.apiKey": "from-ui" });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/environment variable DEEPSEEK_API_KEY/);
+  });
+
+  it("PUT is admin-only and rejects a body that is not an object of strings", async () => {
+    (resolveSessionUser as any).mockResolvedValueOnce(null);
+    expect((await put({ "dataforseo.login": "me" })).status).toBe(401);
+    for (const bad of [undefined, null, "a string", 42, ["a"]]) {
+      expect((await put(bad)).status).toBe(400);
+    }
+    const notString = await put({ "dataforseo.login": 42 });
+    expect(notString.status).toBe(400);
+    expect((await notString.json()).error).toMatch(/must be a string/);
+  });
+
+  it("PUT with null deletes a stored key, and a GET afterwards agrees", async () => {
+    expect((await put({ "dataforseo.login": "to-be-removed" })).status).toBe(200);
+    expect(fieldOf(await (await GET()).json(), "dataforseo.login")).toMatchObject({ set: true, value: "to-be-removed" });
+    const res = await put({ "dataforseo.login": null });
+    expect(res.status).toBe(200);
+    expect(fieldOf(await res.json(), "dataforseo.login")).toMatchObject({ set: false });
+    expect(fieldOf(await (await GET()).json(), "dataforseo.login")).toMatchObject({ set: false });
   });
 });

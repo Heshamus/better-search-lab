@@ -82,8 +82,12 @@ async function run(group: SettingGroupId, cfg: AppConfig, deps: { fetchImpl?: ty
 
     case "reddit": {
       if (!cfg.reddit.configured) return { ok: false, detail: NOT_CONFIGURED.reddit };
+      // withTimeout() stops us WAITING, but only an abort signal stops the
+      // request: without it a hung provider keeps the socket (and its share of
+      // the connection pool) until the OS gives up.
       const r = await fetchImpl("https://www.reddit.com/api/v1/access_token", {
         method: "POST",
+        signal: AbortSignal.timeout(deps.timeoutMs),
         headers: {
           Authorization: "Basic " + btoa(`${cfg.reddit.clientId}:${cfg.reddit.clientSecret}`),
           "Content-Type": "application/x-www-form-urlencoded",
@@ -97,7 +101,10 @@ async function run(group: SettingGroupId, cfg: AppConfig, deps: { fetchImpl?: ty
 
     case "apify": {
       if (!cfg.apify.configured) return { ok: false, detail: NOT_CONFIGURED.apify };
-      const r = await fetchImpl("https://api.apify.com/v2/users/me", { headers: { Authorization: `Bearer ${cfg.apify.apiKey}` } });
+      const r = await fetchImpl("https://api.apify.com/v2/users/me", {
+        signal: AbortSignal.timeout(deps.timeoutMs),
+        headers: { Authorization: `Bearer ${cfg.apify.apiKey}` },
+      });
       const j = (await r.json().catch(() => ({}))) as { data?: { username?: string }; error?: { message?: string } };
       return r.ok ? { ok: true, detail: `Connected as ${j.data?.username ?? "unknown user"}` } : { ok: false, detail: `apify ${r.status}: ${j.error?.message ?? "request failed"}` };
     }

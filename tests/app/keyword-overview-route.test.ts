@@ -22,7 +22,7 @@ import { POST } from "@/app/api/keyword-overview/route";
 const post = (body: unknown) =>
   POST(new Request("http://x/api/keyword-overview", { method: "POST", body: JSON.stringify(body), headers: { "content-type": "application/json" } }) as any);
 
-beforeEach(() => { (logApiUsage as any).mockClear(); (keywordOverviewBulk as any).mockClear(); (resolveSessionUser as any).mockResolvedValue({ user: { email: "t@example.com" } }); });
+beforeEach(() => { (logApiUsage as any).mockClear(); (keywordOverviewBulk as any).mockClear(); (resolveSessionUser as any).mockResolvedValue({ id: "u1", email: "t@example.com", role: "admin" }); });
 
 describe("POST /api/keyword-overview", () => {
   it("401s when unauthenticated", async () => {

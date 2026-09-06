@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { AdminAlreadyExistsError, WeakPasswordError, createFirstAdmin, MIN_PASSWORD_LENGTH } from "@/lib/auth/users";
+import { AdminAlreadyExistsError, WeakPasswordError, createFirstAdmin } from "@/lib/auth/users";
+import { EmailSchema, PasswordSchema } from "@/lib/auth/schemas";
 
 // The only unauthenticated write in the app, and it works exactly once: the
 // users library refuses (inside its advisory lock) as soon as any user exists.
-const Body = z.object({
-  email: z.string().trim().refine((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e), "must be an email address"),
-  password: z.string().min(MIN_PASSWORD_LENGTH, `password must be at least ${MIN_PASSWORD_LENGTH} characters`),
-});
+const Body = z.object({ email: EmailSchema, password: PasswordSchema });
 
 export async function POST(req: NextRequest) {
   const parsed = Body.safeParse(await req.json().catch(() => ({})));

@@ -5,7 +5,7 @@ import { loadEnv } from "@/config/env";
 import { requireAdmin } from "@/lib/api-guard";
 import { keyFromEnv } from "@/lib/config/crypto";
 import { writeSettings } from "@/lib/config/store";
-import { envOverriddenKeys } from "@/lib/config/resolve";
+import { envOverriddenKeys, envOverrideName } from "@/lib/config/resolve";
 import { settingByKey } from "@/lib/config/registry";
 import { buildIntegrationsView } from "@/lib/config/view";
 
@@ -26,7 +26,12 @@ export async function PUT(req: NextRequest) {
   for (const [key, raw] of Object.entries(values as Record<string, unknown>)) {
     const def = settingByKey(key);
     if (!def) return NextResponse.json({ error: `unknown setting: ${key}` }, { status: 400 });
-    if (overridden.has(key)) return NextResponse.json({ error: `${def.label} is set via the environment variable ${def.env}; change it there.` }, { status: 400 });
+    if (overridden.has(key)) {
+      return NextResponse.json(
+        { error: `${def.label} is set via the environment variable ${envOverrideName(key) ?? def.env}; change it there.` },
+        { status: 400 },
+      );
+    }
     if (raw !== null && typeof raw !== "string") return NextResponse.json({ error: `${def.label} must be a string` }, { status: 400 });
     entries[key] = raw;
   }

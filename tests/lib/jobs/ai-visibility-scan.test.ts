@@ -14,7 +14,11 @@ afterEach(() => {
 describe("aiVisibilityScanHandler", () => {
   it("reads GSC queries, scans via Eden, and saves a snapshot", async () => {
     vi.stubEnv("EDENAI_API_KEY", "test-key");
-    vi.stubEnv("DEEPSEEK_API_KEY", ""); // no generated queries → GSC-only, deterministic
+    // No chat provider → no generated queries → GSC-only, deterministic. Both
+    // names must be cleared: LLM_API_KEY is the registry name and
+    // DEEPSEEK_API_KEY its legacy alias, and either one alone configures the LLM.
+    vi.stubEnv("LLM_API_KEY", "");
+    vi.stubEnv("DEEPSEEK_API_KEY", "");
     const t = await createTestDb();
     close = t.close;
     const p = await createProject(t.db, { name: "Northwind", domain: "example-site.com" });

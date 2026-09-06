@@ -9,7 +9,9 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }
 // rest parameter, which `signIn(...args)` below (args: unknown[]) needs to
 // type-check under `strict`: TS2556 otherwise ("a spread argument must
 // either have a tuple type or be passed to a rest parameter").
-const signIn = vi.fn(async (..._args: unknown[]) => ({ ok: true, error: undefined }));
+// `error` is widened to string | undefined so a test can override the result
+// with a real Auth.js error code; inferred bare `undefined` would reject it.
+const signIn = vi.fn(async (..._args: unknown[]) => ({ ok: true, error: undefined as string | undefined }));
 vi.mock("next-auth/react", () => ({ signIn: (...args: unknown[]) => signIn(...args) }));
 
 import { CreateAdminForm } from "@/components/create-admin-form";
@@ -41,6 +43,15 @@ describe("CreateAdminForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /create admin/i }));
     expect(await screen.findByRole("alert")).toHaveTextContent(/match/i);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it("keeps you on the page when the account was created but sign-in failed", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ id: "u1" }), { status: 201 })));
+    signIn.mockResolvedValueOnce({ ok: false, error: "CredentialsSignin" });
+    render(<CreateAdminForm />);
+    fill("o@example.com", "correct horse battery");
+    fireEvent.click(screen.getByRole("button", { name: /create admin/i }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/sign-in failed/i);
+    expect(push).not.toHaveBeenCalled();
   });
   it("shows the server's error text", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: "An admin already exists — sign in." }), { status: 409 })));

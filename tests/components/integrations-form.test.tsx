@@ -78,6 +78,33 @@ describe("IntegrationsForm", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/settings/integrations/dataforseo/test", expect.objectContaining({ method: "POST" }));
   });
 
+  it("leaves an untouched masked secret out of the PUT body entirely", async () => {
+    // The form never holds the real secret (masked fields start empty), so
+    // sending the key at all would blank a working credential.
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify(view), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<IntegrationsForm view={view} />);
+    const card = screen.getByTestId("integration-dataforseo");
+    fireEvent.click(within(card).getByRole("button", { name: /replace/i }));
+    // Revealed but still not typed into: nothing is dirty, so nothing is sent.
+    expect(within(card).getByRole("button", { name: /^save$/i })).toBeDisabled();
+    fireEvent.click(within(card).getByRole("button", { name: /^save$/i }));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps Save disabled until something in that card is actually dirty", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify(view), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<IntegrationsForm view={view} />);
+    const card = screen.getByTestId("integration-llm");
+    expect(within(card).getByRole("button", { name: /^save$/i })).toBeDisabled();
+    // Another card's edit must not enable this one's Save.
+    fireEvent.change(within(screen.getByTestId("integration-edenai")).getByLabelText("API key"), { target: { value: "k" } });
+    expect(within(card).getByRole("button", { name: /^save$/i })).toBeDisabled();
+    fireEvent.change(within(card).getByLabelText("Base URL"), { target: { value: "http://x/v1" } });
+    expect(within(card).getByRole("button", { name: /^save$/i })).not.toBeDisabled();
+  });
+
   it("surfaces a PUT error inline", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: "must be an http(s) URL" }), { status: 400 })));
     render(<IntegrationsForm view={view} />);

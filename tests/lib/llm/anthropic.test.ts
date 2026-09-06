@@ -44,6 +44,10 @@ describe("AnthropicProvider", () => {
     const params = client.create.mock.calls[0][0] as Record<string, unknown>;
     expect(params.output_config).toEqual({ effort: "medium" });
     expect(params.max_tokens).toBe(500);
+    // Thinking is adaptive by default on claude-opus-5; sending a `thinking`
+    // param would pin it and override what output_config.effort steers.
+    expect(params.thinking).toBeUndefined();
+    expect(Object.hasOwn(params, "thinking")).toBe(false);
   });
 
   it("throws a refusal LlmError carrying the stop_details category", async () => {
