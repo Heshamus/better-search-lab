@@ -17,6 +17,7 @@
   "license": "UNLICENSED",
   "packageManager": "pnpm@10.32.1",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.124.0",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.2",
     "geist": "^1.7.2",
