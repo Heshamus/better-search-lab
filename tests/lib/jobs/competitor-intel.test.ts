@@ -23,7 +23,7 @@ function rankedFetch(): typeof fetch {
 describe("competitorIntelHandler", () => {
   it("fetches ranked keywords per competitor and stores them", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await addCompetitor(t.db, p.id, "rival.com");
     const client = new DataForSeoClient({ login: "x", password: "y", fetchImpl: rankedFetch() });
 

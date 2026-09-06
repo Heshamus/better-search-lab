@@ -12,20 +12,20 @@ describe("ensureKnowledgeBrief", () => {
   it("seeds a brief + subreddits via chat when config is empty, persists them, and prompts with domain + crawl summary", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     const chat = vi.fn(async (_messages: ChatMessage[]) =>
       JSON.stringify({
-        brief: "HarperFlow auto-publishes GEO-optimized articles to Webflow sites.",
+        brief: "Northwind auto-publishes GEO-optimized articles to Webflow sites.",
         subreddits: ["SEO", "webflow", "content_marketing"],
       }),
     );
-    const crawl = vi.fn(async () => "HarperFlow: AI content automation for Webflow sites. Pricing, blog, features.");
+    const crawl = vi.fn(async () => "Northwind: AI content automation for Webflow sites. Pricing, blog, features.");
 
-    const result = await ensureKnowledgeBrief({ db: t.db, projectId: p.id, domain: "harperflow.io", chat, crawl });
+    const result = await ensureKnowledgeBrief({ db: t.db, projectId: p.id, domain: "example-site.com", chat, crawl });
 
     expect(result).toEqual({
-      brief: "HarperFlow auto-publishes GEO-optimized articles to Webflow sites.",
+      brief: "Northwind auto-publishes GEO-optimized articles to Webflow sites.",
       subreddits: ["SEO", "webflow", "content_marketing"],
     });
     expect(chat).toHaveBeenCalledTimes(1);
@@ -34,13 +34,13 @@ describe("ensureKnowledgeBrief", () => {
     // The prompt sent to `chat` must include the domain and the crawl summary text.
     const messages = chat.mock.calls[0][0] as ChatMessage[];
     const promptText = messages.map((m) => m.content).join("\n");
-    expect(promptText).toContain("harperflow.io");
+    expect(promptText).toContain("example-site.com");
     expect(promptText).toContain("AI content automation for Webflow sites");
 
     // Persisted via saveRedditConfig — readable back through the Task 4 store.
     const stored = await getRedditConfig(t.db, p.id);
     expect(stored).toEqual({
-      knowledgeBrief: "HarperFlow auto-publishes GEO-optimized articles to Webflow sites.",
+      knowledgeBrief: "Northwind auto-publishes GEO-optimized articles to Webflow sites.",
       subreddits: ["SEO", "webflow", "content_marketing"],
     });
   });
@@ -48,14 +48,14 @@ describe("ensureKnowledgeBrief", () => {
   it("is idempotent — returns the stored brief + subreddits WITHOUT calling chat when a brief already exists", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await saveRedditConfig(t.db, p.id, { knowledgeBrief: "existing brief", subreddits: ["SEO"] });
 
     const chat = vi.fn(async () => {
       throw new Error("chat must not be called when a brief already exists");
     });
 
-    const result = await ensureKnowledgeBrief({ db: t.db, projectId: p.id, domain: "harperflow.io", chat });
+    const result = await ensureKnowledgeBrief({ db: t.db, projectId: p.id, domain: "example-site.com", chat });
 
     expect(result).toEqual({ brief: "existing brief", subreddits: ["SEO"] });
     expect(chat).not.toHaveBeenCalled();
@@ -64,10 +64,10 @@ describe("ensureKnowledgeBrief", () => {
   it("parses defensively — falls back to the raw text as brief + empty subreddits when chat returns non-JSON", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     const chat = vi.fn(async () => "This company builds SEO tools for Webflow site owners.");
-    const result = await ensureKnowledgeBrief({ db: t.db, projectId: p.id, domain: "harperflow.io", chat });
+    const result = await ensureKnowledgeBrief({ db: t.db, projectId: p.id, domain: "example-site.com", chat });
 
     expect(result).toEqual({
       brief: "This company builds SEO tools for Webflow site owners.",

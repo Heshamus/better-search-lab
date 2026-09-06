@@ -19,7 +19,7 @@ All are additive (new table or new column); none alter or drop existing tables (
 
 ## Deploy procedure (OWNER-DRIVEN — do NOT auto-deploy)
 
-The seo-platform runs self-hosted on the Supergenius VPS (`/opt/seo-platform/`, Docker Compose: `seo-db` Postgres + `seo-web` Next.js + `seo-worker` + oauth2-proxies behind Traefik/Zitadel). Deployment is owner-driven and must be live-verified per the project's live-verification mandate.
+The seo-platform runs self-hosted on the private VPS (`/opt/seo-platform/`, Docker Compose: `seo-db` Postgres + `seo-web` Next.js + `seo-worker` + oauth2-proxies behind Traefik/Zitadel). Deployment is owner-driven and must be live-verified per the project's live-verification mandate.
 
 1. **Merge/rsync** the branch to `/opt/seo-platform/app/` (rsync excludes `node_modules`/`.next`/`.git`/`.env`; the vendored `Dockerfile`/`.dockerignore` are in the repo).
 2. **Run the migrations against the container DB BEFORE serving new code** — the new tables/column must exist or profiling/competitor-intel/research-persistence will error at runtime:

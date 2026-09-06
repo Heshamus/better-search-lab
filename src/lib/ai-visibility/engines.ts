@@ -7,7 +7,7 @@ export const LOCALE_HINT = "Answer for a United States audience using English-la
  * Eden AI gateway (POST /v2/llm/chat) — one funded key, three measured engines.
  * Perplexity models return native citations (top-level `citations` or
  * `search_results[].url`); OpenAI/Gemini return answers only, which is honest —
- * those products don't expose live sources. Ported from the proven HarperFlow
+ * those products don't expose live sources. Ported from an earlier internal
  * citation engine.
  */
 export class EdenClient {

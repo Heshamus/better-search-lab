@@ -17,8 +17,8 @@ const row = (o: Partial<AiVisibilityRow>): AiVisibilityRow => ({
 
 describe("buildWeeklyReport", () => {
   it("reports a baseline on the first scan (no previous)", () => {
-    const r = buildWeeklyReport({ domain: "harperflow.io", latest: row({ citedTotal: 3, answersTotal: 15 }), previous: null });
-    expect(r.subject).toContain("harperflow.io");
+    const r = buildWeeklyReport({ domain: "example-site.com", latest: row({ citedTotal: 3, answersTotal: 15 }), previous: null });
+    expect(r.subject).toContain("example-site.com");
     expect(r.subject).toContain("20%"); // 3/15
     expect(r.html).toMatch(/baseline/i);
     expect(r.text).toMatch(/baseline/i);
@@ -27,7 +27,7 @@ describe("buildWeeklyReport", () => {
   it("computes the week-over-week cited-rate delta and lists newly won queries", () => {
     const latest = row({ citedTotal: 6, answersTotal: 15, perQuery: [{ text: "best ai seo", source: "gsc", named: true, cited: true }] });
     const previous = row({ citedTotal: 3, answersTotal: 15, scannedAt: new Date("2026-08-05"), perQuery: [{ text: "best ai seo", source: "gsc", named: false, cited: false }] });
-    const r = buildWeeklyReport({ domain: "harperflow.io", latest, previous });
+    const r = buildWeeklyReport({ domain: "example-site.com", latest, previous });
     expect(r.subject).toMatch(/40%/); // 6/15
     expect(r.subject).toMatch(/20/); // +20 pts delta
     expect(r.html).toContain("best ai seo"); // newly won
@@ -47,9 +47,19 @@ describe("buildWeeklyReport", () => {
         { text: "lost-q", source: "gsc", named: true, cited: true },
       ],
     });
-    const r = buildWeeklyReport({ domain: "harperflow.io", latest, previous });
+    const r = buildWeeklyReport({ domain: "example-site.com", latest, previous });
     expect(r.html).toContain("won-q");
     expect(r.html).toContain("lost-q");
     expect(r.html).toContain("rival.com"); // competing domain
+  });
+
+  it("omits the app link when no appUrl is configured, and honors one when it is", () => {
+    const latest = row({ citedTotal: 3, answersTotal: 15 });
+
+    const r1 = buildWeeklyReport({ domain: "example-site.com", latest, previous: null });
+    expect(r1.html).not.toContain("Open AI Visibility");
+
+    const r2 = buildWeeklyReport({ domain: "example-site.com", latest, previous: null, appUrl: "https://custom.app/" });
+    expect(r2.html).toContain("https://custom.app/ai-visibility");
   });
 });

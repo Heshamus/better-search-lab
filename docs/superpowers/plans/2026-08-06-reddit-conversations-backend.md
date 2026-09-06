@@ -323,7 +323,7 @@ export async function runDailyConversationRadar(deps: { db; now: Date; env; scra
 
 - [ ] **Step 1: Probe Apify live** — `scripts/probe-apify-reddit.ts` (loads env, calls `scrapeReddit` for one term + one subreddit); run in the deployed container. **Confirm** items carry `body`, `upVotes`, `numberOfComments`, `createdAt`, and comments, and confirm the input flags that turn engagement on (RSS-mode caveat). If the live field names differ from the fixture, **fix `apify.ts` mapper + the fixture, re-run Task 2's tests.**
 - [ ] **Step 2: Deploy** (rsync + `docker compose build seo-web seo-worker` + `up -d`; run `pnpm db:migrate` for the two new tables).
-- [ ] **Step 3: Live E2E** — enqueue a `reddit_conversations_scan` for HarperFlow.io; confirm it stores 1–5 real, fresh, on-topic conversations with sensible `whyItMatters` and a draft that reads genuinely useful + non-promotional + carries real Perplexity citations. Trigger `runDailyConversationRadar` and confirm the **email arrives** with the digest. Record the result. Only now is Plan 1 done.
+- [ ] **Step 3: Live E2E** — enqueue a `reddit_conversations_scan` for Northwind.io; confirm it stores 1–5 real, fresh, on-topic conversations with sensible `whyItMatters` and a draft that reads genuinely useful + non-promotional + carries real Perplexity citations. Trigger `runDailyConversationRadar` and confirm the **email arrives** with the digest. Record the result. Only now is Plan 1 done.
 
 ---
 

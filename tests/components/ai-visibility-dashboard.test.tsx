@@ -27,7 +27,7 @@ const row = (o: Partial<AiVisibilityRow> = {}): AiVisibilityRow => ({
 
 describe("AiVisibilityDashboard", () => {
   it("renders cited rate, per-engine tallies, per-query rows, and competing domains", () => {
-    render(<AiVisibilityDashboard latest={row()} history={[row()]} projectDomain="harperflow.io" />);
+    render(<AiVisibilityDashboard latest={row()} history={[row()]} projectDomain="example-site.com" />);
     expect(screen.getByText("best ai seo tool")).toBeTruthy();
     expect(screen.getByText("frase alternatives")).toBeTruthy();
     expect(screen.getByText("Invisible")).toBeTruthy(); // the uncited query

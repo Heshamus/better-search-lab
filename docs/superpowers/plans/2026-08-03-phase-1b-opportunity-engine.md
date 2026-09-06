@@ -125,7 +125,7 @@ afterEach(() => close?.());
 describe("opportunity-signals schema", () => {
   it("competitor_gaps round-trips", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await t.db.insert(competitorGaps).values({
       projectId: p.id, competitorDomain: "rival.com", keyword: "seo reporting",
       competitorRank: 4, ourRank: null, volume: 1200, difficulty: 34,
@@ -138,14 +138,14 @@ describe("opportunity-signals schema", () => {
 
   it("rank_snapshots.own_urls defaults to [] and stores arrays", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [kw] = await t.db.insert(keywords).values({
       projectId: p.id, keyword: "k", locationCode: 2840, languageCode: "en",
     }).returning();
     const [snap] = await t.db.insert(rankSnapshots).values({ keywordId: kw.id }).returning();
     expect(snap.ownUrls).toEqual([]);
     const [snap2] = await t.db.insert(rankSnapshots).values({
-      keywordId: kw.id, ownUrls: ["https://harperflow.io/a", "https://harperflow.io/b"],
+      keywordId: kw.id, ownUrls: ["https://example-site.com/a", "https://example-site.com/b"],
     }).returning();
     expect(snap2.ownUrls).toHaveLength(2);
   });
@@ -242,7 +242,7 @@ const gapItem = (keyword: string, compRank: number | null, volume: number) => ({
 describe("gapRefreshHandler", () => {
   it("persists per-competitor gaps and aggregates competitorCount across competitors", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await t.db.insert(competitors).values([
       { projectId: p.id, domain: "rival-a.com" }, { projectId: p.id, domain: "rival-b.com" },
     ]);
@@ -262,7 +262,7 @@ describe("gapRefreshHandler", () => {
 
   it("re-run replaces a competitor's rows (idempotent full refresh)", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await t.db.insert(competitors).values({ projectId: p.id, domain: "rival-a.com" });
     const c1 = clientReturning({ "rival-a.com": [gapItem("seo reporting", 3, 1200)] });
     await gapRefreshHandler(c1)({ db: t.db, projectId: p.id });
@@ -367,17 +367,17 @@ export function gapRefreshHandler(client: DataForSeoClient) {
 ```ts
 it("captures all our-domain URLs in own_urls (cannibalization signal)", async () => {
   const t = await createTestDb(); close = t.close;
-  const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+  const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
   const [kw] = await addKeywords(t.db, p.id, [{ keyword: "seo tools", locationCode: 2840, languageCode: "en" }]);
   const serp = vi.fn().mockResolvedValue({ rows: 3, items: [
-    { rankAbsolute: 4, rankGroup: 4, domain: "harperflow.io", url: "https://harperflow.io/tools", serpFeatures: [] },
-    { rankAbsolute: 7, rankGroup: 7, domain: "harperflow.io", url: "https://harperflow.io/blog/tools", serpFeatures: [] },
+    { rankAbsolute: 4, rankGroup: 4, domain: "example-site.com", url: "https://example-site.com/tools", serpFeatures: [] },
+    { rankAbsolute: 7, rankGroup: 7, domain: "example-site.com", url: "https://example-site.com/blog/tools", serpFeatures: [] },
     { rankAbsolute: 2, rankGroup: 2, domain: "rival.com", url: "https://rival.com/x", serpFeatures: [] },
   ]});
   await rankRefreshHandler(client, serp)({ db: t.db, projectId: p.id });
   const [snap] = await t.db.select().from(rankSnapshots);
   expect(snap.rankAbsolute).toBe(4); // still best hit
-  expect(snap.ownUrls).toEqual(["https://harperflow.io/tools", "https://harperflow.io/blog/tools"]);
+  expect(snap.ownUrls).toEqual(["https://example-site.com/tools", "https://example-site.com/blog/tools"]);
 });
 ```
 
@@ -782,7 +782,7 @@ afterEach(() => close?.());
 describe("weeklyOpportunitiesHandler", () => {
   it("writes a scored shortlist from collected signals, idempotent per week", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [kw] = await addKeywords(t.db, p.id, [{ keyword: "seo reporting software", locationCode: 2840, languageCode: "en" }]);
     await t.db.insert(rankSnapshots).values({ keywordId: kw.id, rankAbsolute: 8, rankGroup: 8, fetchStatus: "ok", ownUrls: [] });
     await t.db.insert(keywordMetrics).values({ keywordId: kw.id, searchVolume: 2000, difficulty: 25 });

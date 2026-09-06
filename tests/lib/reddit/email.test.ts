@@ -119,9 +119,10 @@ describe("buildConversationsEmail", () => {
     expect(r.text).not.toContain("Sources:");
   });
 
-  it("defaults appUrl and honors an override", () => {
+  it("omits the app link when no appUrl is configured, and honors one when it is", () => {
     const r1 = buildConversationsEmail({ domain: "acme.com", conversations: [] });
-    expect(r1.html).toContain("https://seo-web.supergenius.cloud");
+    expect(r1.html).not.toContain("/reddit");
+    expect(r1.html).not.toContain("Open Reddit conversations");
 
     const r2 = buildConversationsEmail({ domain: "acme.com", conversations: [], appUrl: "https://custom.app/" });
     expect(r2.html).toContain("https://custom.app/reddit");

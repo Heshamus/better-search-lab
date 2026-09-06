@@ -29,13 +29,13 @@ describe("RedditBriefEditor", () => {
     render(
       <RedditBriefEditor
         projectId="proj-1"
-        knowledgeBrief="HarperFlow auto-publishes GEO-optimized articles to Webflow sites."
+        knowledgeBrief="Northwind auto-publishes GEO-optimized articles to Webflow sites."
         subreddits={["SEO", "webflow"]}
       />,
     );
 
     expect(screen.getByLabelText(/knowledge/i)).toHaveValue(
-      "HarperFlow auto-publishes GEO-optimized articles to Webflow sites.",
+      "Northwind auto-publishes GEO-optimized articles to Webflow sites.",
     );
     expect(screen.getByLabelText(/subreddit/i)).toHaveValue("SEO\nwebflow");
   });

@@ -6,8 +6,8 @@ describe("EdenClient.ask", () => {
     const fetchImpl = vi.fn(async () =>
       new Response(
         JSON.stringify({
-          choices: [{ message: { content: "HarperFlow is a good option." } }],
-          citations: ["https://harperflow.io/x", "not-a-url", "https://other.com/y"],
+          choices: [{ message: { content: "Northwind is a good option." } }],
+          citations: ["https://example-site.com/x", "not-a-url", "https://other.com/y"],
         }),
         { status: 200 },
       ),
@@ -15,7 +15,7 @@ describe("EdenClient.ask", () => {
 
     const client = new EdenClient("k", fetchImpl);
     const out = await client.ask("perplexityai/sonar", "best ai seo tool?");
-    expect(out).toEqual({ answer: "HarperFlow is a good option.", citations: ["https://harperflow.io/x", "https://other.com/y"] });
+    expect(out).toEqual({ answer: "Northwind is a good option.", citations: ["https://example-site.com/x", "https://other.com/y"] });
 
     const [url, init] = (fetchImpl as any).mock.calls[0];
     expect(String(url)).toBe("https://api.edenai.run/v2/llm/chat");

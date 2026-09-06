@@ -8,7 +8,7 @@
 
 ## 1. Goal & context
 
-Build an internal, self-hosted SEO platform that replaces Search Atlas for our own SEO work, so we stop paying per-seat. All SEO data comes from the **DataForSEO** API; the content engine (a later phase) reuses our existing HarperFlow LLM stack. It is a standalone internal web app — **not** an MCP — cloud-hosted and usable from any device.
+Build an internal, self-hosted SEO platform that replaces Search Atlas for our own SEO work, so we stop paying per-seat. All SEO data comes from the **DataForSEO** API; the content engine (a later phase) reuses our existing Northwind LLM stack. It is a standalone internal web app — **not** an MCP — cloud-hosted and usable from any device.
 
 It follows the discipline proven in **TopicEngine** (`~/Desktop/Youtube/topicengine`): a pure, offline-testable core; external APIs behind an injectable provider seam; key-gated; an offline self-test. It differs from TopicEngine in two deliberate ways — it is genuinely hosted (not localhost-only), and it uses a real database (time-series rank/audit data, not flat JSON).
 
@@ -34,7 +34,7 @@ Each phase is an independent sub-project with its own spec → plan → build.
 - **Phase 2 — Site Audit / On-Page** (DataForSEO On-Page API).
 - **Phase 3 — Backlinks & competitive intelligence** (deepened).
 - **Phase 4 — LLM Visibility** (DataForSEO AI-Optimization / LLM-Mentions).
-- **Phase 5 — Content engine** (LLM; reuse HarperFlow writer stack; turns opportunity signals into briefs/drafts).
+- **Phase 5 — Content engine** (LLM; reuse Northwind writer stack; turns opportunity signals into briefs/drafts).
 - **Phase 6+ — à la carte**: local geo-grid heatmaps (deferred; parked), URL indexing (IndexNow/Google), etc.
 
 ## 4. Architecture
@@ -43,7 +43,7 @@ Each phase is an independent sub-project with its own spec → plan → build.
 
 - **Next.js (App Router) + TypeScript** — one codebase, React dashboard + API route handlers.
 - **Runtime:** a **persistent Node server** (not serverless) — the rank scheduler must stay alive.
-- **DB:** **Postgres** on a **dedicated Supabase project** (isolated from HarperFlow prod), accessed via **Drizzle ORM** (TS-native, SQL-transparent — good for the analytical queries this tool runs).
+- **DB:** **Postgres** on a **dedicated Supabase project** (isolated from Northwind prod), accessed via **Drizzle ORM** (TS-native, SQL-transparent — good for the analytical queries this tool runs).
 - **UI:** Tailwind + shadcn/ui; **Recharts** (rank trends), **TanStack Table** (keyword grids), **TanStack Query** (data fetching).
 - **Auth:** email + password against a small **allowlist** (Auth.js credentials or Lucia). Internal only.
 - **Hosting:** **Railway** — one web service (Next.js) + one worker service (scheduler) — plus the Supabase Postgres. ~$5–20/mo.
@@ -140,7 +140,7 @@ The raw data is a commodity; **the shortlist is the product.** A weekly `weekly_
 
 **Relevance gate (differentiator):** before scoring, candidates pass a **niche-anchored relevance check** so generic high-volume noise ("best plumbing keywords" for a SaaS site) never surfaces — directly addressing a known pain point with off-the-shelf tools. **v1 keeps it dependency-free:** a heuristic gate scoring topical overlap against the site's *own* ranked keywords/tags (all from DataForSEO, no LLM needed). It can later upgrade to embedding/LLM classification once the content engine (Phase 5) brings that stack online.
 
-**Content opportunities** split by phase: keyword-level gaps ("topics competitors cover that you don't") are computed now (Phase 1 surfaces the *signal*); rich briefs/drafts land with the content engine (Phase 5), reusing the HarperFlow writer stack.
+**Content opportunities** split by phase: keyword-level gaps ("topics competitors cover that you don't") are computed now (Phase 1 surfaces the *signal*); rich briefs/drafts land with the content engine (Phase 5), reusing the Northwind writer stack.
 
 ## 7. Jobs & scheduler
 

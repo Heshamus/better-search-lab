@@ -139,7 +139,7 @@ Mirror `settings-form.tsx`/`profile-review.tsx` (client component, own `/api` ro
 **No app code.** Deploy + real-browser E2E (the backend is already live-verified; this proves the UI).
 
 - [ ] **Step 1: Deploy** (rsync + `docker compose build seo-web` + `up -d seo-web seo-worker`; no new migration).
-- [ ] **Step 2: Browser E2E** (Kimi WebBridge, the owner's Brave, authenticated) on `https://seo-web.supergenius.cloud/trends`: the **Conversations worth joining** cards render (the 5 from the live scan) with copyable drafts + citations + Go-to-thread; **Copy** copies the draft; **Dismiss** removes a card (status persists on refresh); **Refresh** enqueues a scan and the button polls to done; in **Settings**, the knowledge-brief + subreddits editor shows the seeded values, and an edit + Save persists (re-open shows the change). Record the result. Only then is Plan 2 done.
+- [ ] **Step 2: Browser E2E** (Kimi WebBridge, the owner's Brave, authenticated) on `https://seo.example.com/trends`: the **Conversations worth joining** cards render (the 5 from the live scan) with copyable drafts + citations + Go-to-thread; **Copy** copies the draft; **Dismiss** removes a card (status persists on refresh); **Refresh** enqueues a scan and the button polls to done; in **Settings**, the knowledge-brief + subreddits editor shows the seeded values, and an edit + Save persists (re-open shows the change). Record the result. Only then is Plan 2 done.
 
 ---
 

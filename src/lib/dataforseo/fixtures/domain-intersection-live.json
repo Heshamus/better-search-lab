@@ -20,7 +20,7 @@
         "function": "domain_intersection",
         "se_type": "google",
         "target1": "rival.com",
-        "target2": "harperflow.io",
+        "target2": "example-site.com",
         "location_code": 2840,
         "language_code": "en",
         "intersections": false,
@@ -30,7 +30,7 @@
         {
           "se_type": "google",
           "first_domain": "rival.com",
-          "second_domain": "harperflow.io",
+          "second_domain": "example-site.com",
           "location_code": 2840,
           "language_code": "en",
           "total_count": 3,
@@ -73,9 +73,9 @@
                 "type": "organic",
                 "rank_group": 9,
                 "rank_absolute": 9,
-                "domain": "harperflow.io",
+                "domain": "example-site.com",
                 "title": "Backlink Checker Tool",
-                "url": "https://harperflow.io/tools/backlink-checker"
+                "url": "https://example-site.com/tools/backlink-checker"
               }
             },
             {
@@ -150,9 +150,9 @@
                 "type": "organic",
                 "rank_group": 3,
                 "rank_absolute": 3,
-                "domain": "harperflow.io",
-                "title": "SEO Reporting API - HarperFlow",
-                "url": "https://harperflow.io/api/seo-reporting"
+                "domain": "example-site.com",
+                "title": "SEO Reporting API - Northwind",
+                "url": "https://example-site.com/api/seo-reporting"
               }
             }
           ]

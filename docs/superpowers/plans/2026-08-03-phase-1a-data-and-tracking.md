@@ -152,7 +152,7 @@ describe("labs competitor + gap", () => {
   });
   it("parses intersection rows incl. a genuine gap (ourRank null)", async () => {
     const c = client(); vi.spyOn(c, "post").mockResolvedValue(di as any);
-    const { items } = await domainIntersection(c, { competitor: "rival.com", us: "harperflow.io", locationCode: 2840, languageCode: "en" });
+    const { items } = await domainIntersection(c, { competitor: "rival.com", us: "example-site.com", locationCode: 2840, languageCode: "en" });
     expect(items.some((r) => r.competitorRank != null && r.ourRank == null)).toBe(true);
   });
 });
@@ -258,7 +258,7 @@ afterEach(() => close?.());
 describe("keywords", () => {
   it("adds tracked keywords and lists them; untracking removes from the tracked list", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [kw] = await addKeywords(t.db, p.id, [{ keyword: "seo reporting software", locationCode: 2840, languageCode: "en" }]);
     expect((await listTrackedKeywords(t.db, p.id)).length).toBe(1);
     await setKeywordTracked(t.db, kw.id, false);
@@ -266,7 +266,7 @@ describe("keywords", () => {
   });
   it("skips a duplicate (project,keyword,location,language,device)", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const row = { keyword: "x", locationCode: 2840, languageCode: "en" };
     await addKeywords(t.db, p.id, [row]);
     const second = await addKeywords(t.db, p.id, [row]);
@@ -337,11 +337,11 @@ afterEach(() => close?.());
 describe("rankRefreshHandler", () => {
   it("writes an ok snapshot for a found domain and logs usage", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [kw] = await addKeywords(t.db, p.id, [{ keyword: "seo reporting software", locationCode: 2840, languageCode: "en" }]);
     const client = new DataForSeoClient({ login: "L", password: "P" });
-    // inject a serp fn returning harperflow.io at 12
-    const serp = vi.fn().mockResolvedValue({ items: [{ rankAbsolute: 12, rankGroup: 11, domain: "harperflow.io", url: "https://harperflow.io/x", serpFeatures: ["featured_snippet"] }], rows: 5 });
+    // inject a serp fn returning example-site.com at 12
+    const serp = vi.fn().mockResolvedValue({ items: [{ rankAbsolute: 12, rankGroup: 11, domain: "example-site.com", url: "https://example-site.com/x", serpFeatures: ["featured_snippet"] }], rows: 5 });
     const r = await rankRefreshHandler(client, serp)({ db: t.db, projectId: p.id });
     const [snap] = await t.db.select().from(rankSnapshots).where(eq(rankSnapshots.keywordId, kw.id));
     expect(snap.fetchStatus).toBe("ok");
@@ -351,7 +351,7 @@ describe("rankRefreshHandler", () => {
   });
   it("stores fetch_status=failed (no fake rank) when SERP throws", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [kw] = await addKeywords(t.db, p.id, [{ keyword: "x", locationCode: 2840, languageCode: "en" }]);
     const client = new DataForSeoClient({ login: "L", password: "P" });
     const serp = vi.fn().mockRejectedValue(new Error("timeout"));

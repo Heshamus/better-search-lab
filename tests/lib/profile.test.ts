@@ -9,7 +9,7 @@ afterEach(() => close?.());
 describe("profile candidates", () => {
   it("saves, lists, and replaces candidates for a project", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     await saveProfileCandidates(t.db, p.id, [
       { keyword: "webflow seo", source: "crawl", volume: 300, difficulty: 20 },
@@ -30,7 +30,7 @@ describe("profile candidates", () => {
 
   it("rolls back the delete when the insert fails — prior candidates survive", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await saveProfileCandidates(t.db, p.id, [{ keyword: "keep me", source: "crawl", volume: 100, difficulty: 10 }]);
     // `keyword` is NOT NULL, so a null keyword makes the INSERT throw *after*
     // the delete. Without the transaction the delete commits and the candidate

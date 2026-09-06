@@ -130,7 +130,7 @@ Changed:
 
 ## Verification (live E2E — per the project mandate)
 
-Deploy to the VPS, then in the owner's browser on the HarperFlow project: open Organic
+Deploy to the VPS, then in the owner's browser on the Northwind project: open Organic
 Keywords → Refresh → confirm a real ranked-keyword list renders (position/volume/URL),
 sort + a position-bucket filter + search work, "Track" adds a keyword that then appears
 on the Rankings/Keywords tracked list, and the empty state is honest before the first

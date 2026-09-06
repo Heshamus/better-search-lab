@@ -12,7 +12,7 @@ const d = (s: string) => new Date(s + "T00:00:00Z");
 describe("usageSummary", () => {
   it("aggregates total, byDay, and byEndpoint across 3 rows spanning 2 days/2 endpoints", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await t.db.insert(apiUsage).values([
       { occurredAt: d("2026-08-01"), projectId: p.id, endpoint: "serp", rows: 5, estCost: "0.50" },
       { occurredAt: d("2026-08-01"), projectId: p.id, endpoint: "labs", rows: 3, estCost: "0.25" },
@@ -36,7 +36,7 @@ describe("usageSummary", () => {
 
   it("scopes to a projectId when given, and summarizes across all projects when omitted", async () => {
     const t = await createTestDb(); close = t.close;
-    const p1 = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p1 = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const p2 = await createProject(t.db, { name: "Other", domain: "other.com" });
     await t.db.insert(apiUsage).values([
       { occurredAt: d("2026-08-01"), projectId: p1.id, endpoint: "serp", rows: 1, estCost: "1.00" },

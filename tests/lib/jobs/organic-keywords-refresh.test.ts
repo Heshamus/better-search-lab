@@ -13,7 +13,7 @@ afterEach(() => close?.());
 describe("organic_keywords_refresh handler", () => {
   it("fetches ranked keywords for the project domain and stores them (incl. position + url)", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     // Inject a fake fetch that returns the DataForSEO success fixture.
     const fetchImpl = (async () => new Response(JSON.stringify(fixture), { status: 200 })) as any;
@@ -66,9 +66,9 @@ describe("organic_keywords_refresh handler", () => {
   it("normalizes the stored domain (case, scheme, www, path) before using it as the DataForSEO target", async () => {
     const t = await createTestDb(); close = t.close;
     // Regression for a live bug: DataForSEO's ranked_keywords `target` is
-    // case-sensitive ("harperflow.io" ranked, "HarperFlow.io" returned zero),
+    // case-sensitive ("example-site.com" ranked, "Example-Site.com" returned zero),
     // and the stored project domain isn't guaranteed to already be normalized.
-    const p = await createProject(t.db, { name: "HF", domain: "HarperFlow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "Example-Site.com" });
 
     let capturedTarget: unknown;
     const fetchImpl = (async (_url: unknown, init?: RequestInit) => {
@@ -81,9 +81,9 @@ describe("organic_keywords_refresh handler", () => {
     await organicKeywordsRefreshHandler(client)({ db: t.db, projectId: p.id });
 
     // The API target is normalized; the stored project.domain is untouched
-    // (display continues to show "HarperFlow.io" as entered).
-    expect(capturedTarget).toBe("harperflow.io");
+    // (display continues to show "Example-Site.com" as entered).
+    expect(capturedTarget).toBe("example-site.com");
     const [project] = await t.db.select().from(projects);
-    expect(project.domain).toBe("HarperFlow.io");
+    expect(project.domain).toBe("Example-Site.com");
   });
 });

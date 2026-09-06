@@ -21,7 +21,7 @@ describe("ai-visibility store", () => {
   it("appends scans, returns the latest, and history newest-first", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     await saveScan(t.db, p.id, mk(1));
     await saveScan(t.db, p.id, mk(2));

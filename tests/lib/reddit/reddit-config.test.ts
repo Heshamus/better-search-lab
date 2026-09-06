@@ -10,16 +10,16 @@ describe("reddit-config store", () => {
   it("save then get returns the knowledge brief + subreddits", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     await saveRedditConfig(t.db, p.id, {
-      knowledgeBrief: "HarperFlow auto-publishes GEO-optimized articles to Webflow sites.",
+      knowledgeBrief: "Northwind auto-publishes GEO-optimized articles to Webflow sites.",
       subreddits: ["SEO", "webflow"],
     });
 
     const config = await getRedditConfig(t.db, p.id);
     expect(config).toEqual({
-      knowledgeBrief: "HarperFlow auto-publishes GEO-optimized articles to Webflow sites.",
+      knowledgeBrief: "Northwind auto-publishes GEO-optimized articles to Webflow sites.",
       subreddits: ["SEO", "webflow"],
     });
   });
@@ -35,7 +35,7 @@ describe("reddit-config store", () => {
   it("save is an upsert — a second save overwrites the first", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     await saveRedditConfig(t.db, p.id, { knowledgeBrief: "first draft", subreddits: ["SEO"] });
     await saveRedditConfig(t.db, p.id, { knowledgeBrief: "second draft", subreddits: ["SEO", "marketing"] });
@@ -49,7 +49,7 @@ describe("reddit-config store", () => {
   it("save only writes the fields provided, leaving the rest untouched", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     await saveRedditConfig(t.db, p.id, { knowledgeBrief: "brief", subreddits: ["SEO"] });
     await saveRedditConfig(t.db, p.id, { subreddits: ["SEO", "marketing"] }); // no knowledgeBrief this time

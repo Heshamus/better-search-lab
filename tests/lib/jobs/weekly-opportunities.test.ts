@@ -13,7 +13,7 @@ afterEach(() => close?.());
 describe("weeklyOpportunitiesHandler", () => {
   it("writes a scored shortlist from collected signals, idempotent per week", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [kw] = await addKeywords(t.db, p.id, [{ keyword: "seo reporting software", locationCode: 2840, languageCode: "en" }]);
     await t.db.insert(rankSnapshots).values({ keywordId: kw.id, rankAbsolute: 8, rankGroup: 8, fetchStatus: "ok", ownUrls: [] });
     await t.db.insert(keywordMetrics).values({ keywordId: kw.id, searchVolume: 2000, difficulty: 25 });
@@ -32,7 +32,7 @@ describe("weeklyOpportunitiesHandler", () => {
 
   it("persists the keyword string on gap-type rows, since gap candidates have keywordId: null", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     // Tracked keyword only builds the niche profile ({seo, reporting, software}) — no
     // rank snapshot/metrics needed since this test is about the GAP candidate's own
     // persisted fields, not a striking-distance one.
@@ -62,7 +62,7 @@ describe("weeklyOpportunitiesHandler", () => {
 
   it("a user-actioned row survives a re-run of the same week (status-scoped delete)", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [kw] = await addKeywords(t.db, p.id, [{ keyword: "seo reporting software", locationCode: 2840, languageCode: "en" }]);
     await t.db.insert(rankSnapshots).values({ keywordId: kw.id, rankAbsolute: 8, rankGroup: 8, fetchStatus: "ok", ownUrls: [] });
     await t.db.insert(keywordMetrics).values({ keywordId: kw.id, searchVolume: 2000, difficulty: 25 });
@@ -84,7 +84,7 @@ describe("weeklyOpportunitiesHandler", () => {
 
   it("a dismissed opportunity does not resurrect as a fresh 'new' row on a same-week re-run", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [kw] = await addKeywords(t.db, p.id, [{ keyword: "seo reporting software", locationCode: 2840, languageCode: "en" }]);
     await t.db.insert(rankSnapshots).values({ keywordId: kw.id, rankAbsolute: 8, rankGroup: 8, fetchStatus: "ok", ownUrls: [] });
     await t.db.insert(keywordMetrics).values({ keywordId: kw.id, searchVolume: 2000, difficulty: 25 });
@@ -107,7 +107,7 @@ describe("weeklyOpportunitiesHandler", () => {
 
   it("threads the project's saved opportunityWeights into scoring, not DEFAULT_WEIGHTS", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     // Heavily favor winnability over volume — the opposite of DEFAULT_WEIGHTS'
     // balanced blend (volume 0.25 / winnability 0.25).
@@ -151,7 +151,7 @@ describe("upsertOpportunities transaction safety", () => {
 
   it("rolls back the delete when the insert fails — the prior shortlist survives", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     // Seed one status='new' shortlist row via the real API.
     await upsertOpportunities(t.db, p.id, weekOf, [

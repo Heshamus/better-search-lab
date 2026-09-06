@@ -13,7 +13,7 @@ const d = (s: string) => new Date(s + "T00:00:00Z");
 describe("computeHealthMetrics", () => {
   it("aggregates visibility/traffic/position/keywords/spend from seeded ok snapshots + metrics + usage", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [k1, k2] = await addKeywords(t.db, p.id, [
       { keyword: "seo reporting", locationCode: 2840, languageCode: "en" },
       { keyword: "rank tracker", locationCode: 2840, languageCode: "en" },
@@ -47,7 +47,7 @@ describe("computeHealthMetrics", () => {
 
   it("renders honest '—' placeholders for visibility/traffic/position when no ok-ranked snapshot exists yet", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await addKeywords(t.db, p.id, [{ keyword: "brand new", locationCode: 2840, languageCode: "en" }]);
 
     const m = await computeHealthMetrics(t.db, p.id, d("2026-08-03"));
@@ -63,7 +63,7 @@ describe("computeHealthMetrics", () => {
 
   it("ignores a failed-only snapshot (no fabricated rank) and stays honest", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [k1] = await addKeywords(t.db, p.id, [{ keyword: "x", locationCode: 2840, languageCode: "en" }]);
     await t.db.insert(rankSnapshots).values([
       { keywordId: k1.id, capturedAt: d("2026-08-01"), rankAbsolute: null, fetchStatus: "failed", reason: "timeout" },
@@ -78,7 +78,7 @@ describe("computeHealthMetrics", () => {
 
   it("scopes spend to the asOf calendar month only, excluding a prior month's usage row", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await t.db.insert(apiUsage).values([
       { occurredAt: d("2026-07-15"), projectId: p.id, endpoint: "serp", rows: 1, estCost: "5.00" }, // last month — excluded
       { occurredAt: d("2026-08-02"), projectId: p.id, endpoint: "serp", rows: 1, estCost: "2.00" }, // this month — included

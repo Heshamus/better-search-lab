@@ -970,7 +970,7 @@ cd ~/TheProjects/seo-platform && rsync -az --delete \
 ssh -i ~/.ssh/id_ed25519 root@72.62.165.110 'cd /opt/seo-platform && docker compose build seo-web 2>&1 | tail -1 && docker compose up -d seo-web seo-worker 2>&1 | tail -2'
 ```
 
-- [ ] **Step 2: Browser E2E** at `https://seo-web.supergenius.cloud/keyword-overview`
+- [ ] **Step 2: Browser E2E** at `https://seo.example.com/keyword-overview`
 
   1. Confirm **Keyword Overview** appears in the sidebar (Analyze group) with its icon and loads with no site selected.
   2. Paste ~5 real keywords (e.g. `project management software`, `notion alternative`, `best crm`, `time tracking app`, `asana vs monday`), keep **United States**, click **Look up**.

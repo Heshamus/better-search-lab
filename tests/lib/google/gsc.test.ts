@@ -17,13 +17,13 @@ describe("buildAuthUrl", () => {
 describe("matchSite", () => {
   const s = (siteUrl: string) => ({ siteUrl, permissionLevel: "siteOwner" });
   it("prefers a domain property over a URL-prefix", () => {
-    expect(matchSite([s("https://harperflow.io/"), s("sc-domain:harperflow.io")], "HarperFlow.io")).toBe("sc-domain:harperflow.io");
+    expect(matchSite([s("https://example-site.com/"), s("sc-domain:example-site.com")], "Example-Site.com")).toBe("sc-domain:example-site.com");
   });
   it("falls back to an https prefix (incl www)", () => {
-    expect(matchSite([s("https://www.harperflow.io/")], "harperflow.io")).toBe("https://www.harperflow.io/");
+    expect(matchSite([s("https://www.example-site.com/")], "example-site.com")).toBe("https://www.example-site.com/");
   });
   it("returns null when nothing matches", () => {
-    expect(matchSite([s("https://other.com/")], "harperflow.io")).toBeNull();
+    expect(matchSite([s("https://other.com/")], "example-site.com")).toBeNull();
   });
 });
 

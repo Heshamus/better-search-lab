@@ -12,7 +12,7 @@ afterEach(() => close?.());
 describe("metricsRefreshHandler", () => {
   it("bulk-upserts keyword_metrics for tracked keywords, idempotently", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await addKeywords(t.db, p.id, [
       { keyword: "a", locationCode: 2840, languageCode: "en" },
       { keyword: "b", locationCode: 2840, languageCode: "en" },

@@ -87,7 +87,7 @@ describe("isBlockedHost", () => {
     }
   });
   it("allows public hostnames", () => {
-    for (const h of ["harperflow.io", "www.example.com", "sub.domain.co.uk"]) {
+    for (const h of ["example-site.com", "www.example.com", "sub.domain.co.uk"]) {
       expect(isBlockedHost(h)).toBe(false);
     }
   });
@@ -111,19 +111,19 @@ describe("fetchSite", () => {
     const calls: string[] = [];
     const fetchImpl = (async (url: string) => {
       calls.push(String(url));
-      return new Response(String(url).includes("harperflow.io/") && calls.length === 1 ? home : sub,
+      return new Response(String(url).includes("example-site.com/") && calls.length === 1 ? home : sub,
         { status: 200, headers: { "content-type": "text/html" } });
     }) as unknown as typeof fetch;
 
-    const r = await fetchSite("harperflow.io", { fetchImpl, maxPages: 3 });
+    const r = await fetchSite("example-site.com", { fetchImpl, maxPages: 3 });
     expect(r.failed).toBe(false);
     expect(r.pages.length).toBe(3); // home + about + pricing (off-site skipped)
-    expect(calls.every((u) => u.includes("harperflow.io"))).toBe(true);
+    expect(calls.every((u) => u.includes("example-site.com"))).toBe(true);
   });
 
   it("degrades to failed with a reason when the homepage fetch throws", async () => {
     const fetchImpl = (async () => { throw new Error("ECONNREFUSED"); }) as unknown as typeof fetch;
-    const r = await fetchSite("harperflow.io", { fetchImpl });
+    const r = await fetchSite("example-site.com", { fetchImpl });
     expect(r.failed).toBe(true);
     expect(r.reason).toBeTruthy();
     expect(r.pages).toEqual([]);
@@ -291,9 +291,9 @@ import { describe, it, expect } from "vitest";
 import { extractSeeds } from "@/lib/crawl/extract-seeds";
 
 const page = {
-  url: "https://harperflow.io/",
+  url: "https://example-site.com/",
   html: `<html><head>
-    <title>AI SEO Automation for Webflow | HarperFlow</title>
+    <title>AI SEO Automation for Webflow | Northwind</title>
     <meta name="description" content="Auto-publish GEO-optimized articles to Webflow.">
     <meta property="og:title" content="AI content autopilot">
   </head><body>
@@ -364,7 +364,7 @@ function isAllStop(phrase: string): boolean {
   const words = phrase.split(" ").filter(Boolean);
   return words.length === 0 || words.every((w) => STOP.has(w) || w.length < 3);
 }
-// A title like "AI SEO Automation for Webflow | HarperFlow" → segments split on
+// A title like "AI SEO Automation for Webflow | Northwind" → segments split on
 // separators, brand tail dropped by length/last-segment heuristic is left to
 // keyword_ideas; here we just yield the cleaned segments.
 function segments(text: string): string[] {
@@ -457,7 +457,7 @@ afterEach(() => close?.());
 describe("profile candidates", () => {
   it("saves, lists, and replaces candidates for a project", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     await saveProfileCandidates(t.db, p.id, [
       { keyword: "webflow seo", source: "crawl", volume: 300, difficulty: 20 },
@@ -568,8 +568,8 @@ function fakeFetch(): typeof fetch {
     if (u.includes("api.dataforseo.com")) {
       const isRanked = u.includes("ranked_keywords");
       const items = isRanked
-        ? [{ keyword_data: { keyword: "harperflow", keyword_info: { search_volume: 40 }, keyword_properties: { keyword_difficulty: 8 } },
-             ranked_serp_element: { serp_item: { rank_absolute: 3, url: "https://harperflow.io/" } } }]
+        ? [{ keyword_data: { keyword: "northwind", keyword_info: { search_volume: 40 }, keyword_properties: { keyword_difficulty: 8 } },
+             ranked_serp_element: { serp_item: { rank_absolute: 3, url: "https://example-site.com/" } } }]
         : [{ keyword: "webflow seo automation", keyword_info: { search_volume: 500 }, keyword_properties: { keyword_difficulty: 25 } }];
       return new Response(JSON.stringify({ status_code: 20000, tasks: [{ status_code: 20000, result: [{ items }] }] }),
         { status: 200 });
@@ -582,7 +582,7 @@ function fakeFetch(): typeof fetch {
 describe("profileSiteHandler", () => {
   it("crawls, expands, and writes deduped candidates tagged by source", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const fetchImpl = fakeFetch();
     const client = new DataForSeoClient({ login: "x", password: "y", fetchImpl });
 
@@ -602,7 +602,7 @@ describe("profileSiteHandler", () => {
 
   it("records a failed job (no candidates) when the domain is unreachable", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const fetchImpl = (async (url: string) => {
       if (String(url).includes("api.dataforseo.com"))
         return new Response(JSON.stringify({ status_code: 20000, tasks: [{ status_code: 20000, result: [{ items: [] }] }] }), { status: 200 });
@@ -942,7 +942,7 @@ describe("normalizeDomain", () => {
 describe("competitor CRUD", () => {
   it("adds, dedupes, caps at 5, edits, and removes", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     const a = await addCompetitor(t.db, p.id, "https://www.rival-a.com/");
     expect(a.domain).toBe("rival-a.com");
@@ -963,7 +963,7 @@ describe("competitor CRUD", () => {
 
   it("orders competitors by creation time", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await addCompetitor(t.db, p.id, "first.com");
     await addCompetitor(t.db, p.id, "second.com");
     expect((await listCompetitors(t.db, p.id)).map((c) => c.domain)).toEqual(["first.com", "second.com"]);
@@ -1227,7 +1227,7 @@ afterEach(() => close?.());
 describe("competitor intel", () => {
   it("saves+replaces per competitor and aggregates top pages", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     await saveCompetitorKeywords(t.db, p.id, "rival.com", [
       { keyword: "a", rankAbsolute: 3, url: "https://rival.com/guide", volume: 500, difficulty: 20 },
@@ -1353,7 +1353,7 @@ function rankedFetch(): typeof fetch {
 describe("competitorIntelHandler", () => {
   it("fetches ranked keywords per competitor and stores them", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await addCompetitor(t.db, p.id, "rival.com");
     const client = new DataForSeoClient({ login: "x", password: "y", fetchImpl: rankedFetch() });
 
@@ -1588,7 +1588,7 @@ import { saveGapRows, listGapSignals } from "@/lib/competitors";
 describe("listGapSignals competitor domains", () => {
   it("returns which competitors rank for each gap keyword", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await saveGapRows(t.db, p.id, "rival-a.com", [
       { keyword: "webflow seo", searchVolume: 300, difficulty: 20, competitorRank: 5, ourRank: null },
     ]);
@@ -1662,7 +1662,7 @@ import { addKeywords, listTrackedKeywords, setKeywordTracked } from "@/lib/keywo
 describe("addKeywords re-tracking", () => {
   it("re-tracks a previously untracked keyword instead of silently no-oping", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [row] = await addKeywords(t.db, p.id, [{ keyword: "webflow seo", locationCode: 2840, languageCode: "en" }]);
     await setKeywordTracked(t.db, row.id, false);
     expect((await listTrackedKeywords(t.db, p.id)).length).toBe(0);
@@ -1675,7 +1675,7 @@ describe("addKeywords re-tracking", () => {
 
   it("does not create a duplicate row when re-tracking", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [row] = await addKeywords(t.db, p.id, [{ keyword: "geo", locationCode: 2840, languageCode: "en" }]);
     await setKeywordTracked(t.db, row.id, false);
     await addKeywords(t.db, p.id, [{ keyword: "geo", locationCode: 2840, languageCode: "en" }]);
@@ -1767,7 +1767,7 @@ afterEach(() => close?.());
 describe("research history", () => {
   it("saves searches newest-first and prunes to 20", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     for (let i = 0; i < 22; i++) await saveResearchSearch(t.db, p.id, `seed-${i}`, [{ keyword: `k${i}` }]);
     const recent = await listRecentSearches(t.db, p.id);
     expect(recent.length).toBe(20);           // pruned
@@ -1910,14 +1910,14 @@ beforeEach(() => { (global.fetch as any) = vi.fn(async () => new Response(JSON.s
 
 describe("ProjectEditForm", () => {
   it("PATCHes name/domain edits", async () => {
-    render(<ProjectEditForm project={{ id: "p1", name: "HF", domain: "harperflow.io" }} />);
-    fireEvent.change(screen.getByLabelText(/name/i), { target: { value: "HarperFlow" } });
+    render(<ProjectEditForm project={{ id: "p1", name: "HF", domain: "example-site.com" }} />);
+    fireEvent.change(screen.getByLabelText(/name/i), { target: { value: "Northwind" } });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
     await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/projects/p1", expect.objectContaining({ method: "PATCH" })));
   });
 
   it("triggers profiling", async () => {
-    render(<ProjectEditForm project={{ id: "p1", name: "HF", domain: "harperflow.io" }} />);
+    render(<ProjectEditForm project={{ id: "p1", name: "HF", domain: "example-site.com" }} />);
     fireEvent.click(screen.getByRole("button", { name: /profile site/i }));
     await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/projects/p1/profile", expect.objectContaining({ method: "POST" })));
   });

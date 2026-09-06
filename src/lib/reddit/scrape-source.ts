@@ -3,7 +3,7 @@ import { scrapeReddit } from "./apify";
 import { fetchRedditViaApi, type RedditScrapeInput, type RedditApiConfig } from "./reddit-api";
 
 // A descriptive UA is mandatory — Reddit throttles/blocks generic library UAs.
-const DEFAULT_USER_AGENT = "web:better-search-lab:1.0 (by /u/betterbrainlab)";
+const DEFAULT_USER_AGENT = "web:better-search-lab:1.0 (self-hosted)";
 
 export interface ConversationFetchEnv {
   REDDIT_CLIENT_ID?: string;

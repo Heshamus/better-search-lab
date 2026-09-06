@@ -43,13 +43,13 @@ let close: (() => Promise<void>) | undefined;
 afterEach(() => close?.());
 
 const row = (keyword: string, position: number, volume: number): OrganicKeywordRow => ({
-  keyword, position, searchVolume: volume, difficulty: 30, url: `https://harperflow.io/${keyword}`, estTraffic: volume / 2,
+  keyword, position, searchVolume: volume, difficulty: 30, url: `https://example-site.com/${keyword}`, estTraffic: volume / 2,
 });
 
 describe("organic-keywords-store", () => {
   it("replace-all wipes the prior snapshot and stores the new rows with a capturedAt", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     await replaceOrganicKeywords(t.db, p.id, [row("alpha", 3, 100), row("beta", 8, 50)]);
     let got = await getOrganicKeywords(t.db, p.id);
@@ -60,12 +60,12 @@ describe("organic-keywords-store", () => {
     await replaceOrganicKeywords(t.db, p.id, [row("gamma", 1, 999)]);
     got = await getOrganicKeywords(t.db, p.id);
     expect(got.rows.map((r) => r.keyword)).toEqual(["gamma"]);
-    expect(got.rows[0]).toMatchObject({ position: 1, searchVolume: 999, url: "https://harperflow.io/gamma" });
+    expect(got.rows[0]).toMatchObject({ position: 1, searchVolume: 999, url: "https://example-site.com/gamma" });
   });
 
   it("returns an empty result (not an error) when nothing is stored", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     expect(await getOrganicKeywords(t.db, p.id)).toEqual({ rows: [], capturedAt: null });
   });
 });
@@ -190,7 +190,7 @@ afterEach(() => close?.());
 describe("organic_keywords_refresh handler", () => {
   it("fetches ranked keywords for the project domain and stores them (incl. position + url)", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     // Inject a fake fetch that returns the DataForSEO success fixture.
     const fetchImpl = (async () => new Response(JSON.stringify(fixture), { status: 200 })) as any;
@@ -652,7 +652,7 @@ Confirm the `organic_keywords` table exists on the box DB and `seo-web` logs "Re
 
 - [ ] **Step 3: Live-verify (owner browser)**
 
-On `seo-web.supergenius.cloud`, HarperFlow project: open **Organic Keywords** → confirm honest empty state → click **Refresh organic keywords** → a real ranked-keyword list renders (keyword/position/volume/URL). Exercise sort (Volume), a position bucket (Top 10), and search. Click **Track** on a row and confirm the keyword then appears on the Rankings/Keywords tracked list. Confirm the DataForSEO spend shows on **Usage & cost**.
+On `seo.example.com`, Northwind project: open **Organic Keywords** → confirm honest empty state → click **Refresh organic keywords** → a real ranked-keyword list renders (keyword/position/volume/URL). Exercise sort (Volume), a position bucket (Top 10), and search. Click **Track** on a row and confirm the keyword then appears on the Rankings/Keywords tracked list. Confirm the DataForSEO spend shows on **Usage & cost**.
 
 - [ ] **Step 4: Finish the branch**
 

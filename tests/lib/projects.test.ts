@@ -10,8 +10,8 @@ afterEach(() => close?.());
 describe("projects", () => {
   it("creates a project with competitors and lists it", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io", competitors: ["rival.com"] });
-    expect(p.domain).toBe("harperflow.io");
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com", competitors: ["rival.com"] });
+    expect(p.domain).toBe("example-site.com");
     const comps = await t.db.select().from(competitors).where(eq(competitors.projectId, p.id));
     expect(comps.map((c) => c.domain)).toEqual(["rival.com"]);
     expect(await listProjects(t.db)).toHaveLength(1);

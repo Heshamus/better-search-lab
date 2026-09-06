@@ -12,11 +12,11 @@ describe("runScan", () => {
       { id: "perplexity" as EngineId, model: "m1" },
       { id: "chatgpt" as EngineId, model: "m2" },
     ];
-    const prospect = { name: "HarperFlow", domain: "harperflow.io" };
+    const prospect = { name: "Northwind", domain: "example-site.com" };
     // Only perplexity on q1 names + cites the prospect; every answer cites rival.com.
     const ask = async (model: string, prompt: string) => {
       if (model === "m1" && prompt === "q1") {
-        return { answer: "HarperFlow is great", citations: ["https://harperflow.io/a", "https://rival.com/b"] };
+        return { answer: "Northwind is great", citations: ["https://example-site.com/a", "https://rival.com/b"] };
       }
       return { answer: "some other tools", citations: ["https://rival.com/c"] };
     };
@@ -28,7 +28,7 @@ describe("runScan", () => {
     const pplx = out.perEngine.find((e) => e.engine === "perplexity")!;
     expect(pplx).toMatchObject({ answers: 2, cited: 1, named: 1 });
     expect(out.citedSources[0]).toMatchObject({ domain: "rival.com", count: 4 });
-    expect(out.citedSources.find((s) => s.domain === "harperflow.io")?.count).toBe(1);
+    expect(out.citedSources.find((s) => s.domain === "example-site.com")?.count).toBe(1);
     expect(out.queries).toEqual(queries);
     // per-query: q1 is named+cited (perplexity), q2 is neither
     expect(out.perQuery.find((q) => q.text === "q1")).toMatchObject({ named: true, cited: true, source: "gsc" });

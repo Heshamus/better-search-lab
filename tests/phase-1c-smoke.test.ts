@@ -35,7 +35,7 @@ describe("phase-1c dashboard read-layer (offline)", () => {
   it("composes createProject -> addKeywords -> signals -> weeklyOpportunitiesHandler -> every page read fn: real data, zero network", async () => {
     const t = await createTestDb(); close = t.close;
 
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     // On-niche tracked keyword -> niche profile = {seo, reporting, software}.
     const [kw] = await addKeywords(t.db, p.id, [

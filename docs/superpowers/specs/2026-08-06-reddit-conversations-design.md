@@ -260,7 +260,7 @@ Component (jsdom): the conversations cards render; Copy button; Refresh enqueues
    subreddit; confirm the items include `body`, `upVotes`, `numberOfComments`, `createdAt`, and
    comments — and confirm which input flags are required to get engagement fields (RSS-mode
    caveat). Build the mapper fixture from that real response.
-2. **Live E2E in the deployed env**: run one real scan for HarperFlow.io → confirm it surfaces
+2. **Live E2E in the deployed env**: run one real scan for Northwind.io → confirm it surfaces
    real, fresh, on-topic threads with sensible "why it matters," and a draft reply that reads as
    genuinely useful + non-promotional + carries real Perplexity citations. Confirm the **email**
    arrives with the list. Only then is it "done."

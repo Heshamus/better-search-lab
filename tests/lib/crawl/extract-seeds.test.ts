@@ -3,9 +3,9 @@ import { describe, it, expect } from "vitest";
 import { extractSeeds } from "@/lib/crawl/extract-seeds";
 
 const page = {
-  url: "https://harperflow.io/",
+  url: "https://example-site.com/",
   html: `<html><head>
-    <title>AI SEO Automation for Webflow | HarperFlow</title>
+    <title>AI SEO Automation for Webflow | Northwind</title>
     <meta name="description" content="Auto-publish GEO-optimized articles to Webflow.">
     <meta property="og:title" content="AI content autopilot">
   </head><body>

@@ -9,7 +9,7 @@ afterEach(() => close?.());
 describe("research history", () => {
   it("saves searches newest-first and prunes to 20", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     for (let i = 0; i < 22; i++) await saveResearchSearch(t.db, p.id, `seed-${i}`, [{ keyword: `k${i}` }]);
     const recent = await listRecentSearches(t.db, p.id);
     expect(recent.length).toBe(20);           // pruned

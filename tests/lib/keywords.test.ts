@@ -9,7 +9,7 @@ afterEach(() => close?.());
 describe("keywords", () => {
   it("adds tracked keywords and lists them; untracking removes from the tracked list", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [kw] = await addKeywords(t.db, p.id, [{ keyword: "seo reporting software", locationCode: 2840, languageCode: "en" }]);
     expect((await listTrackedKeywords(t.db, p.id)).length).toBe(1);
     await setKeywordTracked(t.db, kw.id, false);
@@ -17,7 +17,7 @@ describe("keywords", () => {
   });
   it("skips a duplicate (project,keyword,location,language,device)", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const row = { keyword: "x", locationCode: 2840, languageCode: "en" };
     await addKeywords(t.db, p.id, [row]);
     const second = await addKeywords(t.db, p.id, [row]);
@@ -29,7 +29,7 @@ describe("keywords", () => {
 describe("addKeywords re-tracking", () => {
   it("re-tracks a previously untracked keyword instead of silently no-oping", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [row] = await addKeywords(t.db, p.id, [{ keyword: "webflow seo", locationCode: 2840, languageCode: "en" }]);
     await setKeywordTracked(t.db, row.id, false);
     expect((await listTrackedKeywords(t.db, p.id)).length).toBe(0);
@@ -42,7 +42,7 @@ describe("addKeywords re-tracking", () => {
 
   it("does not create a duplicate row when re-tracking", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [row] = await addKeywords(t.db, p.id, [{ keyword: "geo", locationCode: 2840, languageCode: "en" }]);
     await setKeywordTracked(t.db, row.id, false);
     await addKeywords(t.db, p.id, [{ keyword: "geo", locationCode: 2840, languageCode: "en" }]);

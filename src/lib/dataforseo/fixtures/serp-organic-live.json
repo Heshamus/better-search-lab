@@ -106,11 +106,11 @@
               "type": "organic",
               "rank_group": 9,
               "rank_absolute": 12,
-              "domain": "harperflow.io",
-              "title": "HarperFlow — Automated SEO Reporting Software",
-              "url": "https://harperflow.io/features/seo-reporting",
-              "breadcrumb": "harperflow.io › features › seo-reporting",
-              "description": "HarperFlow auto-generates GEO-optimized SEO reports and publishes ranked content straight to your CMS."
+              "domain": "example-site.com",
+              "title": "Northwind — Automated SEO Reporting Software",
+              "url": "https://example-site.com/features/seo-reporting",
+              "breadcrumb": "example-site.com › features › seo-reporting",
+              "description": "Northwind auto-generates GEO-optimized SEO reports and publishes ranked content straight to your CMS."
             }
           ]
         }

@@ -24,7 +24,7 @@ describe("phase-1b pipeline (offline)", () => {
   it("composes createProject -> addKeywords -> signals -> weeklyOpportunitiesHandler -> listOpportunities: scored, relevance-filtered shortlist, zero network", async () => {
     const t = await createTestDb(); close = t.close;
 
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     // On-niche tracked keyword -> niche profile = {seo, reporting, software}.
     const [kw] = await addKeywords(t.db, p.id, [

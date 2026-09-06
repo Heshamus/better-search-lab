@@ -29,7 +29,7 @@
   --color-neutral-900: #141921;
   --color-neutral-950: #0b0e14;
 
-  /* Brand accent (HarperFlow green) — used with restraint: CTAs, active nav,
+  /* Brand accent (signal green) — used with restraint: CTAs, active nav,
      positive deltas. Plus a dim variant for tints and a ring for focus. */
   --color-accent: #7bf3a3;
   --color-accent-strong: #4ade80;

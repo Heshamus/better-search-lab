@@ -17,8 +17,8 @@ function fakeFetch(): typeof fetch {
     if (u.includes("api.dataforseo.com")) {
       const isRanked = u.includes("ranked_keywords");
       const items = isRanked
-        ? [{ keyword_data: { keyword: "harperflow", keyword_info: { search_volume: 40 }, keyword_properties: { keyword_difficulty: 8 } },
-             ranked_serp_element: { serp_item: { rank_absolute: 3, url: "https://harperflow.io/" } } }]
+        ? [{ keyword_data: { keyword: "northwind", keyword_info: { search_volume: 40 }, keyword_properties: { keyword_difficulty: 8 } },
+             ranked_serp_element: { serp_item: { rank_absolute: 3, url: "https://example-site.com/" } } }]
         : [{ keyword: "webflow seo automation", keyword_info: { search_volume: 500 }, keyword_properties: { keyword_difficulty: 25 } }];
       return new Response(JSON.stringify({ status_code: 20000, tasks: [{ status_code: 20000, result: [{ items }] }] }),
         { status: 200 });
@@ -31,7 +31,7 @@ function fakeFetch(): typeof fetch {
 describe("profileSiteHandler", () => {
   it("crawls, expands, and writes deduped candidates tagged by source", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const fetchImpl = fakeFetch();
     const client = new DataForSeoClient({ login: "x", password: "y", fetchImpl });
 
@@ -53,16 +53,16 @@ describe("profileSiteHandler", () => {
     // DataForSEO's ranked_keywords `target` is case-sensitive: a mixed-case stored
     // domain silently returns zero ranking seeds unless normalized first.
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "HarperFlow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "Example-Site.com" });
     const fetchImpl = (async (url: string, init?: any) => {
       const u = String(url);
       if (u.includes("api.dataforseo.com")) {
         if (u.includes("ranked_keywords")) {
           const target = JSON.parse(init.body)[0].target;
           // Mimic the real endpoint: only the lowercase target returns rows.
-          const items = target === "harperflow.io"
-            ? [{ keyword_data: { keyword: "harperflow reviews", keyword_info: { search_volume: 40 }, keyword_properties: { keyword_difficulty: 8 } },
-                 ranked_serp_element: { serp_item: { rank_absolute: 3, url: "https://harperflow.io/" } } }]
+          const items = target === "example-site.com"
+            ? [{ keyword_data: { keyword: "northwind reviews", keyword_info: { search_volume: 40 }, keyword_properties: { keyword_difficulty: 8 } },
+                 ranked_serp_element: { serp_item: { rank_absolute: 3, url: "https://example-site.com/" } } }]
             : [];
           return new Response(JSON.stringify({ status_code: 20000, tasks: [{ status_code: 20000, result: [{ items }] }] }), { status: 200 });
         }
@@ -83,7 +83,7 @@ describe("profileSiteHandler", () => {
 
   it("records a failed job (no candidates) when the domain is unreachable", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const fetchImpl = (async (url: string) => {
       if (String(url).includes("api.dataforseo.com"))
         return new Response(JSON.stringify({ status_code: 20000, tasks: [{ status_code: 20000, result: [{ items: [] }] }] }), { status: 200 });
@@ -102,7 +102,7 @@ describe("profileSiteHandler", () => {
 
   it("degrades gracefully (and visibly) when the rankings call fails with a task-level error", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const fetchImpl = (async (url: string) => {
       const u = String(url);
       if (u.includes("api.dataforseo.com")) {

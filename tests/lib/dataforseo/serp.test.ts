@@ -10,7 +10,7 @@ describe("serpOrganicLive", () => {
     const { items, rows } = await serpOrganicLive(client, {
       keyword: "seo reporting software", locationCode: 2840, languageCode: "en",
     });
-    const hf = items.find((i) => i.domain === "harperflow.io");
+    const hf = items.find((i) => i.domain === "example-site.com");
     expect(hf?.rankAbsolute).toBe(12);
     expect(items.some((i) => i.serpFeatures.includes("featured_snippet"))).toBe(true);
     expect(rows).toBeGreaterThan(0);
@@ -58,7 +58,7 @@ describe("serpOrganicLive", () => {
     const { items, rows } = await serpOrganicLive(client, {
       keyword: "seo reporting software", locationCode: 2840, languageCode: "en",
     });
-    expect(items.some((i) => i.domain === "harperflow.io")).toBe(false);
+    expect(items.some((i) => i.domain === "example-site.com")).toBe(false);
     expect(rows).toBeGreaterThan(0);
   });
 });

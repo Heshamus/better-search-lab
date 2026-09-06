@@ -17,7 +17,7 @@ export function buildWeeklyReport(opts: {
   appUrl?: string;
 }): { subject: string; html: string; text: string } {
   const { domain, latest, previous } = opts;
-  const appUrl = (opts.appUrl ?? "https://seo-web.supergenius.cloud").replace(/\/$/, "");
+  const appUrl = opts.appUrl ? opts.appUrl.replace(/\/$/, "") : null;
 
   const citedRate = pct(latest.citedTotal, latest.answersTotal);
   const namedRate = pct(latest.namedTotal, latest.answersTotal);
@@ -75,7 +75,7 @@ export function buildWeeklyReport(opts: {
   <h2 style="font-size:14px;margin:18px 0 6px">Who's winning the citations</h2>
   ${competitors.length ? `<table role="presentation" style="border-collapse:collapse;font-size:13px">${competitors.map((c) => `<tr><td style="padding:2px 16px 2px 0;color:#0f172a">${esc(c.domain)}</td><td style="padding:2px 0;color:#64748b">${c.count} citations</td></tr>`).join("")}</table>` : '<p style="color:#94a3b8">— none —</p>'}
 
-  <p style="margin:22px 0 0"><a href="${appUrl}/ai-visibility" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:9px 16px;border-radius:8px;font-size:13px">Open AI Visibility →</a></p>
+  ${appUrl ? `<p style="margin:22px 0 0"><a href="${appUrl}/ai-visibility" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:9px 16px;border-radius:8px;font-size:13px">Open AI Visibility →</a></p>` : ""}
   <p style="margin:16px 0 0;color:#94a3b8;font-size:11px">Automated weekly scan from Better Search Lab.</p>
 </div>`;
 
@@ -91,7 +91,7 @@ export function buildWeeklyReport(opts: {
     `Still invisible: ${invisible.length ? invisible.slice(0, 8).join("; ") : "none"}`,
     `Winning citations: ${competitors.length ? competitors.map((c) => `${c.domain} (${c.count})`).join(", ") : "none"}`,
     "",
-    `${appUrl}/ai-visibility`,
+    ...(appUrl ? [`${appUrl}/ai-visibility`] : []),
   ];
 
   return { subject, html, text: textLines.join("\n") };

@@ -1,4 +1,4 @@
-// Named/cited detection for AI-visibility — ported from the proven HarperFlow
+// Named/cited detection for AI-visibility — ported from an earlier internal
 // citation engine (apps/api/src/lib/audit/citations/extract.ts).
 
 /** Citation URLs → unique hosts (www-stripped, lowercase, order-preserving). */
@@ -19,8 +19,8 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
  * Did the AI name or cite the prospect? `named` = brand name OR domain appears in
- * the answer text on a word boundary (no substring false-positives — "HarperFlow"
- * must not match "HarperFlowerShop"). `cited` = a citation host equals the prospect
+ * the answer text on a word boundary (no substring false-positives — "Acme"
+ * must not match "AcmeShop"). `cited` = a citation host equals the prospect
  * domain or one of its subdomains.
  */
 export function detectMention(

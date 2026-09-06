@@ -34,7 +34,7 @@ describe("normalizeDomain", () => {
 describe("listCompetitors", () => {
   it("returns the project's competitor {id, domain} rows", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await t.db.insert(competitors).values([
       { projectId: p.id, domain: "rival-a.com" },
       { projectId: p.id, domain: "rival-b.com" },
@@ -47,7 +47,7 @@ describe("listCompetitors", () => {
 
   it("does not return another project's competitors", async () => {
     const t = await createTestDb(); close = t.close;
-    const p1 = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p1 = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const p2 = await createProject(t.db, { name: "Other", domain: "other.io" });
     await t.db.insert(competitors).values([{ projectId: p1.id, domain: "rival-a.com" }]);
 
@@ -58,7 +58,7 @@ describe("listCompetitors", () => {
 describe("competitor CRUD", () => {
   it("adds, dedupes, caps at 5, edits, and removes", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     const a = await addCompetitor(t.db, p.id, "https://www.rival-a.com/");
     expect(a.domain).toBe("rival-a.com");
@@ -89,7 +89,7 @@ describe("competitor CRUD", () => {
 
   it("orders competitors by creation time", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await addCompetitor(t.db, p.id, "first.com");
     await addCompetitor(t.db, p.id, "second.com");
     expect((await listCompetitors(t.db, p.id)).map((c) => c.domain)).toEqual(["first.com", "second.com"]);
@@ -97,7 +97,7 @@ describe("competitor CRUD", () => {
 
   it("removeCompetitor is project-scoped — a cross-project id is a no-op", async () => {
     const t = await createTestDb(); close = t.close;
-    const p1 = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p1 = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const p2 = await createProject(t.db, { name: "Other", domain: "other.io" });
     const c1 = await addCompetitor(t.db, p1.id, "rival-a.com");
     const c2 = await addCompetitor(t.db, p2.id, "rival-b.com");
@@ -110,7 +110,7 @@ describe("competitor CRUD", () => {
 
   it("updateCompetitorDomain is project-scoped — a cross-project id is a no-op", async () => {
     const t = await createTestDb(); close = t.close;
-    const p1 = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p1 = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const p2 = await createProject(t.db, { name: "Other", domain: "other.io" });
     const c1 = await addCompetitor(t.db, p1.id, "rival-a.com");
 
@@ -126,7 +126,7 @@ describe("competitor CRUD", () => {
 describe("listGapSignals competitor domains", () => {
   it("returns which competitors rank for each gap keyword", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await saveGapRows(t.db, p.id, "rival-a.com", [
       { keyword: "webflow seo", searchVolume: 300, difficulty: 20, competitorRank: 5, ourRank: null },
     ]);
@@ -145,7 +145,7 @@ describe("listGapSignals competitor domains", () => {
 describe("saveGapRows replace + transaction safety", () => {
   it("a replace-save leaves exactly the new rows for that (project, competitor)", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await saveGapRows(t.db, p.id, "rival.com", [
       { keyword: "old kw", searchVolume: 100, difficulty: 10, competitorRank: 4, ourRank: null },
     ]);
@@ -157,7 +157,7 @@ describe("saveGapRows replace + transaction safety", () => {
 
   it("rolls back the delete when the insert fails — the prior snapshot survives", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await saveGapRows(t.db, p.id, "rival.com", [
       { keyword: "keep me", searchVolume: 100, difficulty: 10, competitorRank: 4, ourRank: null },
     ]);

@@ -18,12 +18,12 @@ beforeEach(() => {
   (global.fetch as any) = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }));
 });
 
-const project = { id: "p1", name: "HF", domain: "harperflow.io" };
+const project = { id: "p1", name: "HF", domain: "example-site.com" };
 
 describe("ProjectEditForm", () => {
   it("PATCHes name/domain edits", async () => {
     render(<ProjectEditForm project={project} />);
-    fireEvent.change(screen.getByLabelText(/name/i), { target: { value: "HarperFlow" } });
+    fireEvent.change(screen.getByLabelText(/name/i), { target: { value: "Northwind" } });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
     await waitFor(() =>
       expect(global.fetch).toHaveBeenCalledWith("/api/projects/p1", expect.objectContaining({ method: "PATCH" })),

@@ -238,9 +238,9 @@ describe("schema", () => {
   it("inserts and reads a project row", async () => {
     const t = await createTestDb(); close = t.close;
     const [row] = await t.db.insert(projects).values({
-      name: "HarperFlow", domain: "harperflow.io",
+      name: "Northwind", domain: "example-site.com",
     }).returning();
-    expect(row.domain).toBe("harperflow.io");
+    expect(row.domain).toBe("example-site.com");
     expect(row.refreshCadence).toBe("weekly"); // default
   });
 });
@@ -510,7 +510,7 @@ git add -A && git commit -m "feat: dataforseo client with basic auth and retry/b
 
 - [ ] **Step 1: Create the fixture, then write the failing test**
 
-Save a **trimmed real** DataForSEO response to `fixtures/serp-organic-live.json` (structure: `{ tasks: [{ result: [{ items: [{ type, rank_absolute, rank_group, domain, url }] }] }] }`). Include at least one `organic` item for `domain: "harperflow.io"` at `rank_absolute: 12`, plus one `featured_snippet` item.
+Save a **trimmed real** DataForSEO response to `fixtures/serp-organic-live.json` (structure: `{ tasks: [{ result: [{ items: [{ type, rank_absolute, rank_group, domain, url }] }] }] }`). Include at least one `organic` item for `domain: "example-site.com"` at `rank_absolute: 12`, plus one `featured_snippet` item.
 
 ```ts
 // tests/lib/dataforseo/serp.test.ts
@@ -526,7 +526,7 @@ describe("serpOrganicLive", () => {
     const { items, rows } = await serpOrganicLive(client, {
       keyword: "seo reporting software", locationCode: 2840, languageCode: "en",
     });
-    const hf = items.find((i) => i.domain === "harperflow.io");
+    const hf = items.find((i) => i.domain === "example-site.com");
     expect(hf?.rankAbsolute).toBe(12);
     expect(items.some((i) => i.serpFeatures.includes("featured_snippet"))).toBe(true);
     expect(rows).toBeGreaterThan(0);
@@ -675,12 +675,12 @@ import { findDomainRank, computeRankDelta } from "@/lib/core/rank";
 
 const items = [
   { rankAbsolute: 3, rankGroup: 3, domain: "rival.com", url: "https://rival.com/a", serpFeatures: [] },
-  { rankAbsolute: 12, rankGroup: 11, domain: "harperflow.io", url: "https://harperflow.io/x", serpFeatures: [] },
+  { rankAbsolute: 12, rankGroup: 11, domain: "example-site.com", url: "https://example-site.com/x", serpFeatures: [] },
 ];
 
 describe("core/rank", () => {
   it("finds a domain's position", () => {
-    expect(findDomainRank(items, "harperflow.io")?.rankAbsolute).toBe(12);
+    expect(findDomainRank(items, "example-site.com")?.rankAbsolute).toBe(12);
   });
   it("returns null when the domain is absent", () => {
     expect(findDomainRank(items, "absent.com")).toBeNull();
@@ -937,9 +937,9 @@ import { describe, it, expect } from "vitest";
 import { isAllowed } from "@/lib/auth/allowlist";
 
 describe("isAllowed", () => {
-  const list = ["Harper@BetterBrainLab.org", "a@x.com"];
+  const list = ["Harper@Example-Org.org", "a@x.com"];
   it("matches case-insensitively", () => {
-    expect(isAllowed("harper@betterbrainlab.org", list)).toBe(true);
+    expect(isAllowed("harper@example-org.org", list)).toBe(true);
   });
   it("rejects unknown emails", () => {
     expect(isAllowed("intruder@evil.com", list)).toBe(false);
@@ -1003,8 +1003,8 @@ afterEach(() => close?.());
 describe("projects", () => {
   it("creates a project with competitors and lists it", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io", competitors: ["rival.com"] });
-    expect(p.domain).toBe("harperflow.io");
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com", competitors: ["rival.com"] });
+    expect(p.domain).toBe("example-site.com");
     const comps = await t.db.select().from(competitors).where(eq(competitors.projectId, p.id));
     expect(comps.map((c) => c.domain)).toEqual(["rival.com"]);
     expect(await listProjects(t.db)).toHaveLength(1);
@@ -1161,8 +1161,8 @@ Expected: FAIL — module not found.
 // src/app/api/selftest/logic.ts
 import { findDomainRank, computeRankDelta } from "@/lib/core/rank";
 export function runSelftest() {
-  const items = [{ rankAbsolute: 12, rankGroup: 11, domain: "harperflow.io", url: "u", serpFeatures: [] }];
-  const rank = findDomainRank(items, "harperflow.io");
+  const items = [{ rankAbsolute: 12, rankGroup: 11, domain: "example-site.com", url: "u", serpFeatures: [] }];
+  const rank = findDomainRank(items, "example-site.com");
   const delta = computeRankDelta(rank?.rankAbsolute ?? null, 15);
   const checks = { rankParsed: rank?.rankAbsolute === 12, deltaComputed: delta === 3 };
   return { ok: Object.values(checks).every(Boolean), checks };

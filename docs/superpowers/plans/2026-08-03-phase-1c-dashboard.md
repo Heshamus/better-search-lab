@@ -62,7 +62,7 @@ let close: () => Promise<void>; afterEach(() => close?.());
 const d = (s: string) => new Date(s + "T00:00:00Z");
 it("shapes latest rank + 7d delta + metrics per tracked keyword; failed stays honest", async () => {
   const t = await createTestDb(); close = t.close;
-  const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+  const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
   const [k1, k2] = await addKeywords(t.db, p.id, [
     { keyword: "seo reporting", locationCode: 2840, languageCode: "en" },
     { keyword: "rank tracker", locationCode: 2840, languageCode: "en" },

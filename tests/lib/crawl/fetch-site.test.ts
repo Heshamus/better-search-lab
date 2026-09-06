@@ -13,7 +13,7 @@ describe("isBlockedHost", () => {
     }
   });
   it("allows public hostnames", () => {
-    for (const h of ["harperflow.io", "www.example.com", "sub.domain.co.uk"]) {
+    for (const h of ["example-site.com", "www.example.com", "sub.domain.co.uk"]) {
       expect(isBlockedHost(h)).toBe(false);
     }
   });
@@ -37,19 +37,19 @@ describe("fetchSite", () => {
     const calls: string[] = [];
     const fetchImpl = (async (url: string) => {
       calls.push(String(url));
-      return new Response(String(url).includes("harperflow.io/") && calls.length === 1 ? home : sub,
+      return new Response(String(url).includes("example-site.com/") && calls.length === 1 ? home : sub,
         { status: 200, headers: { "content-type": "text/html" } });
     }) as unknown as typeof fetch;
 
-    const r = await fetchSite("harperflow.io", { fetchImpl, maxPages: 3 });
+    const r = await fetchSite("example-site.com", { fetchImpl, maxPages: 3 });
     expect(r.failed).toBe(false);
     expect(r.pages.length).toBe(3); // home + about + pricing (off-site skipped)
-    expect(calls.every((u) => u.includes("harperflow.io"))).toBe(true);
+    expect(calls.every((u) => u.includes("example-site.com"))).toBe(true);
   });
 
   it("degrades to failed with a reason when the homepage fetch throws", async () => {
     const fetchImpl = (async () => { throw new Error("ECONNREFUSED"); }) as unknown as typeof fetch;
-    const r = await fetchSite("harperflow.io", { fetchImpl });
+    const r = await fetchSite("example-site.com", { fetchImpl });
     expect(r.failed).toBe(true);
     expect(r.reason).toBeTruthy();
     expect(r.pages).toEqual([]);
@@ -59,18 +59,18 @@ describe("fetchSite", () => {
     const calls: string[] = [];
     const fetchImpl = (async (url: string) => {
       calls.push(String(url));
-      if (String(url) === "https://harperflow.io/") {
-        return new Response(null, { status: 301, headers: { location: "https://www.harperflow.io/" } });
+      if (String(url) === "https://example-site.com/") {
+        return new Response(null, { status: 301, headers: { location: "https://www.example-site.com/" } });
       }
       return new Response(`<html><head><title>WWW</title></head><body>ok</body></html>`,
         { status: 200, headers: { "content-type": "text/html" } });
     }) as unknown as typeof fetch;
 
-    const r = await fetchSite("harperflow.io", { fetchImpl, maxPages: 1 });
+    const r = await fetchSite("example-site.com", { fetchImpl, maxPages: 1 });
     expect(r.failed).toBe(false);
     expect(r.pages.length).toBe(1);
     expect(r.pages[0].html).toContain("WWW");
-    expect(calls).toEqual(["https://harperflow.io/", "https://www.harperflow.io/"]);
+    expect(calls).toEqual(["https://example-site.com/", "https://www.example-site.com/"]);
   });
 
   it("refuses to follow a redirect into a blocked host and never fetches it (FIX 1b)", async () => {
@@ -100,10 +100,10 @@ describe("fetchSite", () => {
         { status: 200, headers: { "content-type": "text/html" } });
     }) as unknown as typeof fetch;
 
-    const r = await fetchSite("harperflow.io", { fetchImpl, maxPages: 2 });
+    const r = await fetchSite("example-site.com", { fetchImpl, maxPages: 2 });
     expect(r.failed).toBe(false);
     expect(r.pages.length).toBe(2);
-    expect(calls[1]).toBe("https://harperflow.io/pricing");
+    expect(calls[1]).toBe("https://example-site.com/pricing");
   });
 
   it("maxPages:1 returns exactly the homepage with no internal links followed (FIX 5)", async () => {
@@ -111,9 +111,9 @@ describe("fetchSite", () => {
     const fetchImpl = (async () => new Response(home,
       { status: 200, headers: { "content-type": "text/html" } })) as unknown as typeof fetch;
 
-    const r = await fetchSite("harperflow.io", { fetchImpl, maxPages: 1 });
+    const r = await fetchSite("example-site.com", { fetchImpl, maxPages: 1 });
     expect(r.failed).toBe(false);
     expect(r.pages.length).toBe(1);
-    expect(r.pages[0].url).toBe("https://harperflow.io/");
+    expect(r.pages[0].url).toBe("https://example-site.com/");
   });
 });

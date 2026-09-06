@@ -24,7 +24,7 @@ function isAllStop(phrase: string): boolean {
   const words = phrase.split(" ").filter(Boolean);
   return words.length === 0 || words.every((w) => STOP.has(w) || w.length < 3);
 }
-// A title like "AI SEO Automation for Webflow | HarperFlow" → segments split on
+// A title like "Trail Running Shoes | Northwind Outdoor" → segments split on
 // separators, brand tail dropped by length/last-segment heuristic is left to
 // keyword_ideas; here we just yield the cleaned segments.
 function segments(text: string): string[] {

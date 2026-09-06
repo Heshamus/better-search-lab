@@ -26,7 +26,7 @@ Three pieces, one new namespace:
 
 ```
 Coding agent ──stdio──> BSL MCP server (local, in-repo)
-                              │  GET https://seo-web.supergenius.cloud/api/mcp/<tool>
+                              │  GET https://seo.example.com/api/mcp/<tool>
                               │  Authorization: Bearer <BSL_TOKEN>
                               ▼
                      oauth2-proxy  (skip_auth for ^/api/mcp/)
@@ -43,7 +43,7 @@ Coding agent ──stdio──> BSL MCP server (local, in-repo)
   built to `mcp/dist/server.js`, plus a `mcp/package.json`). It does NOT import the Next app —
   it is a thin HTTP client, so it stays decoupled and runnable standalone.
 - Uses `@modelcontextprotocol/sdk` with the **stdio** transport.
-- Reads config from env: `BSL_URL` (default `https://seo-web.supergenius.cloud`) and
+- Reads config from env: `BSL_URL` (default `https://seo.example.com`) and
   `BSL_TOKEN` (required). Fails fast with a clear message if `BSL_TOKEN` is missing.
 - Registers one MCP tool per capability (see Tool Surface). Each tool: builds the query,
   `fetch`es `${BSL_URL}/api/mcp/<tool>` with the bearer header, and returns the JSON body

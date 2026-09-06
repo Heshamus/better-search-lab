@@ -79,7 +79,7 @@ describe("callBsl", () => {
   });
 
   it("returns {ok:true, status:200, body:<parsed JSON>} on a 200", async () => {
-    const payload = [{ id: "proj_1", name: "HarperFlow", domain: "harperflow.io" }];
+    const payload = [{ id: "proj_1", name: "Northwind", domain: "example-site.com" }];
     global.fetch = vi.fn().mockResolvedValue(jsonResponse(payload)) as unknown as typeof fetch;
 
     const result = await callBsl("/api/mcp/projects", {});

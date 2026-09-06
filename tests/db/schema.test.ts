@@ -10,9 +10,9 @@ describe("schema", () => {
   it("inserts and reads a project row", async () => {
     const t = await createTestDb(); close = t.close;
     const [row] = await t.db.insert(projects).values({
-      name: "HarperFlow", domain: "harperflow.io",
+      name: "Northwind", domain: "example-site.com",
     }).returning();
-    expect(row.domain).toBe("harperflow.io");
+    expect(row.domain).toBe("example-site.com");
     expect(row.refreshCadence).toBe("weekly"); // default
   });
 });

@@ -56,8 +56,8 @@ function fakeFetch(cfg: { nicheTerms: string[]; expansion: { keyword: string; vo
     if (u.includes("api.dataforseo.com")) {
       const isRanked = u.includes("ranked_keywords");
       const items = isRanked
-        ? [{ keyword_data: { keyword: "harperflow", keyword_info: { search_volume: 40 }, keyword_properties: { keyword_difficulty: 8 } },
-             ranked_serp_element: { serp_item: { rank_absolute: 3, url: "https://harperflow.io/" } } }]
+        ? [{ keyword_data: { keyword: "northwind", keyword_info: { search_volume: 40 }, keyword_properties: { keyword_difficulty: 8 } },
+             ranked_serp_element: { serp_item: { rank_absolute: 3, url: "https://example-site.com/" } } }]
         : ideaItems(cfg.expansion);
       return new Response(JSON.stringify({ status_code: 20000, tasks: [{ status_code: 20000, result: [{ items }] }] }), { status: 200 });
     }
@@ -68,7 +68,7 @@ function fakeFetch(cfg: { nicheTerms: string[]; expansion: { keyword: string; vo
 
 async function runProfile(fetchImpl: typeof fetch): Promise<string[]> {
   const t = await createTestDb(); close = t.close;
-  const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+  const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
   const client = new DataForSeoClient({ login: "x", password: "y", fetchImpl });
   const llm = new OpenAICompatibleProvider({ baseUrl: "https://api.deepseek.com", apiKey: "sk-test", model: "deepseek-v4-pro", fetchImpl });
   const status = await runJob(t.db, {

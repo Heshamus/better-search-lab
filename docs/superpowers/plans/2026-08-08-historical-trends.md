@@ -104,7 +104,7 @@ Behavior: headline = `format(points[last])`; Δ = `points[last] - points[first]`
 **No app code.** Deploy + real-browser E2E (the trend data is real accumulated snapshots).
 
 - [ ] **Step 1: Deploy** (rsync — anchored `/mcp` exclude — + `docker compose build seo-web` + `up -d seo-web seo-worker`; no migration).
-- [ ] **Step 2: Browser E2E** (WebBridge, owner's Brave, authenticated) for HarperFlow: **Backlinks** shows the 4 over-time cards reading real snapshots; **Rankings** shows the average-position trend and it inverts (improvement = line down); **AI-Visibility** cited-rate trend still renders (now via TrendCard); **GA/GSC** show their top-line series. Confirm a surface with only one snapshot shows the honest empty state, not a broken chart. Record the result. Only then is it done.
+- [ ] **Step 2: Browser E2E** (WebBridge, owner's Brave, authenticated) for Northwind: **Backlinks** shows the 4 over-time cards reading real snapshots; **Rankings** shows the average-position trend and it inverts (improvement = line down); **AI-Visibility** cited-rate trend still renders (now via TrendCard); **GA/GSC** show their top-line series. Confirm a surface with only one snapshot shows the honest empty state, not a broken chart. Record the result. Only then is it done.
 
 ---
 

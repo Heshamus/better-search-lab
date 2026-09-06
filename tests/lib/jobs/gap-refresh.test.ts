@@ -26,7 +26,7 @@ const gapItem = (keyword: string, compRank: number | null, volume: number) => ({
 describe("gapRefreshHandler", () => {
   it("persists per-competitor gaps and aggregates competitorCount across competitors", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await t.db.insert(competitors).values([
       { projectId: p.id, domain: "rival-a.com" }, { projectId: p.id, domain: "rival-b.com" },
     ]);
@@ -46,7 +46,7 @@ describe("gapRefreshHandler", () => {
 
   it("re-run replaces a competitor's rows (idempotent full refresh)", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await t.db.insert(competitors).values({ projectId: p.id, domain: "rival-a.com" });
     const c1 = clientReturning({ "rival-a.com": [gapItem("seo reporting", 3, 1200)] });
     await gapRefreshHandler(c1)({ db: t.db, projectId: p.id });

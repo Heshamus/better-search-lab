@@ -34,7 +34,7 @@ describe("conversations-store", () => {
   it("saves rows then lists them newest-first, capped at limit", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     // Separate sequential saves, each past a real elapsed-time boundary: PGlite's
     // defaultNow() can otherwise tie for statements that land in the same
@@ -70,7 +70,7 @@ describe("conversations-store", () => {
   it("seenThreadUrls returns the set of stored thread urls for the project", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const other = await createProject(t.db, { name: "Other", domain: "other.io" });
 
     await saveConversations(t.db, p.id, SCAN_DATE, [
@@ -87,7 +87,7 @@ describe("conversations-store", () => {
   it("dedups a resurfaced thread — saving the same (projectId, threadUrl) again is a silent no-op", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     await saveConversations(t.db, p.id, SCAN_DATE, [row("https://reddit.com/r/SEO/dupe", { draftReply: "first draft" })]);
     // Rescan surfaces the same thread again — must not throw, must not duplicate, must not overwrite.
@@ -103,7 +103,7 @@ describe("conversations-store", () => {
   it("a duplicate thread url on a DIFFERENT project is not deduped (unique index is per-project)", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p1 = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p1 = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const p2 = await createProject(t.db, { name: "Other", domain: "other.io" });
 
     await saveConversations(t.db, p1.id, SCAN_DATE, [row("https://reddit.com/r/SEO/shared")]);
@@ -116,7 +116,7 @@ describe("conversations-store", () => {
   it("updateConversationStatus updates the row's status, visible via listLatestConversations", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     await saveConversations(t.db, p.id, SCAN_DATE, [row("https://reddit.com/r/SEO/dismiss-me")]);
     const [saved] = await listLatestConversations(t.db, p.id, 1);
@@ -131,7 +131,7 @@ describe("conversations-store", () => {
   it("updateConversationStatus scoped by project — a different project's id touches 0 rows", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p1 = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p1 = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const p2 = await createProject(t.db, { name: "Other", domain: "other.io" });
 
     await saveConversations(t.db, p1.id, SCAN_DATE, [row("https://reddit.com/r/SEO/cross-project")]);

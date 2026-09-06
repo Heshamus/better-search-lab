@@ -31,7 +31,7 @@ describe("getBacklinksHistory", () => {
   it("returns saved snapshots oldest→newest with mapped fields", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     // Separate sequential saves past a real elapsed-time boundary: PGlite's
     // defaultNow() can tie for statements landing in the same millisecond
@@ -73,7 +73,7 @@ describe("getBacklinksHistory", () => {
   it("maps a null summary.rank through as null (the pure trends module does the →0 coercion)", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     await saveBacklinks(t.db, p.id, { summary: summary({ rank: null }), referringDomains: [], anchors: [] });
 
@@ -84,7 +84,7 @@ describe("getBacklinksHistory", () => {
   it("returns an empty array when the project has no snapshots", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     expect(await getBacklinksHistory(t.db, p.id)).toEqual([]);
   });
@@ -92,7 +92,7 @@ describe("getBacklinksHistory", () => {
   it("limit returns the most-recent N snapshots (not the oldest N), still oldest→newest", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     await saveBacklinks(t.db, p.id, { summary: summary({ backlinks: 100 }), referringDomains: [], anchors: [] });
     await new Promise((resolve) => setTimeout(resolve, 15));
@@ -112,7 +112,7 @@ describe("getBacklinksHistory", () => {
   it("is scoped per project — a snapshot saved for a different project is excluded", async () => {
     const t = await createTestDb();
     close = t.close;
-    const p1 = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p1 = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const p2 = await createProject(t.db, { name: "Other", domain: "other.io" });
 
     await saveBacklinks(t.db, p1.id, { summary: summary({ backlinks: 100 }), referringDomains: [], anchors: [] });

@@ -101,7 +101,7 @@ export function buildConversationsEmail(opts: {
   appUrl?: string;
 }): { subject: string; html: string; text: string } {
   const { domain, conversations } = opts;
-  const appUrl = (opts.appUrl ?? "https://seo-web.supergenius.cloud").replace(/\/$/, "");
+  const appUrl = opts.appUrl ? opts.appUrl.replace(/\/$/, "") : null;
   const n = conversations.length;
 
   const subject =
@@ -126,7 +126,7 @@ export function buildConversationsEmail(opts: {
   <h1 style="font-size:18px;margin:0 0 4px">Reddit conversations — ${esc(domain)}</h1>
   <p style="margin:0 0 16px;color:#64748b;font-size:13px">${esc(introText)}</p>
   ${bodyHtml}
-  <p style="margin:22px 0 0"><a href="${appUrl}/reddit" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:9px 16px;border-radius:8px;font-size:13px">Open Reddit conversations →</a></p>
+  ${appUrl ? `<p style="margin:22px 0 0"><a href="${appUrl}/reddit" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:9px 16px;border-radius:8px;font-size:13px">Open Reddit conversations →</a></p>` : ""}
   <p style="margin:16px 0 0;color:#94a3b8;font-size:11px">Automated daily scan from Better Search Lab.</p>
 </div>`;
 
@@ -135,7 +135,7 @@ export function buildConversationsEmail(opts: {
     introText,
     ...(n === 0 ? [] : ["", conversations.map((c, i) => renderConversationText(c, i + 1)).join("\n\n")]),
     "",
-    `${appUrl}/reddit`,
+    ...(appUrl ? [`${appUrl}/reddit`] : []),
   ];
 
   return { subject, html, text: textLines.join("\n") };

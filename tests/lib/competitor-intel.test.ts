@@ -9,7 +9,7 @@ afterEach(() => close?.());
 describe("competitor intel", () => {
   it("saves+replaces per competitor and aggregates top pages", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
     await saveCompetitorKeywords(t.db, p.id, "rival.com", [
       { keyword: "a", rankAbsolute: 3, url: "https://rival.com/guide", volume: 500, difficulty: 20 },
@@ -36,7 +36,7 @@ describe("competitor intel", () => {
 
   it("rolls back the delete when the insert fails — prior keywords survive", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await saveCompetitorKeywords(t.db, p.id, "rival.com", [
       { keyword: "keep me", rankAbsolute: 3, url: "https://rival.com/x", volume: 500, difficulty: 20 },
     ]);

@@ -103,14 +103,14 @@ sequenced actions and is cached per-sync (no per-page-load LLM calls).
 ### Phase 1 testing
 - Unit: each new detector (with/without first-party data), the first-party input builder,
   the scoring re-base fallback, the advisor prompt-shape. pglite for store reads.
-- Live: after deploy, `/overview` renders real HarperFlow.io numbers + a real action list;
+- Live: after deploy, `/overview` renders real Northwind.io numbers + a real action list;
   zero console errors; verified from the browser origin.
 
 ---
 
 ## Phase 2 — AI-Visibility
 
-### 2a. Engine (ported from HarperFlow, proven)
+### 2a. Engine (ported from Northwind, proven)
 
 New `src/lib/ai-visibility/`:
 - **`engines.ts`** — `EdenClient` calling `POST https://api.edenai.run/v2/llm/chat`
@@ -130,7 +130,7 @@ New `src/lib/ai-visibility/`:
 
 ### 2b. Data model (migration)
 
-`ai_visibility_snapshots` (parallel to HarperFlow's `citation_scan_snapshots`):
+`ai_visibility_snapshots` (parallel to Northwind's `citation_scan_snapshots`):
 `id, projectId (FK cascade), scannedAt, queries jsonb, engines jsonb, namedTotal,
 citedTotal, answersTotal, citedSources jsonb`. Index `(projectId, scannedAt desc)`.
 Replace-nothing: each scan appends a row, so trend history compounds.
@@ -147,14 +147,14 @@ bounded). Cost recorded through the existing usage/cost system (N queries × 3 e
   per-engine breakdown, delta vs previous scan.
 - **Trend**: cited/named over scans (AreaTrend).
 - **Per-query table**: which queries you're cited / named / invisible on — the direct
-  work-list (feeds HarperFlow autopilot: "write/strengthen for these").
+  work-list (feeds Northwind autopilot: "write/strengthen for these").
 - **Who's winning**: top competing cited domains (the `citedSources`).
 
 ### Phase 2 testing
 - Unit: `EdenClient` (mocked fetch, citation parsing), `extract` named/cited edge cases
   (brand-substring guard), the hybrid query builder (70/30 split, dedup, fallback), scan
   aggregation. A tiny live Eden smoke (1 query, 1 engine) during build to confirm the key.
-- Live: real scan for HarperFlow.io; dashboard shows real cited/named counts; trend row
+- Live: real scan for Northwind.io; dashboard shows real cited/named counts; trend row
   persists; zero console errors.
 
 ---
@@ -180,5 +180,5 @@ consumes Phase 1's GSC data path.
   + monthly only, surfaced in usage/cost. No per-page-load calls.
 - **Query matching (keyword↔GSC query)**: normalized exact-match first; fuzzy left for a
   later pass to avoid over-engineering.
-- **New-site sparsity**: HarperFlow.io has thin organic data; recommendations will be few
+- **New-site sparsity**: Northwind.io has thin organic data; recommendations will be few
   but honest. The engine already degrades gracefully.

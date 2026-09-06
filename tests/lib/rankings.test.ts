@@ -15,7 +15,7 @@ describe("listRankings", () => {
   // per tracked keyword, and a failed-only keyword stays honest (no fabricated rank).
   it("shapes latest rank + 7d delta + metrics per tracked keyword; failed stays honest", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [k1, k2] = await addKeywords(t.db, p.id, [
       { keyword: "seo reporting", locationCode: 2840, languageCode: "en" },
       { keyword: "rank tracker", locationCode: 2840, languageCode: "en" },
@@ -40,7 +40,7 @@ describe("listRankings", () => {
 
   it("computes delta7 and delta30 independently from a 3-point history", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [k1] = await addKeywords(t.db, p.id, [{ keyword: "x", locationCode: 2840, languageCode: "en" }]);
     await t.db.insert(rankSnapshots).values([
       { keywordId: k1.id, capturedAt: d("2026-07-11"), rankAbsolute: 20, fetchStatus: "ok" }, // 30d before asOf
@@ -54,7 +54,7 @@ describe("listRankings", () => {
 
   it("excludes untracked keywords and other projects' keywords", async () => {
     const t = await createTestDb(); close = t.close;
-    const p1 = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p1 = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const p2 = await createProject(t.db, { name: "Other", domain: "other.com" });
     const [k1, k2] = await addKeywords(t.db, p1.id, [
       { keyword: "tracked", locationCode: 2840, languageCode: "en" },
@@ -69,7 +69,7 @@ describe("listRankings", () => {
 
   it("reports a never-fetched tracked keyword honestly (no fabricated ok/rank)", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     await addKeywords(t.db, p.id, [{ keyword: "brand new", locationCode: 2840, languageCode: "en" }]);
     const rows = await listRankings(t.db, p.id, d("2026-08-10"));
     expect(rows.length).toBe(1);
@@ -84,10 +84,10 @@ describe("listRankings", () => {
 
   it("nulls rankAbsolute when the chronologically latest snapshot is failed, even if an older ok snapshot has a real rank", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [k1] = await addKeywords(t.db, p.id, [{ keyword: "x", locationCode: 2840, languageCode: "en" }]);
     await t.db.insert(rankSnapshots).values([
-      { keywordId: k1.id, capturedAt: d("2026-08-01"), rankAbsolute: 5, fetchStatus: "ok", url: "https://harperflow.io/x", serpFeatures: ["sitelinks"] },
+      { keywordId: k1.id, capturedAt: d("2026-08-01"), rankAbsolute: 5, fetchStatus: "ok", url: "https://example-site.com/x", serpFeatures: ["sitelinks"] },
       { keywordId: k1.id, capturedAt: d("2026-08-08"), rankAbsolute: null, fetchStatus: "failed", reason: "timeout" },
     ]);
     const rows = await listRankings(t.db, p.id, d("2026-08-08"));
@@ -107,7 +107,7 @@ describe("listRankings", () => {
 describe("rankHistory", () => {
   it("returns chronological snapshots including failed rows (gaps shown honestly)", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [k1] = await addKeywords(t.db, p.id, [{ keyword: "x", locationCode: 2840, languageCode: "en" }]);
     await t.db.insert(rankSnapshots).values([
       { keywordId: k1.id, capturedAt: d("2026-08-08"), rankAbsolute: 8, fetchStatus: "ok" },
@@ -124,7 +124,7 @@ describe("rankHistory", () => {
 
   it("returns an empty array for a keyword with no snapshots", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [k1] = await addKeywords(t.db, p.id, [{ keyword: "x", locationCode: 2840, languageCode: "en" }]);
     expect(await rankHistory(t.db, k1.id)).toEqual([]);
   });
@@ -133,7 +133,7 @@ describe("rankHistory", () => {
 describe("getAveragePositionHistory", () => {
   it("averages ok/non-null rankAbsolute per day across tracked keywords, excluding failed snapshots", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [k1, k2] = await addKeywords(t.db, p.id, [
       { keyword: "seo reporting", locationCode: 2840, languageCode: "en" },
       { keyword: "rank tracker", locationCode: 2840, languageCode: "en" },
@@ -153,13 +153,13 @@ describe("getAveragePositionHistory", () => {
 
   it("returns empty points/labels when the project has no tracked keywords", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     expect(await getAveragePositionHistory(t.db, p.id)).toEqual({ points: [], labels: [] });
   });
 
   it("limit keeps the most-recent N days (not the oldest N), still ascending", async () => {
     const t = await createTestDb(); close = t.close;
-    const p = await createProject(t.db, { name: "HF", domain: "harperflow.io" });
+    const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
     const [k1] = await addKeywords(t.db, p.id, [{ keyword: "x", locationCode: 2840, languageCode: "en" }]);
     await t.db.insert(rankSnapshots).values([
       { keywordId: k1.id, capturedAt: d("2026-07-01"), rankAbsolute: 30, fetchStatus: "ok" },

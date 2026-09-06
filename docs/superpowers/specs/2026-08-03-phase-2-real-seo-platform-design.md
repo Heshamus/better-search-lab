@@ -14,7 +14,7 @@ Phase 1 shipped a correct *scoring brain* (six-detector Opportunity Engine, scor
 1. **Competitors can only be set once, at project creation** — there is no post-creation add/edit/delete path (`src/lib/projects.ts:6-8` is the *only* `insert(competitors)` in the tree; no `PATCH`/`PUT`/`DELETE` route exists anywhere in `src/app/api`). Most projects end up with 0–1 competitors.
 2. **The gap detector requires ≥2 competitors on the same keyword** (`src/lib/core/detectors/gap.ts:3` `MIN_COMPETITORS = 2`, enforced line 14). A one-competitor project can *never* produce a gap opportunity.
 3. **No manual refresh anywhere.** `rank_refresh` (`src/app/api/projects/[id]/refresh/route.ts`) and `weekly_opportunities` (`src/app/api/projects/[id]/opportunities/refresh/route.ts`) have **zero UI callers** (confirmed by grepping every `fetch(` in `src/components`). Their only trigger is the standalone worker cron (`worker/index.ts`), gated to Mondays (`src/lib/schedule.ts:6-15`). The worker *is* deployed and running (`seo-worker` container verified live), but the user cannot force a refresh, so adding keywords produces no visible result until some Monday.
-4. **No auto-profiling.** Nothing fetches a project's own domain; tracked keywords are 100% manual (`src/lib/keywords.ts` `addKeywords` is the only insert path). A brand-new site like harperflow.io starts empty and stays empty.
+4. **No auto-profiling.** Nothing fetches a project's own domain; tracked keywords are 100% manual (`src/lib/keywords.ts` `addKeywords` is the only insert path). A brand-new site like example-site.com starts empty and stays empty.
 5. **The niche-relevance gate** (`src/lib/core/relevance.ts`) is built only from the project's own (sparse, manual) tracked keywords, so a thin profile further filters candidates.
 
 Plus reachable friction bugs: **untrack is a one-way trap** (re-adding an untracked keyword silently no-ops — `addKeywords` dedupe at `src/lib/keywords.ts:7-10` matches without checking `isTracked` and `continue`s); the Competitors empty state instructs users to *"add competitors in Settings"* where **no such control exists** (`src/app/(app)/competitors/page.tsx:49`); and the create-project form **renders unconditionally on Settings**, masquerading as an edit form (`src/app/(app)/settings/page.tsx:59`).
@@ -141,7 +141,7 @@ Each slice below is a coherent unit with its own tests. Build order follows depe
 
 **A5. Editable project + delete** — new `PATCH /api/projects/[id]` (name, domain — coerced/validated) and `DELETE /api/projects/[id]` (cascades via FKs) → new `updateProject`/`deleteProject` in `src/lib/projects.ts`.
 
-**Edge cases:** unreachable/blocked domain → job records `failed` with a clear reason, UI shows it (no fabricated candidates). Zero rankings (new site) → candidates come purely from crawl+expansion (the harperflow.io case). Zero crawlable content → fall back to whatever rankings exist, else an explicit "couldn't profile — add keywords manually" state.
+**Edge cases:** unreachable/blocked domain → job records `failed` with a clear reason, UI shows it (no fabricated candidates). Zero rankings (new site) → candidates come purely from crawl+expansion (the example-site.com case). Zero crawlable content → fall back to whatever rankings exist, else an explicit "couldn't profile — add keywords manually" state.
 
 ### Slice B — Competitor CRUD (max 5)
 
@@ -204,4 +204,4 @@ A → B → C → D, because D needs B+C and everything wants A's own-domain pro
 
 ## 13. Success criteria
 
-From a clean project on harperflow.io: paste the domain → auto-profile yields a confirmable keyword set → add ≤5 competitors → see their keywords/top pages → find gaps (with one competitor) → click "Refresh data" → a **populated, relevant Opportunities shortlist** appears without waiting for Monday. Profile, keywords, and competitors are all editable; untrack/re-track works; no screen instructs an action that doesn't exist.
+From a clean project on example-site.com: paste the domain → auto-profile yields a confirmable keyword set → add ≤5 competitors → see their keywords/top pages → find gaps (with one competitor) → click "Refresh data" → a **populated, relevant Opportunities shortlist** appears without waiting for Monday. Profile, keywords, and competitors are all editable; untrack/re-track works; no screen instructs an action that doesn't exist.

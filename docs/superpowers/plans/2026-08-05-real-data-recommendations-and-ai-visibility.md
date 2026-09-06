@@ -4,7 +4,7 @@
 
 **Goal:** Feed live GSC/GA into the opportunity engine with first-party detectors and an Overview command center (Phase 1), then add an AI-Visibility surface tracking Perplexity/ChatGPT/Gemini citation share over time (Phase 2).
 
-**Architecture:** Phase 1 extends the existing pure `DetectorInput` seam (`src/lib/core/`) with null-safe first-party signals, adds three detectors + a scoring re-base + a DeepSeek advisor, and a server-rendered `/overview`. Phase 2 ports HarperFlow's proven Eden AI citation engine into `src/lib/ai-visibility/`, backed by an async job + `ai_visibility_snapshots` table + `/ai-visibility` surface. Every unit is pure and unit-tested; each phase deploys and is live-verified before the next.
+**Architecture:** Phase 1 extends the existing pure `DetectorInput` seam (`src/lib/core/`) with null-safe first-party signals, adds three detectors + a scoring re-base + a DeepSeek advisor, and a server-rendered `/overview`. Phase 2 ports Northwind's proven Eden AI citation engine into `src/lib/ai-visibility/`, backed by an async job + `ai_visibility_snapshots` table + `/ai-visibility` surface. Every unit is pure and unit-tested; each phase deploys and is live-verified before the next.
 
 **Tech Stack:** Next.js 15 App Router, React 19, Drizzle + `postgres`, pglite (hermetic tests), vitest, DeepSeek (existing `src/lib/llm/deepseek.ts`), Eden AI gateway.
 
@@ -328,7 +328,7 @@ export function detectContentVsRanking(input: DetectorInput): Candidate[] {
 
 ### Phase 1 deploy + live-verify (fold into Task 7)
 - [ ] rsync → build image → `docker compose up -d seo-web seo-worker` (no migration this phase).
-- [ ] Browser: `/overview` renders real HarperFlow.io GSC/GA numbers + a real action list; console clean; screenshot for the owner.
+- [ ] Browser: `/overview` renders real Northwind.io GSC/GA numbers + a real action list; console clean; screenshot for the owner.
 
 ---
 
@@ -346,7 +346,7 @@ export function detectContentVsRanking(input: DetectorInput): Candidate[] {
 
 - [ ] **Step 1: Failing test** — mock fetch returning `{ choices:[{message:{content:"..."}}], citations:["https://a.io/x","not-a-url"] }`; assert `ask` POSTs to `https://api.edenai.run/v2/llm/chat` with `Authorization: Bearer k` and returns `{ answer:"...", citations:["https://a.io/x"] }` (non-URLs filtered). Assert `measuredEngines({})` yields the three default models.
 - [ ] **Step 2: Run → FAIL.**
-- [ ] **Step 3: Implement** — port `EdenClient` + `measuredEngines` verbatim from `~/TheProjects/HarperFlow-production/apps/api/src/lib/audit/citations/engines.ts` (already read; keep the citation/`search_results` fallback + `https?` filter + `AbortSignal.timeout`). `types.ts`: `EngineId`, `EngineAnswer`, and the snapshot aggregate types (`PerEngine`, `AiVisibilitySnapshotData`).
+- [ ] **Step 3: Implement** — port `EdenClient` + `measuredEngines` verbatim from `~/TheProjects/Northwind-production/apps/api/src/lib/audit/citations/engines.ts` (already read; keep the citation/`search_results` fallback + `https?` filter + `AbortSignal.timeout`). `types.ts`: `EngineId`, `EngineAnswer`, and the snapshot aggregate types (`PerEngine`, `AiVisibilitySnapshotData`).
 - [ ] **Step 4: Add env fields** in `src/config/env.ts` (optional strings; absence → `/ai-visibility` shows a "not configured" empty, mirroring GSC).
 - [ ] **Step 5: Run → PASS.**
 - [ ] **Step 6: Commit** `feat(ai-visibility): Eden AI multi-engine client`.
@@ -359,7 +359,7 @@ export function detectContentVsRanking(input: DetectorInput): Candidate[] {
 
 **Interfaces:** `domainsFrom(citations: string[]): string[]`; `detectMention(answer, citations, prospect: {name; domain}): { named: boolean; cited: boolean }`.
 
-- [ ] **Step 1: Failing test** (port HarperFlow's cases) — `named` true when brand/domain appears in the answer but guards against substring false-positives (`"Acme"` must not match `"Acmecoffee"` — word-boundary); `cited` true when a citation host equals the domain or a subdomain; `domainsFrom` strips `www.` and dedupes.
+- [ ] **Step 1: Failing test** (port Northwind's cases) — `named` true when brand/domain appears in the answer but guards against substring false-positives (`"Acme"` must not match `"Acmecoffee"` — word-boundary); `cited` true when a citation host equals the domain or a subdomain; `domainsFrom` strips `www.` and dedupes.
 - [ ] **Step 2: Run → FAIL.**
 - [ ] **Step 3: Implement** — port `domainsFrom` + `detectMention` from `apps/api/src/lib/audit/citations/extract.ts` (word-boundary brand guard, subdomain-aware cited match).
 - [ ] **Step 4: Run → PASS.**
@@ -418,7 +418,7 @@ export function detectContentVsRanking(input: DetectorInput): Candidate[] {
 
 - [ ] **Step 1: Failing test** `tests/lib/jobs/handlers/ai-visibility-scan.test.ts` — inject a fake Eden `ask` + fake project; assert it reads GSC top queries, builds the hybrid set, runs the scan, and calls `saveScan`. (No live network.)
 - [ ] **Step 2: Run → FAIL.**
-- [ ] **Step 3: Implement handler** — load project (name+domain), `EDENAI_API_KEY` from env (throw a clear "AI-Visibility isn't configured" if absent), `getGscData` for top queries, `buildQueries` with a DeepSeek generator (kinds best/alternatives/comparison/use_case/category, brand-filtered — reuse the prompt shape from HarperFlow `queries.ts`), `runScan`, `saveScan`. Cost = answers × per-call price.
+- [ ] **Step 3: Implement handler** — load project (name+domain), `EDENAI_API_KEY` from env (throw a clear "AI-Visibility isn't configured" if absent), `getGscData` for top queries, `buildQueries` with a DeepSeek generator (kinds best/alternatives/comparison/use_case/category, brand-filtered — reuse the prompt shape from Northwind `queries.ts`), `runScan`, `saveScan`. Cost = answers × per-call price.
 - [ ] **Step 4: Register** the handler in `worker/index.ts`; add the enqueue route (202 `{jobId}`, mirrors `ga/sync`).
 - [ ] **Step 5: Run → PASS; full suite green.**
 - [ ] **Step 6: Commit** `feat(ai-visibility): scan job + enqueue route + worker registration`.
@@ -445,7 +445,7 @@ export function detectContentVsRanking(input: DetectorInput): Candidate[] {
 - [ ] **Step 1:** Add `EDENAI_API_KEY` to the box compose `x-app-env` anchor (key already in `.env`); `docker compose config -q` to validate.
 - [ ] **Step 2:** rsync → `docker compose build seo-web` → `docker compose run --rm seo-web pnpm db:migrate` (0013) → verify `ai_visibility_snapshots` exists → `docker compose up -d seo-web seo-worker` (loads `EDENAI_API_KEY`).
 - [ ] **Step 3:** Confirm worker registered `ai_visibility_scan`, clean start.
-- [ ] **Step 4:** Trigger one real scan for HarperFlow.io; verify a snapshot row with real named/cited counts; `/ai-visibility` renders real numbers; console clean; screenshot for the owner.
+- [ ] **Step 4:** Trigger one real scan for Northwind.io; verify a snapshot row with real named/cited counts; `/ai-visibility` renders real numbers; console clean; screenshot for the owner.
 - [ ] **Step 5:** Final commit if any fixups; report both phases live-verified.
 
 ---
