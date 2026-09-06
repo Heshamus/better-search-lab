@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: bsl_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+      - name: Unit tests (pglite) + real-Postgres concurrency suite
+        run: pnpm exec vitest run
+        env:
+          TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/bsl_test
+      - name: Build with an empty environment
+        run: env -i PATH="$PATH" HOME="$HOME" pnpm build
+      - name: MCP package
+        run: cd mcp && npm ci && npx vitest run && npm run build
+      - name: Docker image builds
+        run: docker build -t better-search-lab:ci .
