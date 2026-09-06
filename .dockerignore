@@ -1,4 +1,11 @@
 node_modules
+# Nested copies too. mcp/ is a standalone package with its own npm-managed
+# node_modules (84 MB) and its own build output — neither is used by this
+# image, which only builds and runs the Next app and the worker. Shipping a
+# host build would also mean shipping platform-specific binaries into an
+# alpine image.
+**/node_modules
+**/dist
 .next
 .git
 .env

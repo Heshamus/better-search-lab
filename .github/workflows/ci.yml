@@ -5,9 +5,18 @@ on:
     branches: [main]
   pull_request:
 
+# One run per ref: a push that lands while an earlier run is still going
+# cancels it rather than queueing behind a result nobody will read.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    # A hung step (a stuck docker build, a test waiting on a socket) burns the
+    # 6-hour default before anyone notices.
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:16-alpine
@@ -34,8 +43,11 @@ jobs:
         run: pnpm exec vitest run
         env:
           TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/bsl_test
+      # env -i proves the build needs no secret. NEXT_TELEMETRY_DISABLED is
+      # passed back in because the empty environment also strips it, and the
+      # telemetry notice on a first run writes to a HOME that may not be there.
       - name: Build with an empty environment
-        run: env -i PATH="$PATH" HOME="$HOME" pnpm build
+        run: env -i PATH="$PATH" HOME="$HOME" NEXT_TELEMETRY_DISABLED=1 pnpm build
       - name: MCP package
         run: cd mcp && npm ci && npx vitest run && npm run build
       - name: Docker image builds
