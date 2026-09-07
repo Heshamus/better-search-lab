@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "worker": "tsx worker/index.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/db/migrate.ts"
+    "db:migrate": "tsx src/db/migrate.ts",
+    "docs:config": "tsx scripts/gen-config-docs.ts"
   },
   "license": "AGPL-3.0-only",
   "packageManager": "pnpm@10.32.1",
