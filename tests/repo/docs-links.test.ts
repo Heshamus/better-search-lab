@@ -8,7 +8,7 @@ function localLinks(md: string): string[] {
 
 describe("docs", () => {
   it("every relative link in README and docs/ resolves to a file", () => {
-    const files = ["README.md", ...readdirSync("docs").filter((f) => f.endsWith(".md")).map((f) => join("docs", f)), ...readdirSync("docs/integrations").map((f) => join("docs/integrations", f))];
+    const files = ["README.md", ...readdirSync("docs").filter((f) => f.endsWith(".md")).map((f) => join("docs", f)), ...readdirSync("docs/integrations").map((f) => join("docs/integrations", f)), ...readdirSync("docs/screenshots").map((f) => join("docs/screenshots", f))];
     const missing: string[] = [];
     for (const f of files) {
       const dir = f.includes("/") ? f.slice(0, f.lastIndexOf("/")) : ".";

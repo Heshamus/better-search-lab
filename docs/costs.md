@@ -19,8 +19,8 @@ Better Search Lab has no subscription. DataForSEO bills per API request and this
 
 ## What a site costs
 
-- **First build** (150 tracked keywords, two competitors): profile ≈ $0.13, suggest $0.012, rank check 150 × $0.002 = $0.30, gaps 2 × $0.012, metrics ≤ $0.03 — about **$0.50**.
-- **Weekly refresh** of the same site: ranks $0.30 + gaps $0.024 + opportunities (free) — about **$0.35**; daily refresh multiplies the rank part by seven.
+- **First build** (150 tracked keywords, two competitors): profile (ranked keywords + keyword ideas, one call each) 2 × $0.012 = $0.024, suggest 1 × $0.012 = $0.012, rank check 150 × $0.002 = $0.30, gaps 2 × $0.012 = $0.024, metrics (one bulk call for all keywords) $0.012 — $0.024 + $0.012 + $0.30 + $0.024 + $0.012 = $0.372, about **$0.37**.
+- **Weekly refresh** of the same site: ranks $0.30 + metrics $0.012 + gaps $0.024 + opportunities (free) = $0.336, about **$0.34**; daily refresh multiplies the rank part by seven.
 - **Backlinks and organic keywords** are on demand: $0.06 and $0.012 per refresh.
 
 ## Keeping it low

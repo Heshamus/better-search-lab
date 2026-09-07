@@ -51,7 +51,7 @@ export function ProfileStep({ project, candidates, trackedCount }: {
             {job.state === "running" ? "Profiling…" : "Profile this site"}
           </button>
           <JobProgress state={job.state} progress={job.progress} error={job.error} />
-          <p className="text-xs text-neutral-500">Two DataForSEO Labs calls (≈ $0.13).</p>
+          <p className="text-xs text-neutral-500">Two DataForSEO Labs calls (≈ $0.02).</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">

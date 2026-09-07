@@ -15,7 +15,7 @@ cp .env.example .env            # set AUTH_SECRET (openssl rand -base64 32) and 
 docker compose up -d
 ```
 
-Open `http://localhost:3000` — on first run it redirects to `/setup`, which creates your admin account, connects DataForSEO (a $5 balance is plenty to start), profiles your site, suggests competitors, and builds the first picture. Active time: about five minutes; DataForSEO spend for a 150-keyword site: about $0.50. Everything else — an AI assistant, Google, email, Reddit — is optional and lives under **Settings → Integrations**.
+Open `http://localhost:3000` — on first run it redirects to `/setup`, which creates your admin account, connects DataForSEO (a $5 balance is plenty to start), profiles your site, suggests competitors, and builds the first picture. Active time: about five minutes; DataForSEO spend for a 150-keyword site: about $0.37. Everything else — an AI assistant, Google, email, Reddit — is optional and lives under **Settings → Integrations**.
 
 Want to look before you connect anything? `docker compose -f docker-compose.demo.yml up -d` boots a read-only demo with two synthetic sites and ninety days of history (`DEMO_MODE`).
 
@@ -44,7 +44,7 @@ Only `DATABASE_URL` and `AUTH_SECRET` are required. Every integration is configu
 
 ## Costs
 
-DataForSEO bills per request; the in-app **Usage** page shows exactly what was spent, by day and endpoint. Typical numbers: a rank check is $0.002 per keyword per refresh, keyword research and competitor calls are about $0.012 each, a backlinks refresh about $0.06. The first build of a 150-keyword site is about $0.50; a weekly refresh of the same site about $0.35. Details and how to keep it low: [docs/costs.md](docs/costs.md).
+DataForSEO bills per request; the in-app **Usage** page shows exactly what was spent, by day and endpoint. Typical numbers: a rank check is $0.002 per keyword per refresh, keyword research and competitor calls are about $0.012 each, a backlinks refresh about $0.06. The first build of a 150-keyword site is about $0.37; a weekly refresh of the same site about $0.34. Details and how to keep it low: [docs/costs.md](docs/costs.md).
 
 ## MCP
 
