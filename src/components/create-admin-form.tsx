@@ -8,10 +8,12 @@ const inputClass =
   "w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-accent";
 
 /**
- * First-run step 1: create the admin account, then sign in with the same
- * credentials so the caller (the wizard, or the plain first-run page) can
- * continue without a second form. `next` defaults to `/overview`; the wizard
- * passes `/setup` so the server can pick the next pending step.
+ * The setup wizard's `account` step: create the admin account, then sign in
+ * with the same credentials so the wizard continues without a second form.
+ * The wizard is the only caller — first run reaches it because /login
+ * redirects there while the users table is empty — and it passes
+ * `next="/setup"` so the server picks the next pending step. `/overview` is
+ * the default for any other caller.
  */
 export function CreateAdminForm({ next = "/overview" }: { next?: string } = {}) {
   const router = useRouter();

@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { loadEnv } from "@/config/env";
+import { isDemoMode } from "@/lib/demo/mode";
 
 const ok = {
   DATABASE_URL: "postgres://u:p@localhost:5432/db",
@@ -80,5 +81,18 @@ describe("loadEnv AUTH_URL bootstrap", () => {
       loadEnv(ok);
       expect(process.env.AUTH_URL).toBeUndefined();
     }
+  });
+
+  // Two parsers read DEMO_MODE: the schema above, and the pure isDemoMode() the
+  // edge middleware calls (it cannot import this schema). If they ever disagree
+  // the app boots in demo with the write boundary off, or the reverse — so pin
+  // them to each other rather than restating the rule twice.
+  it("parses DEMO_MODE exactly as isDemoMode() does", () => {
+    for (const v of ["true", "1", "false", "", "TRUE", "yes", undefined]) {
+      const env = { ...ok, DEMO_MODE: v };
+      expect(loadEnv(env).DEMO_MODE, `DEMO_MODE=${String(v)}`).toBe(isDemoMode(env));
+    }
+    expect(loadEnv({ ...ok, DEMO_MODE: "1" }).DEMO_MODE).toBe(true);
+    expect(loadEnv({ ...ok, DEMO_MODE: "false" }).DEMO_MODE).toBe(false);
   });
 });
