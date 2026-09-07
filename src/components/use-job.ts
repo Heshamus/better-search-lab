@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
+import { useDemo } from "@/components/demo-provider";
+import { READ_ONLY_DEMO_MESSAGE } from "@/lib/demo/allowlist";
 
 export type JobState = "idle" | "running" | "error";
 
@@ -40,9 +42,11 @@ export function useJob(): {
   state: JobState;
   error: string | null;
   progress: string | null;
+  demo: boolean;
   run: (enqueueUrl: string, opts?: { onDone?: () => void | Promise<void>; body?: unknown }) => Promise<void>;
 } {
   const router = useRouter();
+  const demo = useDemo();
   const [state, setState] = useState<JobState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<string | null>(null);
@@ -50,6 +54,13 @@ export function useJob(): {
 
   const run = useCallback(
     async (enqueueUrl: string, opts?: { onDone?: () => void | Promise<void>; body?: unknown }) => {
+      // The demo boundary is also enforced server-side (middleware, spec §13);
+      // this just spares the user a doomed round-trip and a generic network error.
+      if (demo) {
+        setError(READ_ONLY_DEMO_MESSAGE);
+        setState("error");
+        return;
+      }
       if (activeRef.current) return; // ignore double-clicks while a job is in flight
       activeRef.current = true;
       setState("running");
@@ -92,8 +103,8 @@ export function useJob(): {
         activeRef.current = false;
       }
     },
-    [router],
+    [router, demo],
   );
 
-  return { state, error, progress, run };
+  return { state, error, progress, demo, run };
 }

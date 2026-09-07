@@ -108,4 +108,16 @@ describe("useJob", () => {
     expect(result.current.state).toBe("idle");
     expect(result.current.progress).toBeNull();
   });
+
+  it("refuses to run in demo mode without touching the network", async () => {
+    const { DemoProvider } = await import("@/components/demo-provider");
+    const fetchMock = vi.fn();
+    (global.fetch as any) = fetchMock;
+    const { result } = renderHook(() => useJob(), { wrapper: ({ children }) => <DemoProvider demo={true}>{children}</DemoProvider> });
+    expect(result.current.demo).toBe(true);
+    await act(async () => { await result.current.run("/x"); });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(result.current.state).toBe("error");
+    expect(result.current.error).toBe("This is a read-only demo.");
+  });
 });

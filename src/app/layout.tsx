@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { StaleBuildReloader } from "@/components/stale-build-reloader";
+import { DemoProvider } from "@/components/demo-provider";
+import { DemoBanner } from "@/components/demo-banner";
+import { isDemoMode } from "@/lib/demo/mode";
 
 export const metadata: Metadata = {
   title: "Better Search Lab",
@@ -21,8 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body>
-        <StaleBuildReloader />
-        {children}
+        <DemoProvider demo={isDemoMode()}>
+          <DemoBanner />
+          <StaleBuildReloader />
+          {children}
+        </DemoProvider>
       </body>
     </html>
   );
