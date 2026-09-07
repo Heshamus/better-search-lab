@@ -44,7 +44,7 @@ export function DataForSeoStep() {
       <div>
         <h1 className="text-base font-semibold text-white">Connect DataForSEO</h1>
         <p className="mt-1 text-sm text-neutral-400">
-          DataForSEO supplies rankings, keyword research, competitors and backlinks. Pay-as-you-go, no subscription; a typical first build of 150 keywords costs about $0.50.{" "}
+          DataForSEO supplies rankings, keyword research, competitors and backlinks. Pay-as-you-go, no subscription; a typical first build of 150 keywords costs about $0.37.{" "}
           <a href="https://app.dataforseo.com/register" className="text-accent underline-offset-2 hover:underline" target="_blank" rel="noreferrer">Create an account</a> and copy the API login and password from API Access.
         </p>
       </div>
