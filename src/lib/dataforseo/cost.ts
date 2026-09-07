@@ -13,6 +13,7 @@ const PRICES: Record<string, number> = {
   "/v3/dataforseo_labs/google/ranked_keywords/live": 0.012,
   "/v3/dataforseo_labs/google/keyword_overview/live": 0.012,
   "/v3/dataforseo_labs/google/domain_intersection/live": 0.012,
+  "/v3/dataforseo_labs/google/competitors_domain/live": 0.012,
   "/v3/backlinks/summary/live": 0.02,
   "/v3/backlinks/referring_domains/live": 0.02,
   "/v3/backlinks/anchors/live": 0.02,

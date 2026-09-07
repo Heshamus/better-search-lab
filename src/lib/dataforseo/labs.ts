@@ -160,3 +160,20 @@ export async function keywordOverviewBulk(client: DataForSeoClient, p: {
   );
   return { rows, rowsBilled: p.keywords.length };
 }
+
+export interface CompetitorSuggestion { domain: string; intersections: number; avgPosition: number | null; }
+
+/** Domains that rank for the same keywords as `target` (Labs `competitors_domain`), most overlap first. */
+export async function competitorsDomain(client: DataForSeoClient, p: {
+  target: string; locationCode: number; languageCode: string; limit?: number;
+}): Promise<{ items: CompetitorSuggestion[]; rows: number }> {
+  const body = [{ target: p.target, location_code: p.locationCode, language_code: p.languageCode, limit: p.limit ?? 10 }];
+  const resp = await client.post<any>("/v3/dataforseo_labs/google/competitors_domain/live", body);
+  assertTasksOk(resp);
+  const raw = resp?.tasks?.[0]?.result?.[0]?.items ?? [];
+  const items: CompetitorSuggestion[] = raw
+    .filter((i: any) => typeof i.domain === "string" && i.domain)
+    .map((i: any) => ({ domain: i.domain, intersections: typeof i.intersections === "number" ? i.intersections : 0, avgPosition: num(i.avg_position) }))
+    .sort((a: CompetitorSuggestion, b: CompetitorSuggestion) => b.intersections - a.intersections);
+  return { items, rows: items.length };
+}

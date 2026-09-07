@@ -1,0 +1,51 @@
+{
+  "version": "0.1.20260115",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "1.2043 sec.",
+  "cost": 0.012,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "09071502-1502-0066-0000-a1b2c3d4e5f6",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "1.1587 sec.",
+      "cost": 0.012,
+      "result_count": 1,
+      "path": ["v3", "dataforseo_labs", "google", "competitors_domain", "live"],
+      "data": {
+        "api": "dataforseo_labs",
+        "function": "competitors_domain",
+        "se_type": "google",
+        "target": "example-site.com",
+        "location_code": 2840,
+        "language_code": "en",
+        "limit": 10
+      },
+      "result": [
+        {
+          "se_type": "google",
+          "target": "example-site.com",
+          "location_code": 2840,
+          "language_code": "en",
+          "total_count": 10,
+          "items_count": 10,
+          "items": [
+            { "se_type": "google", "domain": "rival-one.example", "avg_position": 8.4, "intersections": 312 },
+            { "se_type": "google", "domain": "rival-two.example", "avg_position": 11.2, "intersections": 287 },
+            { "se_type": "google", "domain": "rival-three.example", "avg_position": 9.7, "intersections": 264 },
+            { "se_type": "google", "domain": "rival-four.example", "avg_position": 14.5, "intersections": 241 },
+            { "se_type": "google", "domain": "rival-five.example", "avg_position": 17.3, "intersections": 198 },
+            { "se_type": "google", "domain": "rival-six.example", "avg_position": 12.9, "intersections": 176 },
+            { "se_type": "google", "domain": "rival-seven.example", "avg_position": 21.6, "intersections": 153 },
+            { "se_type": "google", "domain": "rival-eight.example", "avg_position": 19.8, "intersections": 129 },
+            { "se_type": "google", "domain": "rival-nine.example", "avg_position": 26.1, "intersections": 104 },
+            { "se_type": "google", "domain": "rival-ten.example", "avg_position": null, "intersections": 87 }
+          ]
+        }
+      ]
+    }
+  ]
+}
