@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useJob } from "@/components/use-job";
+import { JobProgress } from "@/components/job-progress";
 import type { GaProperty } from "@/lib/google/analytics";
 
 // Lets the user map one of their GA4 properties to this project (GA4 properties
@@ -62,9 +63,7 @@ export function GaPropertyPicker({ projectId, properties }: { projectId: string;
       >
         {job.state === "running" ? "Connecting…" : "Use this property"}
       </button>
-      <span role="status" aria-live="polite" className="text-xs text-at-risk">
-        {job.error ?? null}
-      </span>
+      <JobProgress state={job.state} progress={job.progress} error={job.error} />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useJob } from "@/components/use-job";
+import { JobProgress } from "@/components/job-progress";
 
 type SaveState = "idle" | "busy" | "error";
 // Two-click delete instead of window.confirm: "confirm" is the armed state
@@ -171,14 +172,12 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
           </span>
         ) : null}
 
-        {/* Always-mounted live regions: text toggles so the AT is already
-            watching each region before its error lands. */}
+        {/* Always-mounted live region: text toggles so the AT is already
+            watching before its error lands. */}
         <span role="status" aria-live="polite" className="text-xs text-at-risk">
           {saveState === "error" ? "Couldn’t save — try again." : null}
         </span>
-        <span role="status" aria-live="polite" className="text-xs text-at-risk">
-          {profile.error ?? null}
-        </span>
+        <JobProgress state={profile.state} progress={profile.progress} error={profile.error} />
       </form>
 
       <div className="flex flex-col gap-1 border-t border-neutral-100 pt-4 dark:border-neutral-800/60">

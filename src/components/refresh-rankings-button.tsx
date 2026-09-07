@@ -1,6 +1,7 @@
 "use client";
 
 import { useJob } from "@/components/use-job";
+import { JobProgress } from "@/components/job-progress";
 
 /**
  * The Rankings page's single-job refresh: enqueues `rank_refresh` (re-fetches
@@ -22,9 +23,7 @@ export function RefreshRankingsButton({ projectId }: { projectId: string }) {
       >
         {job.state === "running" ? "Refreshing rankings… · ~1–2 min" : "Refresh rankings"}
       </button>
-      <span role="status" aria-live="polite" className="text-xs text-at-risk">
-        {job.error ?? null}
-      </span>
+      <JobProgress state={job.state} progress={job.progress} error={job.error} />
     </div>
   );
 }

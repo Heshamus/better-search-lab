@@ -31,15 +31,21 @@ async function readError(res: Response, fallback: string): Promise<string> {
  * On success we `router.refresh()` (or call `onDone`) so the server-rendered page
  * pulls the fresh data. On failure we surface the job's REAL error string, so the
  * user sees what actually went wrong instead of a blanket "try again".
+ *
+ * `progress` mirrors the handler's latest reported line (spec §11.2) while
+ * running, and is cleared on `done` — `<JobProgress>` renders it under the
+ * triggering button.
  */
 export function useJob(): {
   state: JobState;
   error: string | null;
+  progress: string | null;
   run: (enqueueUrl: string, opts?: { onDone?: () => void | Promise<void>; body?: unknown }) => Promise<void>;
 } {
   const router = useRouter();
   const [state, setState] = useState<JobState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<string | null>(null);
   const activeRef = useRef(false);
 
   const run = useCallback(
@@ -48,6 +54,7 @@ export function useJob(): {
       activeRef.current = true;
       setState("running");
       setError(null);
+      setProgress(null);
       try {
         const res = await fetch(
           enqueueUrl,
@@ -65,13 +72,17 @@ export function useJob(): {
           if (Date.now() > deadline) throw new Error("This is taking longer than expected — please try again.");
           const s = await fetch(`/api/jobs/${jobId}`);
           if (!s.ok) continue; // transient blip — keep polling (already slept above)
-          const job = (await s.json()) as { status?: string; error?: string | null };
+          const job = (await s.json()) as { status?: string; error?: string | null; progress?: string | null };
+          setProgress(job.progress ?? null);
           if (job.status === "done") {
+            setProgress(null);
             setState("idle");
             if (opts?.onDone) await opts.onDone();
             else router.refresh();
             return;
           }
+          // On "failed" the last progress line is left in place — the error
+          // (surfaced below) explains why it stopped, not a rewound progress line.
           if (job.status === "failed") throw new Error(job.error || "The job failed — please try again.");
         }
       } catch (e) {
@@ -84,5 +95,5 @@ export function useJob(): {
     [router],
   );
 
-  return { state, error, run };
+  return { state, error, progress, run };
 }

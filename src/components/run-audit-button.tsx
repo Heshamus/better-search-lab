@@ -1,6 +1,7 @@
 "use client";
 
 import { useJob } from "@/components/use-job";
+import { JobProgress } from "@/components/job-progress";
 
 /**
  * Runs a site audit as an async job (crawl + score) and polls it to completion,
@@ -20,9 +21,7 @@ export function RunAuditButton({ projectId, label = "Run audit" }: { projectId: 
       >
         {job.state === "running" ? "Auditing… (~30–60s)" : label}
       </button>
-      <span role="status" aria-live="polite" className="text-xs text-at-risk">
-        {job.error ?? null}
-      </span>
+      <JobProgress state={job.state} progress={job.progress} error={job.error} />
     </div>
   );
 }

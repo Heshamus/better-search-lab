@@ -90,4 +90,22 @@ describe("useJob", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it("exposes the latest progress line while running and clears it when done", async () => {
+    vi.useFakeTimers();
+    let polls = 0;
+    (global.fetch as any) = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (isPost(init)) return json({ jobId: "j1" }, 202);
+      polls += 1;
+      return polls === 1 ? json({ status: "running", progress: "Checking keyword 3 of 10" }) : json({ status: "done", progress: "Checking keyword 10 of 10" });
+    });
+    const { result } = renderHook(() => useJob());
+    act(() => void result.current.run("/x"));
+    await act(async () => { await vi.advanceTimersByTimeAsync(2100); });
+    expect(result.current.state).toBe("running");
+    expect(result.current.progress).toBe("Checking keyword 3 of 10");
+    await act(async () => { await vi.advanceTimersByTimeAsync(2100); });
+    expect(result.current.state).toBe("idle");
+    expect(result.current.progress).toBeNull();
+  });
 });

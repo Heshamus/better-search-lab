@@ -1,6 +1,7 @@
 "use client";
 
 import { useJob } from "@/components/use-job";
+import { JobProgress } from "@/components/job-progress";
 
 /** Scans Reddit conversations as an async job and polls to completion. */
 export function RunConversationsScanButton({
@@ -22,9 +23,7 @@ export function RunConversationsScanButton({
       >
         {job.state === "running" ? "Scanning…" : label}
       </button>
-      <span role="status" aria-live="polite" className="text-xs text-at-risk">
-        {job.error ?? null}
-      </span>
+      <JobProgress state={job.state} progress={job.progress} error={job.error} />
     </div>
   );
 }

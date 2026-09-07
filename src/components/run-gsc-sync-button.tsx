@@ -1,6 +1,7 @@
 "use client";
 
 import { useJob } from "@/components/use-job";
+import { JobProgress } from "@/components/job-progress";
 
 /** Re-syncs Search Console data as an async job and polls to completion. */
 export function RunGscSyncButton({ projectId, label = "Refresh" }: { projectId: string; label?: string }) {
@@ -16,9 +17,7 @@ export function RunGscSyncButton({ projectId, label = "Refresh" }: { projectId: 
       >
         {job.state === "running" ? "Syncing…" : label}
       </button>
-      <span role="status" aria-live="polite" className="text-xs text-at-risk">
-        {job.error ?? null}
-      </span>
+      <JobProgress state={job.state} progress={job.progress} error={job.error} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import type { CompetitorKeywordRow, TopPage } from "@/lib/competitor-intel";
 import { formatCompact } from "@/lib/format";
 import { KdMeter, PositionBadge } from "@/components/viz";
 import { useJob } from "@/components/use-job";
+import { JobProgress } from "@/components/job-progress";
 
 const emptyStateClass =
   "rounded-xl border border-dashed border-neutral-700 bg-neutral-900/40 px-4 py-6 text-center text-sm text-neutral-400";
@@ -74,9 +75,7 @@ export function CompetitorIntelPanel({
           >
             {job.state === "running" ? "Refreshing…" : "Refresh"}
           </button>
-          <span role="status" aria-live="polite" className="text-xs text-at-risk">
-            {job.error ?? null}
-          </span>
+          <JobProgress state={job.state} progress={job.progress} error={job.error} />
         </div>
       </div>
 

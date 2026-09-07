@@ -1,6 +1,7 @@
 "use client";
 
 import { useJob } from "@/components/use-job";
+import { JobProgress } from "@/components/job-progress";
 
 /** Fetches the backlink profile as an async job and polls it to completion. */
 export function RunBacklinksButton({ projectId, label = "Refresh backlinks" }: { projectId: string; label?: string }) {
@@ -16,9 +17,7 @@ export function RunBacklinksButton({ projectId, label = "Refresh backlinks" }: {
       >
         {job.state === "running" ? "Fetching… (~20s)" : label}
       </button>
-      <span role="status" aria-live="polite" className="text-xs text-at-risk">
-        {job.error ?? null}
-      </span>
+      <JobProgress state={job.state} progress={job.progress} error={job.error} />
     </div>
   );
 }

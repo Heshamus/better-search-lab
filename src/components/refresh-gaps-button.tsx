@@ -1,6 +1,7 @@
 "use client";
 
 import { useJob } from "@/components/use-job";
+import { JobProgress } from "@/components/job-progress";
 
 /**
  * The Competitors view's "Find keyword gaps" control: enqueues the `gap_refresh`
@@ -22,9 +23,7 @@ export function RefreshGapsButton({ projectId }: { projectId: string }) {
       >
         {job.state === "running" ? "Finding gaps…" : "Find keyword gaps"}
       </button>
-      <span role="status" aria-live="polite" className="text-xs text-at-risk">
-        {job.error ?? null}
-      </span>
+      <JobProgress state={job.state} progress={job.progress} error={job.error} />
     </div>
   );
 }

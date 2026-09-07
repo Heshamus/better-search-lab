@@ -1,6 +1,7 @@
 "use client";
 
 import { useJob } from "@/components/use-job";
+import { JobProgress } from "@/components/job-progress";
 
 /**
  * The full-pipeline "Refresh data" trigger. Enqueues ONE async `refresh_all` job
@@ -26,9 +27,7 @@ export function RefreshDataButton({ projectId }: { projectId: string }) {
       >
         {job.state === "running" ? "Refreshing… (~1–2 min)" : "Refresh data"}
       </button>
-      <span role="status" aria-live="polite" className="text-xs text-at-risk">
-        {job.error ?? null}
-      </span>
+      <JobProgress state={job.state} progress={job.progress} error={job.error} />
     </div>
   );
 }

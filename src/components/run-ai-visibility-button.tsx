@@ -1,6 +1,7 @@
 "use client";
 
 import { useJob } from "@/components/use-job";
+import { JobProgress } from "@/components/job-progress";
 
 /** Runs an AI-visibility scan as an async job and polls to completion. */
 export function RunAiVisibilityButton({ projectId, label = "Run scan" }: { projectId: string; label?: string }) {
@@ -16,9 +17,7 @@ export function RunAiVisibilityButton({ projectId, label = "Run scan" }: { proje
       >
         {job.state === "running" ? "Scanning… · ~1–2 min" : label}
       </button>
-      <span role="status" aria-live="polite" className="text-xs text-at-risk">
-        {job.error ?? null}
-      </span>
+      <JobProgress state={job.state} progress={job.progress} error={job.error} />
     </div>
   );
 }

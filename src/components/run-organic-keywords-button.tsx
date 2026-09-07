@@ -1,5 +1,6 @@
 "use client";
 import { useJob } from "@/components/use-job";
+import { JobProgress } from "@/components/job-progress";
 
 export function RunOrganicKeywordsButton({ projectId }: { projectId: string }) {
   const job = useJob();
@@ -14,7 +15,7 @@ export function RunOrganicKeywordsButton({ projectId }: { projectId: string }) {
       >
         {job.state === "running" ? "Fetching… (~a few sec)" : "Refresh organic keywords"}
       </button>
-      <span role="status" aria-live="polite" className="text-xs text-at-risk">{job.error ?? null}</span>
+      <JobProgress state={job.state} progress={job.progress} error={job.error} />
     </div>
   );
 }
