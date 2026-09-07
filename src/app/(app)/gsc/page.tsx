@@ -6,6 +6,7 @@ import { getConnection, getGscData } from "@/lib/google/store";
 import { EmptyState, IntegrationLink } from "@/components/empty-state";
 import { GscDashboard } from "@/components/gsc-dashboard";
 import { RunGscSyncButton } from "@/components/run-gsc-sync-button";
+import { isDemoMode } from "@/lib/demo/mode";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,10 @@ const ERROR_COPY: Record<string, string> = {
   access_denied: "You declined the Google permission. Connect again to grant read-only access.",
 };
 
-function ConnectPanel({ projectId }: { projectId: string }) {
+// Demo mode: /api/google/connect is a mutation the demo boundary answers with a
+// raw JSON 403, so the call to action becomes an inert, labelled control rather
+// than a live link into a dead end (mirrors Settings → "Add a site").
+function ConnectPanel({ projectId, demo }: { projectId: string; demo: boolean }) {
   return (
     <div className="panel flex flex-col items-center gap-4 px-6 py-16 text-center">
       <div aria-hidden className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
@@ -30,12 +34,23 @@ function ConnectPanel({ projectId }: { projectId: string }) {
         Pull your site&rsquo;s real clicks, impressions, positions and top queries — free, with up to 16 months of history.
         Read-only access; you can revoke it anytime in your Google account.
       </p>
-      <a
-        href={`/api/google/connect?projectId=${projectId}`}
-        className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-90"
-      >
-        Connect Google Search Console
-      </a>
+      {demo ? (
+        <button
+          type="button"
+          disabled
+          title="Read-only demo"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-neutral-900 opacity-50"
+        >
+          Connect Google Search Console
+        </button>
+      ) : (
+        <a
+          href={`/api/google/connect?projectId=${projectId}`}
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-90"
+        >
+          Connect Google Search Console
+        </a>
+      )}
     </div>
   );
 }
@@ -49,6 +64,7 @@ export default async function GscPage({ searchParams }: { searchParams: Promise<
   }
 
   const cfg = await getConfig(db);
+  const demo = isDemoMode();
   const configured = cfg.google.oauthReady || Boolean(cfg.google.serviceAccountKey);
   const sp = await searchParams;
   const errorMsg = sp.error ? ERROR_COPY[sp.error] ?? `Couldn't connect: ${sp.error}` : null;
@@ -68,12 +84,18 @@ export default async function GscPage({ searchParams }: { searchParams: Promise<
         </div>
         {connection ? (
           <div className="flex items-center gap-3">
-            <a
-              href={`/api/google/connect?projectId=${project.id}&from=gsc`}
-              className="text-xs font-medium text-neutral-400 underline-offset-2 transition-colors hover:text-neutral-200 hover:underline"
-            >
-              Reconnect
-            </a>
+            {demo ? (
+              <button type="button" disabled title="Read-only demo" className="text-xs font-medium text-neutral-600">
+                Reconnect
+              </button>
+            ) : (
+              <a
+                href={`/api/google/connect?projectId=${project.id}&from=gsc`}
+                className="text-xs font-medium text-neutral-400 underline-offset-2 transition-colors hover:text-neutral-200 hover:underline"
+              >
+                Reconnect
+              </a>
+            )}
             {data ? <RunGscSyncButton projectId={project.id} /> : null}
           </div>
         ) : null}
@@ -90,7 +112,7 @@ export default async function GscPage({ searchParams }: { searchParams: Promise<
           action={<IntegrationLink group="google" label="Connect Google" />}
         />
       ) : !connection ? (
-        <ConnectPanel projectId={project.id} />
+        <ConnectPanel projectId={project.id} demo={demo} />
       ) : !data ? (
         <div className="panel flex flex-col items-center gap-3 px-6 py-14 text-center">
           <p className="text-base font-semibold text-white">Connected — syncing your data…</p>

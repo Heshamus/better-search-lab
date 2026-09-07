@@ -11,6 +11,7 @@ import { EmptyState, IntegrationLink } from "@/components/empty-state";
 import { GaDashboard } from "@/components/ga-dashboard";
 import { GaPropertyPicker } from "@/components/ga-property-picker";
 import { RunGaSyncButton } from "@/components/run-ga-sync-button";
+import { isDemoMode } from "@/lib/demo/mode";
 
 export const dynamic = "force-dynamic";
 
@@ -21,8 +22,11 @@ const ERROR_COPY: Record<string, string> = {
   access_denied: "You declined the Google permission. Connect again to grant read-only access.",
 };
 
-// A "Connect Google" call-to-action. `from=ga` brings the user back here after consent.
-function ConnectPanel({ projectId, reconnect }: { projectId: string; reconnect?: boolean }) {
+// A "Connect Google" call-to-action. `from=ga` brings the user back here after
+// consent. In demo mode /api/google/connect is a mutation the demo boundary
+// answers with a raw JSON 403, so the call to action becomes an inert, labelled
+// control rather than a live link into a dead end.
+function ConnectPanel({ projectId, reconnect, demo }: { projectId: string; reconnect?: boolean; demo: boolean }) {
   return (
     <div className="panel flex flex-col items-center gap-4 px-6 py-16 text-center">
       <div aria-hidden className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
@@ -38,12 +42,23 @@ function ConnectPanel({ projectId, reconnect }: { projectId: string; reconnect?:
           ? "You've connected Search Console — reconnect once to add read-only Analytics access, and your sessions, traffic sources and top pages appear here."
           : "Pull your site's real sessions, users, engagement and traffic sources — free, straight from Google Analytics 4. Read-only; revoke anytime in your Google account."}
       </p>
-      <a
-        href={`/api/google/connect?projectId=${projectId}&from=ga`}
-        className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-90"
-      >
-        {reconnect ? "Reconnect Google" : "Connect Google Analytics"}
-      </a>
+      {demo ? (
+        <button
+          type="button"
+          disabled
+          title="Read-only demo"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-neutral-900 opacity-50"
+        >
+          {reconnect ? "Reconnect Google" : "Connect Google Analytics"}
+        </button>
+      ) : (
+        <a
+          href={`/api/google/connect?projectId=${projectId}&from=ga`}
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-90"
+        >
+          {reconnect ? "Reconnect Google" : "Connect Google Analytics"}
+        </a>
+      )}
     </div>
   );
 }
@@ -66,6 +81,7 @@ export default async function GaPage({ searchParams }: { searchParams: Promise<{
   }
 
   const cfg = await getConfig(db);
+  const demo = isDemoMode();
   const configured = cfg.google.oauthReady || Boolean(cfg.google.serviceAccountKey);
   const sp = await searchParams;
   const errorMsg = sp.error ? ERROR_COPY[sp.error] ?? `Couldn't connect: ${sp.error}` : null;
@@ -94,12 +110,18 @@ export default async function GaPage({ searchParams }: { searchParams: Promise<{
         </div>
         {connection ? (
           <div className="flex items-center gap-3">
-            <a
-              href={`/api/google/connect?projectId=${project.id}&from=ga`}
-              className="text-xs font-medium text-neutral-400 underline-offset-2 transition-colors hover:text-neutral-200 hover:underline"
-            >
-              Reconnect
-            </a>
+            {demo ? (
+              <button type="button" disabled title="Read-only demo" className="text-xs font-medium text-neutral-600">
+                Reconnect
+              </button>
+            ) : (
+              <a
+                href={`/api/google/connect?projectId=${project.id}&from=ga`}
+                className="text-xs font-medium text-neutral-400 underline-offset-2 transition-colors hover:text-neutral-200 hover:underline"
+              >
+                Reconnect
+              </a>
+            )}
             {data ? <RunGaSyncButton projectId={project.id} /> : null}
           </div>
         ) : null}
@@ -116,9 +138,9 @@ export default async function GaPage({ searchParams }: { searchParams: Promise<{
           action={<IntegrationLink group="google" label="Connect Google" />}
         />
       ) : !connection ? (
-        <ConnectPanel projectId={project.id} />
+        <ConnectPanel projectId={project.id} demo={demo} />
       ) : scopeMissing ? (
-        <ConnectPanel projectId={project.id} reconnect />
+        <ConnectPanel projectId={project.id} demo={demo} reconnect />
       ) : !connection.gaPropertyId ? (
         pickerProps.length ? (
           <GaPropertyPicker projectId={project.id} properties={pickerProps} />
