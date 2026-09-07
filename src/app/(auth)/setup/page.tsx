@@ -14,6 +14,8 @@ import { SetupWizard } from "@/components/setup-wizard";
 import { CreateAdminForm } from "@/components/create-admin-form";
 import { AdminOnly } from "@/components/setup/admin-only";
 import { DataForSeoStep } from "@/components/setup/dataforseo-step";
+import { LlmStep } from "@/components/setup/llm-step";
+import { SiteStep } from "@/components/setup/site-step";
 
 export const dynamic = "force-dynamic";
 
@@ -49,8 +51,12 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
     );
   } else if (sel.step === "dataforseo") {
     body = <DataForSeoStep />;
+  } else if (sel.step === "llm") {
+    body = <LlmStep />;
+  } else if (sel.step === "site") {
+    body = <SiteStep />;
   } else {
-    // Steps 3–8 arrive in Tasks 8–10; until then the page shows where it stopped.
+    // Steps 5–8 arrive in Tasks 9–10; until then the page shows where it stopped.
     body = <p className="text-sm text-neutral-400">Step “{sel.step}” is not built yet.</p>;
   }
   // Keep these loads here so later tasks only extend the switch above:
