@@ -7,12 +7,12 @@ describe("repository metadata", () => {
     expect(text).toMatch(/GNU AFFERO GENERAL PUBLIC LICENSE/);
     expect(text).toMatch(/Version 3, 19 November 2007/);
   });
-  it("declares the license and a pre-release version in both packages", () => {
+  it("declares the license and the release version in both packages", () => {
     const root = JSON.parse(readFileSync("package.json", "utf8"));
     const mcp = JSON.parse(readFileSync("mcp/package.json", "utf8"));
     expect(root.license).toBe("AGPL-3.0-only");
     expect(root.name).toBe("better-search-lab");
-    expect(root.version).toBe("1.0.0-rc.1");
+    expect(root.version).toBe("1.0.0");
     expect(mcp.license).toBe("AGPL-3.0-only");
     expect(mcp.name).toBe("@better-search-lab/mcp");
     expect(mcp.private).toBeUndefined();
