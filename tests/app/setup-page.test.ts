@@ -6,7 +6,7 @@ vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined })
 vi.mock("@/db/client", () => ({ db: {} }));
 vi.mock("@/lib/auth/users", () => ({ countUsers: vi.fn(async () => state.users) }));
 vi.mock("@/lib/auth/session", () => ({ resolveSessionUser: vi.fn(async () => state.session) }));
-vi.mock("@/lib/config/resolve", () => ({ getConfig: vi.fn(async () => ({ dataforseo: { configured: state.dataforseo }, setup: { llmStep: state.llmStep, completedAt: state.completedAt } })) }));
+vi.mock("@/lib/config/resolve", () => ({ getConfig: vi.fn(async () => ({ dataforseo: { configured: state.dataforseo }, llm: { configured: false }, setup: { llmStep: state.llmStep, completedAt: state.completedAt } })) }));
 vi.mock("@/lib/projects", () => ({ listProjects: vi.fn(async () => state.projects) }));
 vi.mock("@/lib/profile", () => ({ listProfileCandidates: vi.fn(async () => []) }));
 vi.mock("@/lib/keywords", () => ({ listTrackedKeywords: vi.fn(async () => []) }));

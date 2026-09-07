@@ -60,6 +60,8 @@ Replace the image name (`ghcr.io/your-org/better-search-lab`) with the image tha
 - `docker-compose.yml` — the `web` and `worker` services.
 - `docker-compose.demo.yml` — the one `web` service.
 
+Then enable private vulnerability reporting in the repository settings (Security → Code security), so the link in `SECURITY.md` accepts reports.
+
 ## Pull requests
 
 Fill in the template. Keep one concern per pull request; note anything the reviewer must set up to verify.
