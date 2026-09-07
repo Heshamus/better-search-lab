@@ -172,8 +172,8 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
           {saveState === "error" ? "Couldn’t save — try again." : null}
         </span>
         {/* The single role="status" element while profile-site runs — shows the
-            handler's real line (starts "Crawling example.com…"), not a
-            separate static blurb. */}
+            handler's real progress line (profile-site.ts), not a separate
+            static blurb. */}
         <JobProgress state={profile.state} progress={profile.progress} error={profile.error} />
       </form>
 
