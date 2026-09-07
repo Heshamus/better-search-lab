@@ -52,8 +52,11 @@ describe("BuildStep", () => {
     vi.useFakeTimers();
     const calls = fetchScript({});
     render(<BuildStep projectId="p1" onboarding={ready} extrasCost={0.07} />);
-    fireEvent.click(screen.getByLabelText(/also fetch backlinks and organic keywords/i));
-    expect(screen.getByLabelText(/also fetch/i)).toHaveTextContent(/\$0\.07/);
+    const checkbox = screen.getByRole("checkbox", { name: /also fetch backlinks and organic keywords/i });
+    expect(screen.getByText(/\$0\.07/)).toBeInTheDocument();
+    expect(checkbox).not.toBeChecked();
+    fireEvent.click(checkbox);
+    expect(checkbox).toBeChecked();
     fireEvent.click(screen.getByRole("button", { name: /^start build$/i }));
     await act(async () => { await vi.advanceTimersByTimeAsync(0); });
     expect(calls.find((c) => c.method === "PATCH")?.body.buildJobs).toEqual({ refreshAll: "ra", audit: "au", backlinks: "bl", organic: "og" });

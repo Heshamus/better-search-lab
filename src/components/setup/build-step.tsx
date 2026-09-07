@@ -102,17 +102,10 @@ export function BuildStep({ projectId, onboarding, extrasCost }: { projectId: st
         <p className="mt-1 text-sm text-neutral-400">Rankings for every tracked keyword, competitor gaps, the first opportunity shortlist, and a site audit. Ten minutes at most; you can leave this page and come back.</p>
       </div>
       {phase === "pending" ? (
-        <button
-          type="button"
-          role="checkbox"
-          aria-checked={extras}
-          aria-labelledby="build-extras-label"
-          onClick={() => setExtras((v) => !v)}
-          className="flex items-center gap-2 text-left text-sm text-neutral-300"
-        >
-          <span aria-hidden="true" className={`h-4 w-4 shrink-0 rounded border ${extras ? "border-accent bg-accent" : "border-neutral-600"}`} />
-          <span id="build-extras-label">Also fetch backlinks and organic keywords (≈ ${extrasCost.toFixed(2)})</span>
-        </button>
+        <label className="flex items-center gap-2 text-sm text-neutral-300">
+          <input type="checkbox" checked={extras} onChange={(e) => setExtras(e.target.checked)} />
+          Also fetch backlinks and organic keywords (≈ ${extrasCost.toFixed(2)})
+        </label>
       ) : null}
       {jobs.length > 0 ? (
         <ul className="panel divide-y divide-neutral-800/60 px-4">
