@@ -5,7 +5,6 @@ import { listProjects } from "@/lib/projects";
 import { listProfileCandidates } from "@/lib/profile";
 import { listCompetitors } from "@/lib/competitors";
 import { getRedditConfig } from "@/lib/reddit/reddit-config";
-import { ProjectCreateForm } from "@/components/project-create-form";
 import { ProjectEditForm } from "@/components/project-edit-form";
 import { ProfileReview } from "@/components/profile-review";
 import { CompetitorManager } from "@/components/competitor-manager";
@@ -26,19 +25,11 @@ const sectionHeadingClass =
 // directly — no /api fetch; the (app) layout validates the session against the users table on every render (middleware only pre-filters for a JWT) — and reads
 // everything the page mounts (project roster, this project's profile
 // candidates, its tracked competitors) straight from src/lib. All mutation
-// (edit/profile/delete, add-candidates, add/delete-competitor, create-project,
-// tune-weights) lives in the nested client components, which each fetch their
-// own guarded /api/* route and then router.refresh() this page.
-//
-// Task 18's core split: "Edit current project" (rename/re-profile/delete the
-// site you're looking at, plus review its auto-profiled keyword candidates and
-// manage its competitors) is now VISUALLY SEPARATE from "Create a new project"
-// (the ProjectCreateForm), so submitting the create form can no longer be
-// mistaken for editing the current one — the ambiguous double-form is gone.
-//
-// No-projects case (brief): with zero projects only the "Create a new project"
-// section renders (the edit section and roster are project-gated), so the
-// create form IS the primary content — no separate EmptyState wrapper.
+// (edit/profile/delete, add-candidates, add/delete-competitor, tune-weights)
+// lives in the nested client components, which each fetch their own guarded
+// /api/* route and then router.refresh() this page. Adding a new site is not
+// a mutation on this page anymore (Task 11) — it's a link out to the setup
+// wizard's site step, which now owns project creation.
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   // requireAdminUser() bounces a member here with ?error=admin_only. Saying so
   // out loud is the difference between "the app ignored my click" and "that
@@ -142,17 +133,9 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       ) : null}
 
       <section className="flex flex-col gap-2">
-        {project ? (
-          <div className="border-t border-neutral-200 pt-6 dark:border-neutral-800">
-            <h2 className={sectionHeadingClass}>Create a new project</h2>
-            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-600">
-              Start tracking another site. This adds a project — it does not change the current one above.
-            </p>
-          </div>
-        ) : (
-          <h2 className={sectionHeadingClass}>Create a new project</h2>
-        )}
-        <ProjectCreateForm />
+        <h2 className={sectionHeadingClass}>Add a site</h2>
+        <p className="text-xs text-neutral-400">The setup wizard profiles the site, suggests competitors and runs the first build.</p>
+        <a href="/setup?step=site" className="self-start rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-90">Add a site</a>
       </section>
     </div>
   );

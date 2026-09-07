@@ -46,7 +46,13 @@ function HealthTile({ href, label, value, hint }: { href: string; label: string;
 export default async function OverviewPage() {
   const project = await getCurrentProject(db, (await cookies()).get("sp_project")?.value);
   if (!project) {
-    return <EmptyState title="Create your first project in Settings" description="Add your site's domain in Settings to see the state of your SEO." />;
+    return (
+      <EmptyState
+        title="Add your first site"
+        description="The setup wizard profiles it, suggests competitors, and builds the first picture of your rankings."
+        action={<a href="/setup?step=site" className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-90">Start setup</a>}
+      />
+    );
   }
 
   const [gsc, ga, dashboard, opportunities, audit, backlinks, competitors] = await Promise.all([

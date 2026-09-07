@@ -27,8 +27,9 @@ const dangerButtonClass =
 
 /**
  * Task 18: the current project's edit surface — the "edit" half of the
- * Settings split (create-a-new-project lives in the separate ProjectCreateForm
- * section, so submitting one can no longer be confused with the other).
+ * Settings split (adding another site is now a link out to the setup wizard
+ * instead of a sibling form, so submitting this one can no longer be
+ * confused with creating a new project — Task 11).
  *
  * Three independent mutations, each with its own busy/error state so one
  * in-flight action never blocks or gets confused with another — mirrors

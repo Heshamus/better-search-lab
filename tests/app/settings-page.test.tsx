@@ -17,6 +17,7 @@ vi.mock("@/lib/reddit/reddit-config", () => ({
   getRedditConfig: vi.fn(async () => ({ knowledgeBrief: null, subreddits: [] })),
 }));
 
+import { renderToStaticMarkup } from "react-dom/server";
 import SettingsPage from "@/app/(app)/settings/page";
 
 afterEach(() => cleanup());
@@ -35,5 +36,14 @@ describe("Settings page admin_only notice", () => {
     cleanup();
     render(await SettingsPage({ searchParams: Promise.resolve({ error: "something_else" }) }));
     expect(screen.queryByRole("status")).toBeNull();
+  });
+});
+
+describe("Settings page add-a-site link", () => {
+  it("links to the wizard instead of rendering a create form", async () => {
+    const html = renderToStaticMarkup((await SettingsPage({ searchParams: Promise.resolve({}) })) as any);
+    expect(html).toContain('href="/setup?step=site"');
+    expect(html).toContain("Add a site");
+    expect(html).not.toContain("Create a project");
   });
 });
