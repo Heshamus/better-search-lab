@@ -18,6 +18,13 @@ vi.mock("@/db/client", () => ({
   db: { select: () => ({ from: () => ({ where: () => ({ limit: async () => userRows }) }) }) },
 }));
 vi.mock("@/lib/auth/users", () => ({ countUsers: vi.fn() }));
+// /setup (Task 7) now loads the wizard's config/projects/cookie state too.
+// Those paths are exercised in full by tests/app/setup-page.test.ts; here
+// they only need to be inert so the pre-existing redirect-story tests below
+// (driven by countUsers + auth()) can still reach the code path they assert.
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
+vi.mock("@/lib/config/resolve", () => ({ getConfig: vi.fn(async () => ({ dataforseo: { configured: false }, setup: { llmStep: undefined, completedAt: undefined } })) }));
+vi.mock("@/lib/projects", () => ({ listProjects: vi.fn(async () => []) }));
 
 import { auth } from "@/auth";
 import { requireAdminUser } from "@/lib/auth/session";
@@ -126,13 +133,17 @@ describe("(auth) pages", () => {
     expect(await redirectOf(() => LoginPage({ searchParams: sp }))).toBeNull();
   });
 
-  it("closes /setup once the first admin exists", async () => {
+  it("closes /setup once the first admin exists and nobody is signed in", async () => {
     (countUsers as any).mockResolvedValue(1);
-    expect(await redirectOf(() => SetupPage())).toBe("/login");
+    const sp = Promise.resolve({});
+    // The wizard must stay reachable for a signed-in user (Task 7) — the
+    // redirect target now carries a callback back to /setup, not a bare /login.
+    expect(await redirectOf(() => SetupPage({ searchParams: sp }))).toBe("/login?callbackUrl=%2Fsetup");
   });
 
   it("keeps /setup open while there are no users", async () => {
     (countUsers as any).mockResolvedValue(0);
-    expect(await redirectOf(() => SetupPage())).toBeNull();
+    const sp = Promise.resolve({});
+    expect(await redirectOf(() => SetupPage({ searchParams: sp }))).toBeNull();
   });
 });

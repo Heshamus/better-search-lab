@@ -61,4 +61,14 @@ describe("CreateAdminForm", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(/already exists/);
     expect(push).not.toHaveBeenCalled();
   });
+  it("continues to the wizard when told to", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ id: "u1", email: "a@example.com" }), { status: 201 })));
+    signIn.mockResolvedValue({ ok: true, error: undefined });
+    render(<CreateAdminForm next="/setup" />);
+    fireEvent.change(screen.getByLabelText(/^email/i), { target: { value: "a@example.com" } });
+    fireEvent.change(screen.getByLabelText(/^password/i), { target: { value: "correct horse battery" } });
+    fireEvent.change(screen.getByLabelText(/confirm/i), { target: { value: "correct horse battery" } });
+    fireEvent.click(screen.getByRole("button", { name: /create admin/i }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/setup"));
+  });
 });

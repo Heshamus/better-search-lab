@@ -9,9 +9,11 @@ const inputClass =
 
 /**
  * First-run step 1: create the admin account, then sign in with the same
- * credentials so the wizard (Plan 2) continues without a second form.
+ * credentials so the caller (the wizard, or the plain first-run page) can
+ * continue without a second form. `next` defaults to `/overview`; the wizard
+ * passes `/setup` so the server can pick the next pending step.
  */
-export function CreateAdminForm() {
+export function CreateAdminForm({ next = "/overview" }: { next?: string } = {}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,7 +45,7 @@ export function CreateAdminForm() {
         setError("Account created, but sign-in failed — use the login page.");
         return;
       }
-      router.push("/overview");
+      router.push(next);
     } catch {
       setError("Network error — please try again.");
     } finally {
