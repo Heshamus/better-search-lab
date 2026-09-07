@@ -1,150 +1,69 @@
-# seo-platform *(working name)*
+# Better Search Lab
 
-Internal, self-hosted SEO platform — our own Search Atlas, powered by the **DataForSEO** API.
-Standalone **Next.js + TypeScript** web app; **not** an MCP.
+Self-hosted SEO and AI-search visibility for people who run their own sites: rank tracking, keyword research, competitor gaps, backlinks, site audits, Search Console and Analytics in one place, a weekly **opportunity engine** that turns all of it into a short list of things to do, and an **MCP server** so your coding agent can read the same data.
 
-**Status:** Phase 0 (foundation) complete — allowlist-gated login, Postgres schema + migrations,
-DataForSEO client, job runner/scheduler, and a standalone worker process, all behind a green
-test suite. Phase 1 (rank tracking, research, the Opportunity Engine) is next.
+![Overview](docs/screenshots/overview.png)
 
-📄 **Start here:** [`docs/superpowers/specs/2026-08-02-internal-seo-platform-design.md`](docs/superpowers/specs/2026-08-02-internal-seo-platform-design.md)
+Powered by the [DataForSEO](https://dataforseo.com) API on a pay-as-you-go basis — no credit system, an honest in-app meter instead. AGPL-3.0 licensed; run it on a laptop, a VPS, or Railway.
 
-Scope: SEO intelligence (keyword research, rank tracking, competitive & keyword-gap analysis)
-plus a weekly **Opportunity Engine** that surfaces the best few things to do for each site —
-with a content engine and more following in later phases. No credit system; a transparent
-internal usage/cost meter instead.
-
-## Local development
-
-Requires Node ≥ 20 and pnpm.
-
-1. Install dependencies:
-
-   ```bash
-   pnpm install
-   ```
-
-2. Copy the env template and fill in real values:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   | Variable | Purpose |
-   | --- | --- |
-   | `DATABASE_URL` | Postgres connection string (Supabase or local Postgres). |
-   | `DATAFORSEO_LOGIN` / `DATAFORSEO_PASSWORD` | DataForSEO API Basic Auth credentials. |
-   | `AUTH_SECRET` | Auth.js session-signing secret, 16+ chars (e.g. `openssl rand -base64 32`). |
-   | `ALLOWLIST` | Comma-separated emails permitted to log in (no self-serve signup by design). |
-
-3. Apply the database schema:
-
-   ```bash
-   pnpm db:migrate
-   ```
-
-4. Run the app:
-
-   ```bash
-   pnpm dev
-   ```
-
-   Visit `http://localhost:3000` and sign in with an allowlisted user (seed one manually into
-   the `users` table with a `bcryptjs` password hash — there's no self-serve signup).
-
-5. Run the background worker — a separate long-running process that registers cron schedules
-   and runs jobs (Phase 0 ships one: a daily `health` job):
-
-   ```bash
-   pnpm worker
-   ```
-
-> **Note on env loading:** `pnpm dev` and `pnpm build` are Next.js commands, which auto-load
-> `.env` for you. `pnpm db:migrate` and `pnpm worker` are plain `tsx` scripts and do **not**
-> auto-load `.env` — like any Node process, they only see real environment variables. Load the
-> file into your shell first, then run them in the same shell:
->
-> ```bash
-> set -a; source .env; set +a
-> pnpm db:migrate
-> ```
->
-> This only matters locally — in production, Railway injects env vars directly into the
-> process, so no `.env` file is present or needed there.
-
-### Tests
+## Try it in five minutes
 
 ```bash
-pnpm test        # full suite, single run
-pnpm test:watch  # watch mode
+git clone https://github.com/<org>/better-search-lab.git
+cd better-search-lab
+cp .env.example .env            # set AUTH_SECRET (openssl rand -base64 32) and APP_URL
+docker compose up -d
 ```
 
-Tests run against fixtures and an in-memory Postgres (`@electric-sql/pglite`) — zero network
-calls, zero DataForSEO spend. A `vite-tsconfig-paths` deprecation notice and a pglite "Pulling
-schema from database…" spinner are expected/harmless.
+Open `http://localhost:3000` — on first run it redirects to `/setup`, which creates your admin account, connects DataForSEO (a $5 balance is plenty to start), profiles your site, suggests competitors, and builds the first picture. Active time: about five minutes; DataForSEO spend for a 150-keyword site: about $0.50. Everything else — an AI assistant, Google, email, Reddit — is optional and lives under **Settings → Integrations**.
 
-### Database migrations
+Want to look before you connect anything? `docker compose -f docker-compose.demo.yml up -d` boots a read-only demo with two synthetic sites and ninety days of history (`DEMO_MODE`).
 
-Schema lives in `src/db/schema.ts` (Drizzle ORM). After changing it, regenerate the migration:
+## What it does
 
-```bash
-pnpm db:generate   # drizzle-kit diffs schema.ts against drizzle/ and emits new SQL
+| Area | What you get |
+|---|---|
+| **Overview** | Search Console and Analytics headline, "do this next", health tiles |
+| **Opportunities** | The weekly shortlist: striking distance, decay, momentum, gaps, SERP features, cannibalization, CTR gaps — scored, explained, actionable |
+| **Rankings & keywords** | Daily positions with history, SERP features you own, tracked-keyword management, bulk keyword overview |
+| **Competitors** | Up to five per site, suggested from real overlap; their keywords, top pages, and the gaps you are missing |
+| **Backlinks, audit, organic** | DataForSEO backlink snapshots with trends; an on-page audit from our own crawler (free); organic keywords |
+| **AI visibility** | Weekly scans of Perplexity, ChatGPT and Gemini: are you named, are you cited, who is |
+| **Reddit conversations** | Threads worth joining, judged for fit and drafted with citations |
+| **MCP** | `npx @better-search-lab/mcp` gives Claude Code (or any MCP client) read-only tools over your data |
+
+![Opportunities](docs/screenshots/opportunities.png)
+
+## Install
+
+- **Docker Compose** (recommended): the five lines above. `docs/install.md` covers volumes, reverse proxies, and the worker.
+- **Railway**: the repo ships `railway.json` (web) and `railway.worker.json` (worker).
+- **Bare metal**: Node 22, pnpm, Postgres 16; `pnpm install && pnpm db:migrate && pnpm build && pnpm start`, plus `pnpm worker`.
+
+Only `DATABASE_URL` and `AUTH_SECRET` are required. Every integration is configured in the app; each can also be set by environment variable, and the environment wins — see [docs/configuration.md](docs/configuration.md).
+
+## Costs
+
+DataForSEO bills per request; the in-app **Usage** page shows exactly what was spent, by day and endpoint. Typical numbers: a rank check is $0.002 per keyword per refresh, keyword research and competitor calls are about $0.012 each, a backlinks refresh about $0.06. The first build of a 150-keyword site is about $0.50; a weekly refresh of the same site about $0.35. Details and how to keep it low: [docs/costs.md](docs/costs.md).
+
+## MCP
+
+Mint a token under **Settings → MCP**, then register the server with your agent:
+
+```json
+{ "mcpServers": { "better-search-lab": { "command": "npx", "args": ["-y", "@better-search-lab/mcp"], "env": { "BSL_URL": "https://your-install.example.com", "BSL_TOKEN": "bsl_…" } } } }
 ```
 
-Commit the generated `drizzle/*.sql` file together with the updated `drizzle/meta/` journal —
-they're the migration artifact. `pnpm db:migrate` (`src/db/migrate.ts`) applies every migration
-in `drizzle/` to `DATABASE_URL`; it's idempotent (already-applied files are skipped), so it's
-safe to run again after adding a new one.
+Eleven read-only tools — projects, opportunities, gaps, competitors, audit, backlinks, Search Console, Analytics, AI visibility, Reddit conversations, keyword overview. See [docs/mcp.md](docs/mcp.md).
 
-## Deploying
+## How it works
 
-**1. Database — Supabase**
+Next.js 15 (App Router) + Postgres, one image for the web app and a worker. Pages are server components that read the database; every mutation is a session-guarded API route; long jobs run in the worker and report live progress. Integration secrets are encrypted at rest. [docs/architecture.md](docs/architecture.md) has the map.
 
-Create a dedicated Supabase project for this app and copy its Postgres connection string into
-`DATABASE_URL`. Drizzle's migrator runs DDL and expects prepared-statement support, which
-Supabase's transaction-mode pooler (port 6543) doesn't provide — use the session pooler or the
-direct connection string for `DATABASE_URL`.
+## Contributing
 
-**2. App — Railway (web + worker)**
+Issues and pull requests are welcome — start with [CONTRIBUTING.md](CONTRIBUTING.md). Security reports: [SECURITY.md](SECURITY.md). Every change ships with tests; the suite runs on an in-memory Postgres and never touches the network.
 
-This repo ships two Railway service configs. Railway's config-as-code format describes **one
-service per file** — there's no single-file, multi-service schema — so this is a deliberate
-two-file setup, not an oversight:
+## License
 
-| Service | Config file | Build | Start |
-| --- | --- | --- | --- |
-| `web` | `railway.json` (Railway's default path) | `pnpm install && pnpm build` | `pnpm start` |
-| `worker` | `railway.worker.json` | `pnpm install` | `pnpm worker` |
-
-Steps:
-
-1. Create a new Railway project from this GitHub repo — this becomes the `web` service. It
-   picks up `railway.json` automatically.
-2. Add a second service to the *same* project from the *same* repo. In its Settings → **Config
-   File Path**, point it at `railway.worker.json`.
-3. On **both** services, set: `DATABASE_URL`, `AUTH_SECRET`, `ALLOWLIST`, `DATAFORSEO_LOGIN`,
-   `DATAFORSEO_PASSWORD`.
-   - `web` needs them at **build time**, not just at runtime: `pnpm build` imports
-     `src/db/client.ts`, which calls the env loader at module load, so a missing/invalid var
-     fails the build itself. Railway service variables are available at both build and deploy
-     stages, so setting them as normal service variables covers this.
-   - `worker`'s build step is just `pnpm install` (it runs TypeScript straight via `tsx`, no
-     Next.js build needed), so for it these variables are only a runtime requirement.
-4. Deploy both services.
-5. Run the migration **once** against the production database — via the Railway CLI
-   (`railway run`) or a one-off shell from either service in the Railway dashboard:
-
-   ```bash
-   pnpm db:migrate
-   ```
-
-   Re-run after any deploy that adds a new migration file; already-applied files are skipped.
-
-If Auth.js rejects requests with an "UntrustedHost" error behind Railway's proxy, set
-`AUTH_TRUST_HOST=true` — Auth.js v5 auto-detects trusted hosts on Vercel but needs this
-explicitly elsewhere.
-
-**Single-service alternative:** if you don't want to run a second Railway service, deploy only
-`web`. Phase 0's only scheduled job is a `health` check, so going without the worker isn't
-urgent — add it back (`railway.worker.json`) once Phase 1 lands real scheduled work (rank
-refresh, weekly opportunities).
+[AGPL-3.0-only](LICENSE). You can run, modify and self-host it freely; if you offer it to others as a service, share your changes.
