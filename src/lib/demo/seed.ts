@@ -1,6 +1,7 @@
 import { aiVisibilitySnapshots, apiTokens, apiUsage, backlinkSnapshots, jobs, keywordMetrics, rankSnapshots } from "@/db/schema";
 import { loadEnv } from "@/config/env";
 import { mulberry32 } from "./prng";
+import { DEMO_ADMIN, DEMO_MCP_TOKEN } from "./public";
 import { DEMO_PROJECTS, generateProjectData, type DemoProjectData, type DemoProjectSpec } from "./generators";
 import { createFirstAdmin, findUserByEmail, type UserSummary } from "@/lib/auth/users";
 import { hashToken } from "@/lib/api-tokens";
@@ -31,9 +32,10 @@ import { keyFromEnv } from "@/lib/config/crypto";
 //  - the store cannot express the value — `createApiToken` mints a RANDOM
 //    token, and the demo's token is a fixed, documented one.
 
-export const DEMO_ADMIN = { email: "demo@example.com", password: "demo-password" } as const;
-/** Fixed, documented, read-only token (spec §13): every /api/mcp/* route is read-only and the data is synthetic. */
-export const DEMO_MCP_TOKEN = "bsl_demo_readonly";
+// Defined in ./public so the client components that show them (the login form,
+// the demo MCP panel) can import them without pulling this module in; re-exported
+// here because the seeder and its callers have always read them from `./seed`.
+export { DEMO_ADMIN, DEMO_MCP_TOKEN };
 
 const DAY_MS = 86_400_000;
 /** Postgres caps a statement at 65535 bound parameters; 90 days × 140 keywords is far past that. */

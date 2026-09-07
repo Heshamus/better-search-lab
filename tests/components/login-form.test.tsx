@@ -9,6 +9,9 @@ const signIn = vi.fn();
 vi.mock("next-auth/react", () => ({ signIn: (...args: unknown[]) => signIn(...args) }));
 
 import { LoginForm } from "@/components/login-form";
+// Asserted against the constant, not a copy of the literals: the seeder creates
+// this account, so a divergence here is a demo whose Explore button cannot sign in.
+import { DEMO_ADMIN } from "@/lib/demo/public";
 
 afterEach(() => { cleanup(); push.mockClear(); refresh.mockClear(); signIn.mockReset(); });
 
@@ -59,7 +62,7 @@ describe("LoginForm", () => {
     expect(screen.queryByLabelText(/email/i)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /explore the demo/i }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/overview"));
-    expect(signIn).toHaveBeenCalledWith("credentials", { email: "demo@example.com", password: "demo-password", redirect: false });
+    expect(signIn).toHaveBeenCalledWith("credentials", { email: DEMO_ADMIN.email, password: DEMO_ADMIN.password, redirect: false });
   });
   it("shows the seeding failure honestly", () => {
     render(<LoginForm callbackUrl="/overview" demo seedError="disk full" />);

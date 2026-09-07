@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { DEMO_ADMIN } from "@/lib/demo/public";
 
 const inputClass =
   "w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-accent";
@@ -57,7 +58,7 @@ export function LoginForm({
   async function explore() {
     setBusy(true); setError(null);
     try {
-      const res = await signIn("credentials", { email: "demo@example.com", password: "demo-password", redirect: false });
+      const res = await signIn("credentials", { email: DEMO_ADMIN.email, password: DEMO_ADMIN.password, redirect: false });
       if (!res || res.error) { setError("The demo account is not available yet — the dataset may still be seeding."); return; }
       router.push(callbackUrl);
       router.refresh();

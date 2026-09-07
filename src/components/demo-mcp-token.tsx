@@ -1,4 +1,4 @@
-import { DEMO_MCP_TOKEN } from "@/lib/demo/seed";
+import { DEMO_MCP_TOKEN } from "@/lib/demo/public";
 
 /** MCP settings page in demo mode (spec §13): the one fixed, documented, read-only token — no generate/revoke, nothing to leak. */
 export function DemoMcpToken() {
