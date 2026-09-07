@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { createTestDb } from "@/db/test-db";
 import { jobs } from "@/db/schema";
@@ -51,5 +51,22 @@ describe("makeProgressWriter", () => {
     await w.progress("Pinging");
     const [row] = await t.db.select({ progress: jobs.progress }).from(jobs).where(eq(jobs.dedupeKey, "health:global:2026-09-07"));
     expect(row.progress).toBe("Pinging");
+  });
+
+  it("a write that throws never rejects progress() or flush() (best-effort telemetry)", async () => {
+    close = async () => {}; // this test uses a fake db, not createTestDb() — nothing to close
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const failingDb = { update: () => ({ set: () => ({ where: () => Promise.reject(new Error("db unavailable")) }) }) };
+    let clock = 0;
+    const w = makeProgressWriter(failingDb, { id: "x" }, { minIntervalMs: 1000, now: () => clock });
+
+    await expect(w.progress("a")).resolves.toBeUndefined(); // immediate write attempt fails — must not reject
+    clock += 10; // still inside the throttle window
+    await expect(w.progress("b")).resolves.toBeUndefined(); // held, not written yet
+    await expect(w.flush()).resolves.toBeUndefined(); // flush's write of the held message also fails — must not reject
+
+    expect(warn).toHaveBeenCalledTimes(2); // one per failed write: the immediate one and the flushed one
+    expect(warn.mock.calls[0][0]).toContain("job progress write failed");
+    warn.mockRestore();
   });
 });

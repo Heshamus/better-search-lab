@@ -31,7 +31,17 @@ export function makeProgressWriter(
   async function write(message: string): Promise<void> {
     held = null;
     lastWriteAt = now();
-    await db.update(jobs).set({ progress: message }).where(where);
+    try {
+      await db.update(jobs).set({ progress: message }).where(where);
+    } catch (e) {
+      // Progress lines are best-effort telemetry, not job outcome. A write failure here
+      // must never reject `progress()`/`flush()` — a handler that calls progress() inside
+      // its own try/catch (e.g. profile-site's rankedKeywords guard) would misattribute
+      // this as THAT call failing, and a handler that calls it outside any try (e.g.
+      // rank-refresh's mapLimit callback) would have the whole job marked failed even
+      // though the real work succeeded. Warn and move on.
+      console.warn(`job progress write failed: ${String((e as { message?: unknown })?.message ?? e)}`);
+    }
   }
 
   return {

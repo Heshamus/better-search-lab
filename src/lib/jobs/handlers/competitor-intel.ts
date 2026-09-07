@@ -20,8 +20,8 @@ export function competitorIntelHandler(client: DataForSeoClient) {
       const { items, rows: n } = await rankedKeywords(client, {
         target: c.domain, locationCode: project.defaultLocationCode, languageCode: project.defaultLanguageCode, limit: LIMIT,
       });
-      await saveCompetitorKeywords(db, projectId!, c.domain, items.map((i) => ({
-        keyword: i.keyword, rankAbsolute: i.rankAbsolute, url: i.url, volume: i.searchVolume, difficulty: i.difficulty,
+      await saveCompetitorKeywords(db, projectId!, c.domain, items.map((it) => ({
+        keyword: it.keyword, rankAbsolute: it.rankAbsolute, url: it.url, volume: it.searchVolume, difficulty: it.difficulty,
       })));
       await logApiUsage(db, { endpoint: ENDPOINT, rows: n, projectId });
       rows += n; cost += estimateCost(ENDPOINT, n);

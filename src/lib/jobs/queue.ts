@@ -136,7 +136,7 @@ export async function drainOnce(db: any, resolve: HandlerResolver): Promise<Drai
       .set({ status: "done", finishedAt: new Date(), rowsConsumed: rows, estCost: String(cost) })
       .where(eq(jobs.id, job.id));
   } catch (e: any) {
-    await writer.flush().catch(() => undefined); // never mask the real failure with a flush error
+    await writer.flush(); // never throws (see progress.ts) — never mask the real failure with a flush error
     await db
       .update(jobs)
       .set({ status: "failed", finishedAt: new Date(), error: String(e?.message ?? e) })

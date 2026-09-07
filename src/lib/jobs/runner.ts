@@ -41,7 +41,7 @@ export async function runJob(db: any, spec: {
     }).where(eq(jobs.dedupeKey, dedupeKey));
     return "done";
   } catch (e: any) {
-    await writer.flush().catch(() => undefined);
+    await writer.flush(); // never throws (see progress.ts) — the real failure below is never masked
     await db.update(jobs).set({
       status: "failed", finishedAt: new Date(), error: String(e?.message ?? e),
     }).where(eq(jobs.dedupeKey, dedupeKey));
