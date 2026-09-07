@@ -2,8 +2,9 @@ import { describe, it, expect } from "vitest";
 import { selectSetupStep, type ProjectRow } from "@/lib/setup/state";
 import { COMPLETE_ONBOARDING, initialOnboarding } from "@/lib/setup/onboarding";
 
-const cfg = (o: { dataforseo?: boolean; llmStep?: "done" | "skipped"; completedAt?: string } = {}) => ({
+const cfg = (o: { dataforseo?: boolean; llm?: boolean; llmStep?: "done" | "skipped"; completedAt?: string } = {}) => ({
   dataforseo: { configured: o.dataforseo ?? true },
+  llm: { configured: o.llm ?? false },
   setup: { llmStep: o.llmStep, completedAt: o.completedAt },
 });
 const project = (over: Partial<ProjectRow> = {}): ProjectRow => ({
@@ -43,6 +44,16 @@ describe("selectSetupStep", () => {
     const newer = project({ id: "new", createdAt: new Date("2026-09-02T00:00:00Z") });
     expect(selectSetupStep({ ...base, projects: [old, newer], currentProjectId: "old" })).toMatchObject({ step: "profile", project: { id: "new" } });
     expect(selectSetupStep({ ...base, projects: [old] })).toMatchObject({ step: "done", project: null });
+  });
+  // An install upgraded from before the AI step exists with llmStep undefined.
+  it("an upgraded install still gets the site step from `?step=site`, and a configured LLM skips the AI step", () => {
+    const upgraded = { ...base, cfg: cfg({}), projects: [project()] };
+    expect(selectSetupStep({ ...upgraded, stepParam: "site" }).step).toBe("site");
+    // Without the param the AI step still comes first — unless an LLM is set.
+    expect(selectSetupStep(upgraded).step).toBe("llm");
+    expect(selectSetupStep({ ...upgraded, cfg: cfg({ llm: true }) }).step).not.toBe("llm");
+    // DataForSEO is required, so it outranks `?step=site`.
+    expect(selectSetupStep({ ...upgraded, cfg: cfg({ dataforseo: false }), stepParam: "site" }).step).toBe("dataforseo");
   });
   it("`?step=site` forces the site step even with pending projects, and everything done is done", () => {
     expect(selectSetupStep({ ...base, projects: [project()], stepParam: "site" }).step).toBe("site");

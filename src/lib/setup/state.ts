@@ -7,7 +7,7 @@ export interface ProjectRow { id: string; name: string; domain: string; createdA
 export interface SetupInput {
   userCount: number;
   role: "admin" | "member" | null;
-  cfg: { dataforseo: { configured: boolean }; setup: { llmStep?: "done" | "skipped"; completedAt?: string } };
+  cfg: { dataforseo: { configured: boolean }; llm: { configured: boolean }; setup: { llmStep?: "done" | "skipped"; completedAt?: string } };
   projects: ProjectRow[];
   /** The `sp_project` cookie, if any: the site the wizard should continue with. */
   currentProjectId?: string;
@@ -27,8 +27,14 @@ export function selectSetupStep(input: SetupInput): SetupSelection {
   if (input.userCount === 0) return { step: "account", project: null };
   const admin = input.role === "admin";
   if (!input.cfg.dataforseo.configured) return { step: "dataforseo", project: null, ...(admin ? {} : { blocked: "admin_required" as const }) };
-  if (input.cfg.setup.llmStep === undefined) return { step: "llm", project: null, ...(admin ? {} : { blocked: "admin_required" as const }) };
-  if (input.stepParam === "site" || input.projects.length === 0) return { step: "site", project: null };
+  // `?step=site` (Settings → "Add a site") outranks the optional AI step but
+  // not the required DataForSEO one: an upgraded install that never recorded
+  // `setup.llmStep` would otherwise answer every "add a site" click with the
+  // AI-assistant step. An LLM that is already configured counts as done, so
+  // the step never appears at all for those installs.
+  if (input.stepParam === "site") return { step: "site", project: null };
+  if (input.cfg.setup.llmStep === undefined && !input.cfg.llm.configured) return { step: "llm", project: null, ...(admin ? {} : { blocked: "admin_required" as const }) };
+  if (input.projects.length === 0) return { step: "site", project: null };
 
   const pending = input.projects.filter((p) => !isOnboarded(readOnboarding(p.onboarding)));
   const project =

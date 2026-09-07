@@ -15,6 +15,7 @@ Migrations run automatically when the `web` container starts (`pnpm db:migrate`)
 
 - **Report emails need a recipient.** The old hardcoded fallback address is gone. Set `REPORT_EMAIL_TO` or Settings → Integrations → Email → Report recipient, or the weekly AI-visibility report and the daily Reddit digest are skipped (the worker says so at startup).
 - **`APP_URL`** was recommended before and still is: Google OAuth, email links and the auth redirect base all read it.
+- **The setup wizard asks once about the AI assistant.** An existing install is shown the AI-assistant step one time so it can record a choice — unless an LLM is already configured, in which case the step never appears. Skipping it changes nothing; Settings → "Add a site" goes straight to the site step either way.
 
 ## Between 1.x releases
 
