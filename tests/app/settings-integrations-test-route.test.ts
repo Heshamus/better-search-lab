@@ -29,6 +29,9 @@ describe("integration test + models routes", () => {
     (resolveSessionUser as any).mockResolvedValueOnce({ id: "m", email: "m@example.com", role: "member" });
     expect((await post("llm")).status).toBe(403);
   });
+  it("404s the hidden setup group — it's a real GROUPS entry but not a testable integration", async () => {
+    expect((await post("setup")).status).toBe(404);
+  });
   it("lists models", async () => {
     const res = await GET();
     expect(await res.json()).toEqual({ models: ["deepseek-v4-pro", "deepseek-chat"] });

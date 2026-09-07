@@ -23,4 +23,8 @@ describe("PATCH /api/projects/[id]/onboarding", () => {
     expect((await patch(p.id, { build: "exploded" })).status).toBe(400);
     expect((await patch("00000000-0000-4000-8000-000000000000", { profile: "done" })).status).toBe(404);
   });
+  it("404s a malformed id instead of letting it reach the database", async () => {
+    const res = await patch("not-a-uuid", { profile: "done" });
+    expect(res.status).toBe(404);
+  });
 });

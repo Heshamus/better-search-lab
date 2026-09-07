@@ -22,15 +22,21 @@ const OnboardingSchema = z.object({
 });
 export type Onboarding = z.infer<typeof OnboardingSchema>;
 
-export const OnboardingPatchSchema = z.object({
-  profile: z.enum(PROFILE_STATES).optional(),
-  competitors: z.enum(COMPETITOR_STATES).optional(),
-  build: z.enum(BUILD_STATES).optional(),
-  buildJobs: BuildJobsSchema.optional(),
-});
+// .strict(): an unrecognized key (a typo'd field from a caller) is rejected
+// rather than silently dropped, so the PATCH route 400s instead of no-op'ing.
+export const OnboardingPatchSchema = z
+  .object({
+    profile: z.enum(PROFILE_STATES).optional(),
+    competitors: z.enum(COMPETITOR_STATES).optional(),
+    build: z.enum(BUILD_STATES).optional(),
+    buildJobs: BuildJobsSchema.optional(),
+  })
+  .strict();
 export type OnboardingPatch = z.infer<typeof OnboardingPatchSchema>;
 
-export const COMPLETE_ONBOARDING: Onboarding = Object.freeze({ profile: "done", competitors: "done", build: "done", buildJobs: {} }) as Onboarding;
+// Object.freeze is shallow — the nested buildJobs object needs its own freeze
+// so this shared constant can never be mutated through either level.
+export const COMPLETE_ONBOARDING: Onboarding = Object.freeze({ profile: "done", competitors: "done", build: "done", buildJobs: Object.freeze({}) }) as Onboarding;
 
 export function initialOnboarding(): Onboarding {
   return { profile: "pending", competitors: "pending", build: "pending", buildJobs: {} };
@@ -40,7 +46,11 @@ export function initialOnboarding(): Onboarding {
 export function readOnboarding(raw: unknown): Onboarding {
   if (raw === null || raw === undefined) return { ...COMPLETE_ONBOARDING, buildJobs: {} };
   const parsed = OnboardingSchema.safeParse(raw);
-  return parsed.success ? parsed.data : { ...COMPLETE_ONBOARDING, buildJobs: {} };
+  if (!parsed.success) {
+    console.warn("[setup] invalid onboarding state in storage — treated as complete");
+    return { ...COMPLETE_ONBOARDING, buildJobs: {} };
+  }
+  return parsed.data;
 }
 
 export function isOnboarded(o: Onboarding): boolean {
@@ -52,6 +62,8 @@ export function applyOnboardingPatch(current: Onboarding, patch: OnboardingPatch
     profile: patch.profile ?? current.profile,
     competitors: patch.competitors ?? current.competitors,
     build: patch.build ?? current.build,
-    buildJobs: patch.buildJobs ? { ...current.buildJobs, ...patch.buildJobs } : current.buildJobs,
+    // Always a fresh object — never alias current.buildJobs (or the frozen
+    // COMPLETE_ONBOARDING.buildJobs it may trace back to) into the result.
+    buildJobs: { ...current.buildJobs, ...(patch.buildJobs ?? {}) },
   };
 }
