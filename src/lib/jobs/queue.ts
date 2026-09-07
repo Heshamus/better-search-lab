@@ -1,6 +1,7 @@
 import { jobs } from "@/db/schema";
 import { and, asc, eq, lt } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
+import { makeProgressWriter } from "./progress";
 
 // Async job queue over the existing `jobs` table.
 //
@@ -15,7 +16,13 @@ import { randomUUID } from "node:crypto";
 // status. This is the same async-with-progress model Semrush/Ahrefs use for
 // audits, and it removes the timeout class of failure entirely.
 
-export type JobHandler = (ctx: { db: unknown; projectId?: string }) => Promise<{ rows: number; cost: number }>;
+export interface JobContext {
+  db: unknown;
+  projectId?: string;
+  /** Report a progress line (spec §11.2). Optional so handlers can be unit-tested with a bare `{ db }`. */
+  progress?: (message: string) => Promise<void>;
+}
+export type JobHandler = (ctx: JobContext) => Promise<{ rows: number; cost: number }>;
 export type HandlerResolver = (type: string, payload: Record<string, unknown>) => JobHandler | null;
 
 export interface ClaimedJob {
@@ -120,13 +127,16 @@ export async function drainOnce(db: any, resolve: HandlerResolver): Promise<Drai
     return "no-handler";
   }
 
+  const writer = makeProgressWriter(db, { id: job.id });
   try {
-    const { rows, cost } = await handler({ db, projectId: job.projectId ?? undefined });
+    const { rows, cost } = await handler({ db, projectId: job.projectId ?? undefined, progress: writer.progress });
+    await writer.flush();
     await db
       .update(jobs)
       .set({ status: "done", finishedAt: new Date(), rowsConsumed: rows, estCost: String(cost) })
       .where(eq(jobs.id, job.id));
   } catch (e: any) {
+    await writer.flush().catch(() => undefined); // never mask the real failure with a flush error
     await db
       .update(jobs)
       .set({ status: "failed", finishedAt: new Date(), error: String(e?.message ?? e) })

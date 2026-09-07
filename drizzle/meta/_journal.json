@@ -176,6 +176,13 @@
       "when": 1788661937927,
       "tag": "0024_promote_first_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1788739323117,
+      "tag": "0025_wizard_progress",
+      "breakpoints": true
     }
   ]
 }

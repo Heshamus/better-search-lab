@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
+import { eq } from "drizzle-orm";
 import { createTestDb } from "@/db/test-db";
 import { jobs } from "@/db/schema";
 import { runJob } from "@/lib/jobs/runner";
@@ -47,5 +48,16 @@ describe("runJob", () => {
     const [row] = await t.db.select().from(jobs);
     expect(row.status).toBe("done");
     expect(row.error).toBeNull(); // error cleared on re-claim
+  });
+
+  it("runJob supplies progress() keyed by the job's dedupeKey", async () => {
+    const t = await createTestDb(); close = t.close;
+    const outcome = await runJob(t.db, {
+      type: "rank_refresh", projectId: undefined, date: "2026-09-07",
+      handler: async (ctx) => { await ctx.progress?.("Checking keyword 1 of 1"); return { rows: 1, cost: 0 }; },
+    });
+    expect(outcome).toBe("done");
+    const [row] = await t.db.select().from(jobs).where(eq(jobs.dedupeKey, "rank_refresh:global:2026-09-07"));
+    expect(row.progress).toBe("Checking keyword 1 of 1");
   });
 });

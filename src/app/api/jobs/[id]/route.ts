@@ -11,7 +11,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const denied = await requireSession(); if (denied) return denied;
   const { id } = await params;
   const [job] = await db
-    .select({ id: jobs.id, type: jobs.type, status: jobs.status, error: jobs.error, finishedAt: jobs.finishedAt })
+    .select({ id: jobs.id, type: jobs.type, status: jobs.status, error: jobs.error, finishedAt: jobs.finishedAt, progress: jobs.progress })
     .from(jobs)
     .where(eq(jobs.id, id));
   if (!job) return NextResponse.json({ error: "job not found" }, { status: 404 });

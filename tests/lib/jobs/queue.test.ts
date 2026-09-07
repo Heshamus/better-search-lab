@@ -94,4 +94,31 @@ describe("job queue", () => {
     const [row] = await t.db.select().from(jobs);
     expect(row.status).toBe("running");
   });
+
+  it("drainOnce hands the handler a progress() that persists and flushes the final message", async () => {
+    const t = await createTestDb(); close = t.close;
+    const id = await enqueueJob(t.db, { type: "rank_refresh" });
+    await drainOnce(t.db, () => async (ctx) => {
+      await ctx.progress?.("step 1");
+      await ctx.progress?.("step 2"); // throttled: held until flush
+      return { rows: 1, cost: 0 };
+    });
+    const [row] = await t.db.select().from(jobs).where(eq(jobs.id, id));
+    expect(row.status).toBe("done");
+    expect(row.progress).toBe("step 2");
+  });
+
+  it("drainOnce flushes progress even when the handler throws", async () => {
+    const t = await createTestDb(); close = t.close;
+    const id = await enqueueJob(t.db, { type: "rank_refresh" });
+    await drainOnce(t.db, () => async (ctx) => {
+      await ctx.progress?.("halfway");
+      await ctx.progress?.("about to fail");
+      throw new Error("boom");
+    });
+    const [row] = await t.db.select().from(jobs).where(eq(jobs.id, id));
+    expect(row.status).toBe("failed");
+    expect(row.error).toBe("boom");
+    expect(row.progress).toBe("about to fail");
+  });
 });

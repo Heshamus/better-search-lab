@@ -40,6 +40,11 @@ export const projects = pgTable("projects", {
   defaultLanguageCode: text("default_language_code").notNull().default("en"),
   defaultDevice: text("default_device").notNull().default("desktop"),
   refreshCadence: text("refresh_cadence").notNull().default("weekly"), // daily | weekly
+  /**
+   * Persisted wizard state (spec §11.1). `null` = a project created before the
+   * wizard existed and is read as fully onboarded; see src/lib/setup/onboarding.ts.
+   */
+  onboarding: jsonb("onboarding").$type<Record<string, unknown>>(),
   // Per-project override for scoreOpportunity's blend (Weights: volume/winnability/
   // position/trend/relevance). Nullable — null means "never tuned", and
   // weeklyOpportunitiesHandler passes `undefined` through to assembleOpportunities,
@@ -166,6 +171,8 @@ export const jobs = pgTable("jobs", {
   rowsConsumed: integer("rows_consumed").notNull().default(0),
   estCost: numeric("est_cost").notNull().default("0"),
   error: text("error"),
+  /** Last progress line the handler reported (spec §11.2). Null until the first report. */
+  progress: text("progress"),
 });
 
 export const apiUsage = pgTable("api_usage", {
