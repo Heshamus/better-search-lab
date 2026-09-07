@@ -23,12 +23,14 @@ import { summarizeActions } from "@/lib/llm/advisor";
  * unchanged behavior for every project until it opts in.
  */
 export function weeklyOpportunitiesHandler() {
-  return async (ctx: { db: any; projectId?: string; asOf?: Date }) => {
-    const { db, projectId } = ctx;
+  return async (ctx: { db: any; projectId?: string; progress?: (message: string) => Promise<void>; asOf?: Date }) => {
+    const { db, projectId, progress } = ctx;
     const asOf = ctx.asOf ?? new Date();
 
     const [project] = await db.select().from(projects).where(eq(projects.id, projectId!));
+    await progress?.("Loading signals…");
     const input = await loadDetectorInput(db, projectId!, asOf);
+    await progress?.("Scoring…");
     const results = assembleOpportunities(input, { weights: project?.opportunityWeights ?? undefined });
 
     // Cache DeepSeek-polished imperative actions into the stored `why` (top
@@ -37,6 +39,7 @@ export function weeklyOpportunitiesHandler() {
     // call leaves the engine's own `why` untouched.
     const chat = makeChatProvider(await getConfig(db, { fresh: true }));
     if (chat && results.length) {
+      await progress?.("Phrasing actions…");
       const actions = await summarizeActions(results, { chat: (m) => chat.chat(m) });
       results.forEach((r, i) => {
         if (actions[i]) r.why = actions[i];

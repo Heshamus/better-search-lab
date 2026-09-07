@@ -45,13 +45,14 @@ export function profileSiteHandler(
   client: DataForSeoClient,
   opts?: { fetchImpl?: typeof fetch; llm?: ChatProvider | null },
 ) {
-  return async (ctx: { db: any; projectId?: string }) => {
-    const { db, projectId } = ctx;
+  return async (ctx: { db: any; projectId?: string; progress?: (message: string) => Promise<void> }) => {
+    const { db, projectId, progress } = ctx;
     const [project] = await db.select().from(projects).where(eq(projects.id, projectId!));
     if (!project) return { rows: 0, cost: 0 };
     const loc = project.defaultLocationCode, lang = project.defaultLanguageCode;
 
     // 1. Crawl (best-effort — never fatal on its own).
+    await progress?.("Crawling…");
     const crawl = await fetchSite(project.domain, { fetchImpl: opts?.fetchImpl });
     // The site's own literal phrases — always added as "crawl" candidates below.
     const crawlSeeds = crawl.failed ? [] : extractSeeds(crawl.pages).map((s) => s.phrase);
@@ -66,6 +67,7 @@ export function profileSiteHandler(
     let llmNiche: { seeds: string[]; nicheTerms: string[] } | null = null;
     if (opts?.llm && crawl.pages.length > 0) {
       try {
+        await progress?.("Extracting seeds…");
         const { seeds: llmSeeds, nicheTerms } = await extractNicheSeeds(opts.llm, { pages: crawl.pages, domain: project.domain });
         expansionSeeds = llmSeeds.slice(0, MAX_SEEDS_TO_EXPAND);
         nicheProfile = buildNicheProfile([...nicheTerms, ...llmSeeds].map((term) => ({ keyword: term, tags: [] })));
@@ -108,6 +110,7 @@ export function profileSiteHandler(
     // still carry it), but surface it: swallowing a real provider failure silently
     // has previously masked a billing-lapse outage in production for 24h undetected.
     try {
+      await progress?.("Reading what the site already ranks for…");
       const { items, rows: n } = await rankedKeywords(client, { target: normalizeDomain(project.domain), locationCode: loc, languageCode: lang, limit: MAX_CANDIDATES });
       for (const it of items) if (it.keyword) put({ keyword: it.keyword, source: "ranking", volume: it.searchVolume, difficulty: it.difficulty });
       await logApiUsage(db, { endpoint: RANKED_ENDPOINT, rows: n, projectId });
@@ -120,6 +123,7 @@ export function profileSiteHandler(
     // tight niche seeds (not the broad crawl phrases that explode into the
     // generic category); in the heuristic path they are the crawl seeds.
     if (expansionSeeds.length) {
+      await progress?.(`Expanding ${Math.min(expansionSeeds.length, MAX_SEEDS_TO_EXPAND)} seed${expansionSeeds.length === 1 ? "" : "s"}…`);
       const { items, rows: n } = await keywordIdeas(client, { keywords: expansionSeeds.slice(0, MAX_SEEDS_TO_EXPAND), locationCode: loc, languageCode: lang, limit: MAX_CANDIDATES });
       for (const it of items) if (it.keyword) put({ keyword: it.keyword, source: "expansion", volume: it.searchVolume, difficulty: it.difficulty });
       await logApiUsage(db, { endpoint: IDEAS_ENDPOINT, rows: n, projectId });
@@ -148,6 +152,7 @@ export function profileSiteHandler(
       const profile = nicheProfile;
       try {
         const expansionKeywords = all.filter((c) => c.source === "expansion").map((c) => c.keyword);
+        await progress?.("Judging relevance…");
         const { kept, calls, unjudged } = await judgeRelevance(opts.llm, {
           domain: project.domain, seeds: llmNiche.seeds, nicheTerms: llmNiche.nicheTerms, candidates: expansionKeywords,
         });
@@ -176,6 +181,7 @@ export function profileSiteHandler(
       // No LLM (or extraction failed): unchanged heuristic — top 300 by volume.
       capped = all.sort(byVolumeDesc).slice(0, MAX_CANDIDATES);
     }
+    await progress?.(`Saving ${capped.length} candidates`);
     await saveProfileCandidates(db, projectId!, capped);
     return { rows, cost };
   };

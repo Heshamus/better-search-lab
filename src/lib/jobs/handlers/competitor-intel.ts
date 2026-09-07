@@ -9,13 +9,14 @@ const ENDPOINT = "/v3/dataforseo_labs/google/ranked_keywords/live";
 const LIMIT = 300;
 
 export function competitorIntelHandler(client: DataForSeoClient) {
-  return async (ctx: { db: any; projectId?: string }) => {
-    const { db, projectId } = ctx;
+  return async (ctx: { db: any; projectId?: string; progress?: (message: string) => Promise<void> }) => {
+    const { db, projectId, progress } = ctx;
     const [project] = await db.select().from(projects).where(eq(projects.id, projectId!));
     if (!project) return { rows: 0, cost: 0 };
     const comps = await db.select().from(competitors).where(eq(competitors.projectId, projectId!));
     let rows = 0, cost = 0;
-    for (const c of comps) {
+    for (const [i, c] of comps.entries()) {
+      await progress?.(`Reading ${c.domain}'s rankings (${i + 1} of ${comps.length})`);
       const { items, rows: n } = await rankedKeywords(client, {
         target: c.domain, locationCode: project.defaultLocationCode, languageCode: project.defaultLanguageCode, limit: LIMIT,
       });

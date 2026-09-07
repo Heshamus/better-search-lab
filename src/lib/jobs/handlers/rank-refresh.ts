@@ -13,13 +13,15 @@ const SERP_ENDPOINT = "/v3/serp/google/organic/live/advanced";
 const SERP_CONCURRENCY = 8;
 
 export function rankRefreshHandler(client: DataForSeoClient, serp: typeof serpOrganicLive = serpOrganicLive) {
-  return async (ctx: { db: any; projectId?: string }) => {
-    const { db, projectId } = ctx;
+  return async (ctx: { db: any; projectId?: string; progress?: (message: string) => Promise<void> }) => {
+    const { db, projectId, progress } = ctx;
     const [project] = await db.select().from(projects).where(eq(projects.id, projectId!));
     if (!project) return { rows: 0, cost: 0 };
     const tracked = await db.select().from(keywords).where(and(eq(keywords.projectId, projectId!), eq(keywords.isTracked, true)));
 
+    let done = 0;
     await mapLimit(tracked, SERP_CONCURRENCY, async (kw: any) => {
+      await progress?.(`Checking keyword ${++done} of ${tracked.length}`);
       try {
         const { items, ownedFeatures } = await serp(client, { keyword: kw.keyword, locationCode: kw.locationCode, languageCode: kw.languageCode, device: kw.device, ownDomain: project.domain });
         const hit = findDomainRank(items, project.domain);

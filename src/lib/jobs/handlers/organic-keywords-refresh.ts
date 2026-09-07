@@ -13,11 +13,12 @@ const LIMIT = 1000; // top 1,000 by volume — see plan Global Constraints
 // for (one DataForSEO call) and replace the stored snapshot, so repeat views
 // don't re-spend. A domain that ranks for nothing is a legitimate empty result.
 export function organicKeywordsRefreshHandler(client: DataForSeoClient) {
-  return async (ctx: { db: any; projectId?: string }) => {
-    const { db, projectId } = ctx;
+  return async (ctx: { db: any; projectId?: string; progress?: (message: string) => Promise<void> }) => {
+    const { db, projectId, progress } = ctx;
     const [project] = await db.select().from(projects).where(eq(projects.id, projectId!));
     if (!project) return { rows: 0, cost: 0 };
 
+    await progress?.(`Fetching the top ${LIMIT} organic keywords…`);
     const { items, rows: n } = await rankedKeywords(client, {
       target: normalizeDomain(project.domain),
       locationCode: project.defaultLocationCode,
@@ -36,6 +37,7 @@ export function organicKeywordsRefreshHandler(client: DataForSeoClient) {
         estTraffic: it.etv,
       }));
 
+    await progress?.(`Saving ${rows.length} keywords`);
     await replaceOrganicKeywords(db, projectId!, rows);
     await logApiUsage(db, { endpoint: RANKED, rows: n, projectId });
     return { rows: rows.length, cost: estimateCost(RANKED, n) };
