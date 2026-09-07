@@ -19,8 +19,20 @@ describe("release metadata", () => {
     const y = readFileSync(".github/workflows/release.yml", "utf8");
     expect(y).toMatch(/tags:\s*\n\s*- ["']?v\*/);
     expect(y).toContain("linux/amd64,linux/arm64");
-    expect(y).toContain("ghcr.io/");
+    expect(y).toContain("ghcr.io/<org>/better-search-lab");
     expect(y).toContain("npm publish");
     expect(y).toContain("softprops/action-gh-release");
+  });
+  it("gates the image, npm and github-release jobs behind a preflight job", () => {
+    const y = readFileSync(".github/workflows/release.yml", "utf8");
+    expect(y).toMatch(/\n {2}preflight:\n/);
+    // Crude per-job slice: from a top-level (2-space-indented) job header to the next one.
+    const jobBlock = (job: string) => {
+      const m = y.match(new RegExp(`\\n {2}${job}:\\n([\\s\\S]*?)(?=\\n {2}[\\w-]+:\\n|$)`));
+      return m?.[1] ?? "";
+    };
+    for (const job of ["image", "npm", "github-release"]) {
+      expect(jobBlock(job), `${job} job body`).toMatch(/needs:.*preflight/);
+    }
   });
 });
