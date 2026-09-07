@@ -2,6 +2,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { z } from "zod";
 
@@ -252,8 +253,30 @@ export const TOOL_NAMES = [
 // Server + tool registration
 // ---------------------------------------------------------------------------
 
+/**
+ * The version this server announces in `initialize` is the package's own
+ * version, read from the package.json that ships with it. The lookup tries
+ * the source layout (`./package.json` next to `server.ts`) and the built
+ * layout (`dist/server.js` → `../package.json`) and checks the package name
+ * so the repository root's package.json is never mistaken for ours.
+ */
+function readOwnVersion(): string {
+  const req = createRequire(import.meta.url);
+  for (const candidate of ["./package.json", "../package.json"]) {
+    try {
+      const pkg = req(candidate) as { name?: string; version?: string };
+      if (pkg.name === "@better-search-lab/mcp" && typeof pkg.version === "string") return pkg.version;
+    } catch {
+      // not at this path
+    }
+  }
+  return "0.0.0";
+}
+
+export const SERVER_VERSION = readOwnVersion();
+
 export const server = new McpServer(
-  { name: "better-search-lab", version: "0.1.0" },
+  { name: "better-search-lab", version: SERVER_VERSION },
   {
     instructions:
       "Read-only Better Search Lab SEO intelligence for the owner's projects." +

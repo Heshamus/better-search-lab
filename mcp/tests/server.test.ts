@@ -173,3 +173,13 @@ describe("tool registry", () => {
     expect(new Set(TOOL_NAMES).size).toBe(TOOL_NAMES.length);
   });
 });
+
+describe("SERVER_VERSION", () => {
+  it("announces the version of the package it ships in", async () => {
+    const { SERVER_VERSION } = await import("../server.js");
+    const { readFileSync } = await import("node:fs");
+    const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { version: string };
+    expect(SERVER_VERSION).toBe(pkg.version);
+    expect(SERVER_VERSION).not.toBe("0.0.0");
+  });
+});
