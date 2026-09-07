@@ -21,6 +21,11 @@ export default function middleware(req: NextRequest, event: unknown) {
 // dot). Public paths are decided in auth.config.ts#isPublicPath, not here, so
 // there is exactly one list — and no more substring matching that let a
 // hypothetical /login-* route bypass the guard.
+//
+// The same dot exclusion is also a gap in the demo boundary above: a path
+// segment containing a dot (a domain, a filename, an email) never reaches
+// this middleware at all. A future dynamic route matching such a segment must
+// either not be a write, or must call `isDemoMode()`/`isDemoAllowed()` itself.
 export const config = {
   matcher: ["/((?!_next/|.*\\..*).*)"],
 };
