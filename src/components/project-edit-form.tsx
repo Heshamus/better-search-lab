@@ -166,17 +166,14 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
           </button>
         </div>
 
-        {profile.state === "running" ? (
-          <span role="status" aria-live="polite" className="text-xs text-neutral-500 dark:text-neutral-400">
-            Crawling the site and finding keywords — this runs in the background and can take a minute or two.
-          </span>
-        ) : null}
-
         {/* Always-mounted live region: text toggles so the AT is already
             watching before its error lands. */}
         <span role="status" aria-live="polite" className="text-xs text-at-risk">
           {saveState === "error" ? "Couldn’t save — try again." : null}
         </span>
+        {/* The single role="status" element while profile-site runs — shows the
+            handler's real line (starts "Crawling example.com…"), not a
+            separate static blurb. */}
         <JobProgress state={profile.state} progress={profile.progress} error={profile.error} />
       </form>
 
