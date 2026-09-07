@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useDemo } from "@/components/demo-provider";
 
 type GenerateState = "idle" | "busy" | "error";
 type CopyState = "idle" | "done" | "error";
@@ -41,6 +42,7 @@ function formatDate(value: string | Date): string {
  */
 function TokenRow({ token }: { token: McpTokenSummary }) {
   const router = useRouter();
+  const demo = useDemo();
   const [revoking, setRevoking] = useState(false);
   const [error, setError] = useState(false);
 
@@ -69,7 +71,7 @@ function TokenRow({ token }: { token: McpTokenSummary }) {
       </span>
       <div className="flex items-center gap-2">
         {error ? <span className="text-xs text-at-risk">Couldn&rsquo;t revoke — try again.</span> : null}
-        <button type="button" onClick={handleRevoke} disabled={revoking} className={actionButtonClass}>
+        <button type="button" onClick={handleRevoke} disabled={demo || revoking} title={demo ? "Read-only demo" : undefined} className={actionButtonClass}>
           {revoking ? "Revoking…" : "Revoke"}
         </button>
       </div>
@@ -94,6 +96,7 @@ function TokenRow({ token }: { token: McpTokenSummary }) {
  */
 export function McpTokenManager({ tokens }: { tokens: McpTokenSummary[] }) {
   const router = useRouter();
+  const demo = useDemo();
   const [label, setLabel] = useState("");
   const [generateState, setGenerateState] = useState<GenerateState>("idle");
   const [mintedToken, setMintedToken] = useState<string | null>(null);
@@ -153,7 +156,8 @@ export function McpTokenManager({ tokens }: { tokens: McpTokenSummary[] }) {
           <button
             type="button"
             onClick={handleGenerate}
-            disabled={generateState === "busy"}
+            disabled={demo || generateState === "busy"}
+            title={demo ? "Read-only demo" : undefined}
             className="shrink-0 rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
           >
             {generateState === "busy" ? "Generating…" : "Generate token"}

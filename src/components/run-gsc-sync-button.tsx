@@ -11,7 +11,8 @@ export function RunGscSyncButton({ projectId, label = "Refresh" }: { projectId: 
       <button
         type="button"
         onClick={() => void job.run(`/api/projects/${projectId}/gsc/sync`)}
-        disabled={job.state === "running"}
+        disabled={job.demo || job.state === "running"}
+        title={job.demo ? "Read-only demo" : undefined}
         aria-live="polite"
         className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
       >

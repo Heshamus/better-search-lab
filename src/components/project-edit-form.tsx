@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useJob } from "@/components/use-job";
 import { JobProgress } from "@/components/job-progress";
+import { useDemo } from "@/components/demo-provider";
 
 type SaveState = "idle" | "busy" | "error";
 // Two-click delete instead of window.confirm: "confirm" is the armed state
@@ -51,6 +52,7 @@ const dangerButtonClass =
  */
 export function ProjectEditForm({ project }: { project: { id: string; name: string; domain: string } }) {
   const router = useRouter();
+  const demo = useDemo();
   const [name, setName] = useState(project.name);
   const [domain, setDomain] = useState(project.domain);
   const [saveState, setSaveState] = useState<SaveState>("idle");
@@ -150,7 +152,8 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="submit"
-            disabled={saveState === "busy" || !canSave}
+            disabled={demo || saveState === "busy" || !canSave}
+            title={demo ? "Read-only demo" : undefined}
             aria-live="polite"
             className={primaryButtonClass}
           >
@@ -159,7 +162,8 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
           <button
             type="button"
             onClick={handleProfile}
-            disabled={profile.state === "running"}
+            disabled={profile.demo || profile.state === "running"}
+            title={profile.demo ? "Read-only demo" : undefined}
             aria-live="polite"
             className={secondaryButtonClass}
           >
@@ -183,7 +187,8 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
           <button
             type="button"
             onClick={handleDelete}
-            disabled={deleteState === "busy"}
+            disabled={demo || deleteState === "busy"}
+            title={demo ? "Read-only demo" : undefined}
             aria-live="polite"
             className={dangerButtonClass}
           >

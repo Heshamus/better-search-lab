@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { StoredConversation } from "@/lib/reddit/conversations-store";
 import { formatCompact } from "@/lib/format";
+import { useDemo } from "@/components/demo-provider";
 
 const NO_DRAFT_NOTE = "✍️ No draft — write your own";
 
@@ -45,6 +46,7 @@ function formatAge(postedAt: Date | null): string {
  */
 function ConversationCard({ conv, projectId }: { conv: StoredConversation; projectId: string }) {
   const router = useRouter();
+  const demo = useDemo();
   const [pending, setPending] = useState<"dismissed" | "posted" | null>(null);
   const [error, setError] = useState(false);
   const [copyState, setCopyState] = useState<"idle" | "done" | "error">("idle");
@@ -171,7 +173,8 @@ function ConversationCard({ conv, projectId }: { conv: StoredConversation; proje
           <button
             type="button"
             onClick={() => updateStatus("dismissed")}
-            disabled={pending !== null || isPosted}
+            disabled={demo || pending !== null || isPosted}
+            title={demo ? "Read-only demo" : undefined}
             className={actionButtonClass}
           >
             {pending === "dismissed" ? "Dismissing…" : "Dismiss"}
@@ -179,7 +182,8 @@ function ConversationCard({ conv, projectId }: { conv: StoredConversation; proje
           <button
             type="button"
             onClick={() => updateStatus("posted")}
-            disabled={pending !== null || isPosted}
+            disabled={demo || pending !== null || isPosted}
+            title={demo ? "Read-only demo" : undefined}
             className={actionButtonClass}
           >
             {pending === "posted" ? "Marking…" : "Mark posted"}

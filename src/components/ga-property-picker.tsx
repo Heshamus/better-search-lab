@@ -40,7 +40,7 @@ export function GaPropertyPicker({ projectId, properties }: { projectId: string;
         <select
           value={selected}
           onChange={(e) => setSelected(e.target.value)}
-          disabled={job.state === "running"}
+          disabled={job.demo || job.state === "running"}
           className="mt-1.5 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-neutral-100 outline-none focus:border-accent"
         >
           {groups.map(([account, props]) => (
@@ -58,7 +58,8 @@ export function GaPropertyPicker({ projectId, properties }: { projectId: string;
       <button
         type="button"
         onClick={() => selected && void job.run(`/api/projects/${projectId}/ga/property`, { body: { propertyId: selected } })}
-        disabled={job.state === "running" || !selected}
+        disabled={job.demo || job.state === "running" || !selected}
+        title={job.demo ? "Read-only demo" : undefined}
         className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-90 disabled:cursor-default disabled:opacity-50"
       >
         {job.state === "running" ? "Connecting…" : "Use this property"}

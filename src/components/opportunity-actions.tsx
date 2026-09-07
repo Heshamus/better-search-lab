@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useDemo } from "@/components/demo-provider";
 
 type MutableStatus = "tracked" | "dismissed";
 
@@ -38,6 +39,7 @@ export function OpportunityActions({
   keyword: string;
 }) {
   const router = useRouter();
+  const demo = useDemo();
   const [pending, setPending] = useState<MutableStatus | null>(null);
   const [error, setError] = useState(false);
 
@@ -75,7 +77,8 @@ export function OpportunityActions({
         <button
           type="button"
           onClick={() => handle("tracked")}
-          disabled={isSettled || pending !== null}
+          disabled={demo || isSettled || pending !== null}
+          title={demo ? "Read-only demo" : undefined}
           className={
             isTracked
               ? "rounded-lg bg-accent/20 px-3 py-1 font-medium text-accent"
@@ -88,7 +91,8 @@ export function OpportunityActions({
         <button
           type="button"
           onClick={() => handle("dismissed")}
-          disabled={isSettled || pending !== null}
+          disabled={demo || isSettled || pending !== null}
+          title={demo ? "Read-only demo" : undefined}
           className={
             isDismissed
               ? "rounded-lg bg-neutral-200 px-3 py-1 font-medium text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"

@@ -7,6 +7,7 @@ import { buildKeywordCsv } from "@/lib/keyword-csv";
 import { formatCompact } from "@/lib/format";
 import { KdMeter, Delta, Sparkline } from "@/components/viz";
 import type { KeywordOverviewRow } from "@/lib/dataforseo/labs";
+import { useDemo } from "@/components/demo-provider";
 
 type State =
   | { status: "idle" }
@@ -30,6 +31,7 @@ function sortRows(rows: KeywordOverviewRow[], key: SortKey): KeywordOverviewRow[
 }
 
 export function KeywordOverview() {
+  const demo = useDemo();
   const [raw, setRaw] = useState("");
   const [marketLabel, setMarketLabel] = useState(DEFAULT_MARKET.label);
   const [state, setState] = useState<State>({ status: "idle" });
@@ -112,7 +114,8 @@ export function KeywordOverview() {
             </select>
           </div>
           <button
-            type="button" onClick={lookUp} disabled={parsed.keywords.length === 0 || state.status === "loading"}
+            type="button" onClick={lookUp} disabled={demo || parsed.keywords.length === 0 || state.status === "loading"}
+            title={demo ? "Read-only demo" : undefined}
             className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
           >
             {state.status === "loading" ? "Looking up…" : "Look up"}

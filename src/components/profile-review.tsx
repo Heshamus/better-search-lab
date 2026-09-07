@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ProfileCandidateRow } from "@/lib/profile";
 import { formatMetric } from "@/lib/format";
+import { useDemo } from "@/components/demo-provider";
 
 type AddState = "idle" | "busy" | "error";
 
@@ -46,6 +47,7 @@ export function ProfileReview({
   languageCode: number | string;
 }) {
   const router = useRouter();
+  const demo = useDemo();
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(candidates.filter((c) => c.selected).map((c) => c.id)),
   );
@@ -140,7 +142,8 @@ export function ProfileReview({
         <button
           type="button"
           onClick={handleAddSelected}
-          disabled={selected.size === 0 || addState === "busy"}
+          disabled={demo || selected.size === 0 || addState === "busy"}
+          title={demo ? "Read-only demo" : undefined}
           aria-live="polite"
           className={addButtonClass}
         >

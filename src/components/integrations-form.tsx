@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LLM_PRESETS, type LlmProviderId } from "@/lib/config/presets";
 import type { IntegrationFieldView, IntegrationGroupView, IntegrationsView } from "@/lib/config/view";
+import { useDemo } from "@/components/demo-provider";
 
 const inputClass =
   "w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-accent disabled:cursor-not-allowed disabled:opacity-60";
@@ -24,6 +25,7 @@ function Field({
 }: {
   field: IntegrationFieldView; value: string; revealed: boolean; onChange: (v: string) => void; onReveal: () => void; models?: string[];
 }) {
+  const demo = useDemo();
   const id = `f-${field.key.replace(/\./g, "-")}`;
   const disabled = field.source === "env";
   const maskedSecret = field.secret && field.set && !revealed && !disabled;
@@ -36,7 +38,7 @@ function Field({
       {maskedSecret ? (
         <div className="flex items-center gap-2">
           <span className="tnum text-sm text-neutral-400">•••••••• set</span>
-          <button type="button" aria-label={`Replace ${field.label}`} className={buttonClass} onClick={onReveal}>Replace</button>
+          <button type="button" aria-label={`Replace ${field.label}`} className={buttonClass} disabled={demo} title={demo ? "Read-only demo" : undefined} onClick={onReveal}>Replace</button>
         </div>
       ) : field.options ? (
         <select id={id} className={inputClass} disabled={disabled} value={value} onChange={(e) => onChange(e.target.value)}>
@@ -69,6 +71,7 @@ function Field({
 
 function GroupCard({ group }: { group: IntegrationGroupView }) {
   const router = useRouter();
+  const demo = useDemo();
   const initial = Object.fromEntries(group.fields.map((f) => [f.key, f.secret ? "" : (f.value ?? "")]));
   const [values, setValues] = useState<Record<string, string>>(initial);
   const [dirty, setDirty] = useState<Set<string>>(new Set());
@@ -165,10 +168,10 @@ function GroupCard({ group }: { group: IntegrationGroupView }) {
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button type="submit" disabled={busy || dirty.size === 0} className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 disabled:opacity-50">
+          <button type="submit" disabled={demo || busy || dirty.size === 0} title={demo ? "Read-only demo" : undefined} className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 disabled:opacity-50">
             {status.kind === "saving" ? "Saving…" : "Save"}
           </button>
-          <button type="button" onClick={() => void test()} disabled={busy} className={buttonClass}>
+          <button type="button" onClick={() => void test()} disabled={demo || busy} title={demo ? "Read-only demo" : undefined} className={buttonClass}>
             {status.kind === "testing" ? "Testing…" : "Test"}
           </button>
           {status.kind === "saved" ? <span className="text-xs text-up">{status.text}</span> : null}

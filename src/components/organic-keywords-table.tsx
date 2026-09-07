@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { OrganicKeywordRow } from "@/lib/organic-keywords-store";
 import { formatCompact } from "@/lib/format";
+import { useDemo } from "@/components/demo-provider";
 
 const BUCKETS: { label: string; max: number | null }[] = [
   { label: "All", max: null }, { label: "Top 3", max: 3 }, { label: "Top 10", max: 10 },
@@ -47,6 +48,7 @@ export function OrganicKeywordsTable(props: {
   projectId: string; defaultLocationCode: number; defaultLanguageCode: string;
   rows: OrganicKeywordRow[];
 }) {
+  const demo = useDemo();
   const [q, setQ] = useState("");
   const [bucket, setBucket] = useState<number | null>(null);
   const [sort, setSort] = useState<SortKey>("position");
@@ -143,7 +145,7 @@ export function OrganicKeywordsTable(props: {
                 </td>
                 <td className="px-4 py-2.5 tnum text-neutral-300">{r.estTraffic != null ? formatCompact(r.estTraffic) : "—"}</td>
                 <td className="px-4 py-2.5">
-                  <button type="button" disabled={tracked.has(r.keyword)} onClick={() => void track(r.keyword)}
+                  <button type="button" disabled={demo || tracked.has(r.keyword)} title={demo ? "Read-only demo" : undefined} onClick={() => void track(r.keyword)}
                     className="rounded-md px-2 py-0.5 text-xs font-medium text-accent hover:bg-accent/10 disabled:text-neutral-500">
                     {tracked.has(r.keyword) ? "Tracked" : "Track"}
                   </button>

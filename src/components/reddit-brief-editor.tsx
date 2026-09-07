@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useDemo } from "@/components/demo-provider";
 
 type SaveState = "idle" | "busy" | "done" | "error";
 
@@ -45,6 +46,7 @@ export function RedditBriefEditor({
   subreddits: string[];
 }) {
   const router = useRouter();
+  const demo = useDemo();
   const [brief, setBrief] = useState(knowledgeBrief ?? "");
   const [subredditsText, setSubredditsText] = useState(subreddits.join("\n"));
   const [save, setSave] = useState<SaveState>("idle");
@@ -114,7 +116,8 @@ export function RedditBriefEditor({
         <button
           type="button"
           onClick={handleSave}
-          disabled={save === "busy"}
+          disabled={demo || save === "busy"}
+          title={demo ? "Read-only demo" : undefined}
           className="self-start rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
         >
           {save === "busy" ? "Saving…" : "Save"}

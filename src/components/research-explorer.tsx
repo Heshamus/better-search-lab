@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { formatCompact } from "@/lib/format";
 import { KdMeter } from "@/components/viz";
+import { useDemo } from "@/components/demo-provider";
 
 export interface ResearchIdea {
   keyword: string;
@@ -77,6 +78,7 @@ export function ResearchExplorer({
   recentSeeds?: string[];
 }) {
   const router = useRouter();
+  const demo = useDemo();
   const [seed, setSeed] = useState("");
   const [search, setSearch] = useState<SearchState>({ status: "idle" });
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -178,7 +180,8 @@ export function ResearchExplorer({
         </div>
         <button
           type="submit"
-          disabled={search.status === "loading" || seed.trim().length === 0}
+          disabled={demo || search.status === "loading" || seed.trim().length === 0}
+          title={demo ? "Read-only demo" : undefined}
           className={primaryButtonClass}
         >
           {search.status === "loading" ? "Researching…" : "Research"}
@@ -196,7 +199,8 @@ export function ResearchExplorer({
                 key={s}
                 type="button"
                 onClick={() => runSearch(s)}
-                disabled={search.status === "loading"}
+                disabled={demo || search.status === "loading"}
+                title={demo ? "Read-only demo" : undefined}
                 className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-600 transition-colors hover:border-accent hover:text-neutral-900 disabled:cursor-default disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:text-white"
               >
                 {s}
@@ -271,7 +275,8 @@ export function ResearchExplorer({
             <button
               type="button"
               onClick={handleAddSelected}
-              disabled={selected.size === 0 || addState.status === "busy"}
+              disabled={demo || selected.size === 0 || addState.status === "busy"}
+              title={demo ? "Read-only demo" : undefined}
               className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
             >
               {addState.status === "busy" ? "Adding…" : "Add selected to tracking"}

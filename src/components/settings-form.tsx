@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DEFAULT_WEIGHTS, type Weights } from "@/lib/core/scoring";
+import { useDemo } from "@/components/demo-provider";
 
 const WEIGHT_KEYS = ["volume", "winnability", "position", "trend", "relevance"] as const;
 
@@ -46,6 +47,7 @@ export function SettingsForm({
   cadence: string;
 }) {
   const router = useRouter();
+  const demo = useDemo();
   const initial = (weights as Weights | null) ?? DEFAULT_WEIGHTS;
 
   const [values, setValues] = useState<Record<(typeof WEIGHT_KEYS)[number], string>>({
@@ -137,7 +139,8 @@ export function SettingsForm({
 
       <button
         type="submit"
-        disabled={state === "busy"}
+        disabled={demo || state === "busy"}
+        title={demo ? "Read-only demo" : undefined}
         className="self-start rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
       >
         {state === "busy" ? "Saving…" : "Save settings"}

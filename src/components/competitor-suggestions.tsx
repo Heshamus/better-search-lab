@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useDemo } from "@/components/demo-provider";
 
 interface Suggestion { domain: string; intersections: number; avgPosition: number | null }
 
@@ -18,6 +19,7 @@ async function readError(res: Response, fallback: string): Promise<string> {
  */
 export function CompetitorSuggestions({ projectId, atCap, onAdded }: { projectId: string; atCap: boolean; onAdded?: (domain: string) => void }) {
   const router = useRouter();
+  const demo = useDemo();
   const [rows, setRows] = useState<Suggestion[] | null>(null);
   const [busy, setBusy] = useState(false);
   // Set of domains with an in-flight Add — not a single string — so adding
@@ -61,7 +63,7 @@ export function CompetitorSuggestions({ projectId, atCap, onAdded }: { projectId
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <button type="button" onClick={() => void suggest()} disabled={busy} className={buttonClass}>
+        <button type="button" onClick={() => void suggest()} disabled={demo || busy} title={demo ? "Read-only demo" : undefined} className={buttonClass}>
           {busy ? "Looking up overlapping domains…" : "Suggest competitors"}
         </button>
         <span className="text-[0.7rem] text-neutral-500">One DataForSEO Labs call (≈ $0.01).</span>
@@ -72,7 +74,7 @@ export function CompetitorSuggestions({ projectId, atCap, onAdded }: { projectId
             <li key={r.domain} data-testid={`suggestion-${r.domain}`} className="flex flex-wrap items-center gap-3 py-2">
               <span className="min-w-0 flex-1 truncate text-sm text-neutral-100">{r.domain}</span>
               <span className="tnum text-xs text-neutral-500">{r.intersections} shared keywords · avg. position {r.avgPosition === null ? "—" : r.avgPosition.toFixed(1)}</span>
-              <button type="button" className={buttonClass} disabled={atCap || adding.has(r.domain)} title={atCap ? "Maximum 5 competitors" : undefined} onClick={() => void add(r.domain)}>
+              <button type="button" className={buttonClass} disabled={demo || atCap || adding.has(r.domain)} title={demo ? "Read-only demo" : atCap ? "Maximum 5 competitors" : undefined} onClick={() => void add(r.domain)}>
                 {adding.has(r.domain) ? "Adding…" : "Add"}
               </button>
             </li>

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CompetitorSuggestions } from "@/components/competitor-suggestions";
+import { useDemo } from "@/components/demo-provider";
 
 export type Competitor = { id: string; domain: string };
 
@@ -34,6 +35,7 @@ const deleteButtonClass =
  */
 function CompetitorRow({ projectId, id, domain }: { projectId: string; id: string; domain: string }) {
   const router = useRouter();
+  const demo = useDemo();
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -66,7 +68,7 @@ function CompetitorRow({ projectId, id, domain }: { projectId: string; id: strin
     >
       <span className="font-medium text-neutral-900 dark:text-white">{domain}</span>
       <div className="flex flex-col items-end gap-1">
-        <button type="button" onClick={handleDelete} disabled={pending} className={deleteButtonClass}>
+        <button type="button" onClick={handleDelete} disabled={demo || pending} title={demo ? "Read-only demo" : undefined} className={deleteButtonClass}>
           {pending ? "Deleting…" : "Delete"}
         </button>
         {failed ? <span className="text-xs text-at-risk">{DELETE_FAILURE_MESSAGE}</span> : null}
@@ -90,6 +92,7 @@ function CompetitorRow({ projectId, id, domain }: { projectId: string; id: strin
  */
 export function CompetitorManager({ projectId, competitors }: { projectId: string; competitors: Competitor[] }) {
   const router = useRouter();
+  const demo = useDemo();
   const [domain, setDomain] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -157,12 +160,13 @@ export function CompetitorManager({ projectId, competitors }: { projectId: strin
             value={domain}
             onChange={(event) => setDomain(event.target.value)}
             placeholder="Competitor domain"
-            disabled={atCap}
+            disabled={demo || atCap}
             className="flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm text-neutral-900 outline-none focus:border-accent disabled:cursor-default disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white"
           />
           <button
             type="submit"
-            disabled={atCap || busy || domain.trim().length === 0}
+            disabled={demo || atCap || busy || domain.trim().length === 0}
+            title={demo ? "Read-only demo" : undefined}
             className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
           >
             {busy ? "Adding…" : "Add"}

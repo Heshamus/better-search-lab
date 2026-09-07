@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { keywords } from "@/db/schema";
 import { locationLabel } from "@/lib/format";
+import { useDemo } from "@/components/demo-provider";
 
 export type KeywordManagerRow = typeof keywords.$inferSelect;
 
@@ -29,6 +30,7 @@ function parseKeywordInput(raw: string): string[] {
  */
 function TrackToggle({ id, isTracked }: { id: string; isTracked: boolean }) {
   const router = useRouter();
+  const demo = useDemo();
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -53,7 +55,7 @@ function TrackToggle({ id, isTracked }: { id: string; isTracked: boolean }) {
 
   return (
     <div className="flex flex-col items-start gap-1">
-      <button type="button" onClick={handleClick} disabled={pending} className={actionButtonClass}>
+      <button type="button" onClick={handleClick} disabled={demo || pending} title={demo ? "Read-only demo" : undefined} className={actionButtonClass}>
         {isTracked ? "Untrack" : "Track"}
       </button>
       {failed ? (
@@ -129,6 +131,7 @@ function AddKeywordsBox({
   defaultLanguageCode: string;
 }) {
   const router = useRouter();
+  const demo = useDemo();
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -189,7 +192,8 @@ function AddKeywordsBox({
       ) : null}
       <button
         type="submit"
-        disabled={busy || parsed.length === 0}
+        disabled={demo || busy || parsed.length === 0}
+        title={demo ? "Read-only demo" : undefined}
         className="self-start rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
       >
         {busy ? "Adding…" : "Add keywords"}

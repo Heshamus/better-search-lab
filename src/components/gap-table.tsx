@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { GapRow } from "@/lib/competitors";
 import { formatMetric } from "@/lib/format";
+import { useDemo } from "@/components/demo-provider";
 
 // Sort rule (brief §Task 8): opportunity-first — bigger search volume, then
 // more competitors already ranking for it, is the strongest signal a gap is
@@ -50,6 +51,7 @@ function AddToTrackingButton({
   languageCode: string;
 }) {
   const router = useRouter();
+  const demo = useDemo();
   const [state, setState] = useState<AddState>("idle");
 
   async function handleClick() {
@@ -84,7 +86,8 @@ function AddToTrackingButton({
       <button
         type="button"
         onClick={handleClick}
-        disabled={state === "busy"}
+        disabled={demo || state === "busy"}
+        title={demo ? "Read-only demo" : undefined}
         className="rounded-lg border border-neutral-200 px-3 py-1 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
       >
         {state === "busy" ? "Adding…" : "Add to tracking"}
