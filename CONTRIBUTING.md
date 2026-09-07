@@ -38,6 +38,28 @@ Bigger changes start as a design document under `docs/superpowers/specs/`, becom
 - After changing `src/lib/config/registry.ts`, run `pnpm docs:config`.
 - After changing `src/db/schema.ts`, run `pnpm db:generate` and commit the migration.
 
+## Before you tag a release
+
+A fork substitutes two placeholders before it publishes anything. Neither is a secret — both are literal text, and `tests/repo/placeholders.test.ts` recomputes the lists below from the tree, so they cannot go stale.
+
+Replace the org placeholder (`<org>`) with your GitHub organisation or user name in:
+
+- `.github/ISSUE_TEMPLATE/config.yml` — the "Report a vulnerability" link in the new-issue chooser.
+- `.github/workflows/release.yml` — the GHCR image the release workflow builds and pushes.
+- `CHANGELOG.md` — the two link definitions at the bottom (the `Unreleased` comparison and the `1.0.0` tag). Set the release date in the same pass: `1.0.0` ships as `2026-09-XX`.
+- `README.md` — the `git clone` URL in the quick start.
+- `SECURITY.md` — the private vulnerability reporting link.
+- `docs/install.md` — the `git clone` URL in the install steps.
+- `mcp/package.json` — `repository`, `homepage` and `bugs` for the published MCP package.
+- `package.json` — `repository`, `homepage` and `bugs` for the app package.
+- `src/lib/demo/links.ts` — `REPO_URL`, the source link the demo banner renders.
+- `tests/repo/release.test.ts` — the assertion pinning the release workflow's image name; it has to keep matching the workflow.
+
+Replace the image name (`ghcr.io/your-org/better-search-lab`) with the image that workflow publishes in:
+
+- `docker-compose.yml` — the `web` and `worker` services.
+- `docker-compose.demo.yml` — the one `web` service.
+
 ## Pull requests
 
 Fill in the template. Keep one concern per pull request; note anything the reviewer must set up to verify.
