@@ -29,6 +29,11 @@ ENV NODE_ENV=production
 ENV AUTH_TRUST_HOST=true
 ENV PORT=3000
 ENV NEXT_TELEMETRY_DISABLED=1
+# Corepack caches the pinned pnpm under $COREPACK_HOME (default ~/.cache/node/
+# corepack). Keep it inside /app so the `USER node` below can read what the
+# root-run `pnpm install` here put there, instead of re-downloading pnpm at
+# container start.
+ENV COREPACK_HOME=/app/.corepack
 COPY package.json pnpm-lock.yaml ./
 # tsx and typescript are production dependencies on purpose: tsx runs db:migrate
 # and the worker, and `next start` needs typescript to load next.config.ts —
@@ -40,5 +45,11 @@ COPY src ./src
 COPY drizzle ./drizzle
 COPY worker ./worker
 COPY next.config.ts tsconfig.json ./
+# Drop privileges: nothing here needs root, and `next start` writes to
+# .next/cache at runtime. node:22-alpine already ships an unprivileged `node`
+# user (uid 1000); one chown covers the root-owned node_modules, the build
+# output and the corepack cache.
+RUN chown -R node:node /app
+USER node
 EXPOSE 3000
 CMD ["sh", "-c", "pnpm db:migrate && pnpm start"]

@@ -30,6 +30,8 @@ describe("compose and image contract (spec §14.3)", () => {
     expect(d).toMatch(/FROM node:22-alpine AS runner/);
     expect(d).toContain("ENV AUTH_TRUST_HOST=true");
     expect(d).toContain("pnpm install --prod --frozen-lockfile");
+    // The shipped image drops privileges: web and worker both run as uid 1000.
+    expect(d).toContain("USER node");
     expect(d).not.toMatch(/COPY \.env/);
     expect(read(".dockerignore")).toContain(".env");
   });
