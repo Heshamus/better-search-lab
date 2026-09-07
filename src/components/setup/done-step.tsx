@@ -12,6 +12,8 @@ export function DoneStep({ projectName }: { projectName: string }) {
     setBusy(true);
     try { await fetch("/api/setup/state", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ completed: true }) }); }
     catch { /* completion is a convenience flag; opening the app must never depend on it */ }
+    // Released whatever happened: a failed POST must leave the button usable.
+    finally { setBusy(false); }
     router.push("/overview");
   }
 

@@ -26,4 +26,13 @@ describe("DoneStep", () => {
     fireEvent.click(screen.getByRole("button", { name: /open overview/i }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/overview"));
   });
+  it("still opens the overview when the completion POST throws", async () => {
+    // A rejection, not a non-ok response: the component ignores the status, so
+    // only a throw exercises the catch that keeps navigation unconditional.
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch"); }));
+    render(<DoneStep projectName="Northwind" />);
+    fireEvent.click(screen.getByRole("button", { name: /open overview/i }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/overview"));
+    expect(screen.getByRole("button", { name: /open overview/i })).toBeEnabled();
+  });
 });
