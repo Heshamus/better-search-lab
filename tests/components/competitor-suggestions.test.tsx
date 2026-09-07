@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen, cleanup, fireEvent, waitFor, within } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent, waitFor, within, act } from "@testing-library/react";
 
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
@@ -42,10 +42,63 @@ describe("CompetitorSuggestions", () => {
     expect(onAdded).toHaveBeenCalledWith("rival-one.example");
   });
 
-  it("shows the server's message on 503 and disables Add at the cap", async () => {
+  it("shows the server's message on 503", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: "DataForSEO is not configured. Connect it in Settings → Integrations." }), { status: 503 })));
     render(<CompetitorSuggestions projectId="p1" atCap={true} />);
     fireEvent.click(screen.getByRole("button", { name: /suggest competitors/i }));
     expect(await screen.findByRole("alert")).toHaveTextContent(/not configured/);
+  });
+
+  it("disables every row's Add button when atCap is true", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(suggestBody), { status: 200 })));
+    render(<CompetitorSuggestions projectId="p1" atCap={true} />);
+    fireEvent.click(screen.getByRole("button", { name: /suggest competitors/i }));
+    await screen.findByTestId("suggestion-rival-one.example");
+    expect(within(screen.getByTestId("suggestion-rival-one.example")).getByRole("button", { name: /^add$/i })).toBeDisabled();
+    expect(within(screen.getByTestId("suggestion-rival-two.example")).getByRole("button", { name: /^add$/i })).toBeDisabled();
+  });
+
+  it("tracks two concurrent Adds independently — resolving one leaves the other busy", async () => {
+    let resolveOne!: (value: Response) => void;
+    let resolveTwo!: (value: Response) => void;
+    const onePromise = new Promise<Response>((resolve) => { resolveOne = resolve; });
+    const twoPromise = new Promise<Response>((resolve) => { resolveTwo = resolve; });
+
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith("/suggest")) return new Response(JSON.stringify(suggestBody), { status: 200 });
+      const { domain } = JSON.parse(String(init?.body)) as { domain: string };
+      if (domain === "rival-one.example") return onePromise;
+      if (domain === "rival-two.example") return twoPromise;
+      throw new Error(`unexpected add domain: ${domain}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<CompetitorSuggestions projectId="p1" atCap={false} />);
+    fireEvent.click(screen.getByRole("button", { name: /suggest competitors/i }));
+    await screen.findByTestId("suggestion-rival-one.example");
+
+    fireEvent.click(within(screen.getByTestId("suggestion-rival-one.example")).getByRole("button", { name: /^add$/i }));
+    fireEvent.click(within(screen.getByTestId("suggestion-rival-two.example")).getByRole("button", { name: /^add$/i }));
+
+    // Both rows go busy at once — one in-flight Add must not block the other.
+    await waitFor(() => {
+      expect(within(screen.getByTestId("suggestion-rival-one.example")).getByRole("button", { name: /adding/i })).toBeDisabled();
+      expect(within(screen.getByTestId("suggestion-rival-two.example")).getByRole("button", { name: /adding/i })).toBeDisabled();
+    });
+
+    await act(async () => {
+      resolveOne(new Response(JSON.stringify({ competitor: { id: "c1", domain: "rival-one.example" } }), { status: 200 }));
+      await onePromise;
+    });
+    await waitFor(() => expect(screen.queryByTestId("suggestion-rival-one.example")).toBeNull());
+    // Resolving row one's Add must not clear row two's busy state — this is
+    // the bug a single shared `adding` string would produce.
+    expect(within(screen.getByTestId("suggestion-rival-two.example")).getByRole("button", { name: /adding/i })).toBeDisabled();
+
+    await act(async () => {
+      resolveTwo(new Response(JSON.stringify({ competitor: { id: "c2", domain: "rival-two.example" } }), { status: 200 }));
+      await twoPromise;
+    });
+    await waitFor(() => expect(screen.queryByTestId("suggestion-rival-two.example")).toBeNull());
   });
 });

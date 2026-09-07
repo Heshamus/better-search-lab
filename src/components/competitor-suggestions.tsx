@@ -20,7 +20,11 @@ export function CompetitorSuggestions({ projectId, atCap, onAdded }: { projectId
   const router = useRouter();
   const [rows, setRows] = useState<Suggestion[] | null>(null);
   const [busy, setBusy] = useState(false);
-  const [adding, setAdding] = useState<string | null>(null);
+  // Set of domains with an in-flight Add — not a single string — so adding
+  // row A and then row B while A is still in flight tracks both
+  // independently: each row's disabled/"Adding…" state derives from its own
+  // membership, and finishing one never re-enables or relabels the other.
+  const [adding, setAdding] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   async function suggest() {
@@ -35,14 +39,23 @@ export function CompetitorSuggestions({ projectId, atCap, onAdded }: { projectId
   }
 
   async function add(domain: string) {
-    setAdding(domain); setError(null);
+    setAdding((prev) => new Set(prev).add(domain));
+    setError(null);
     try {
       const res = await fetch(`/api/projects/${projectId}/competitors`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ domain }) });
       if (!res.ok) { setError(await readError(res, "Could not add this competitor.")); return; }
       setRows((prev) => (prev ?? []).filter((r) => r.domain !== domain));
       onAdded?.(domain);
       router.refresh();
-    } catch { setError("Network error — please try again."); } finally { setAdding(null); }
+    } catch {
+      setError("Network error — please try again.");
+    } finally {
+      setAdding((prev) => {
+        const next = new Set(prev);
+        next.delete(domain);
+        return next;
+      });
+    }
   }
 
   return (
@@ -59,8 +72,8 @@ export function CompetitorSuggestions({ projectId, atCap, onAdded }: { projectId
             <li key={r.domain} data-testid={`suggestion-${r.domain}`} className="flex flex-wrap items-center gap-3 py-2">
               <span className="min-w-0 flex-1 truncate text-sm text-neutral-100">{r.domain}</span>
               <span className="tnum text-xs text-neutral-500">{r.intersections} shared keywords · avg. position {r.avgPosition === null ? "—" : r.avgPosition.toFixed(1)}</span>
-              <button type="button" className={buttonClass} disabled={atCap || adding === r.domain} title={atCap ? "Maximum 5 competitors" : undefined} onClick={() => void add(r.domain)}>
-                {adding === r.domain ? "Adding…" : "Add"}
+              <button type="button" className={buttonClass} disabled={atCap || adding.has(r.domain)} title={atCap ? "Maximum 5 competitors" : undefined} onClick={() => void add(r.domain)}>
+                {adding.has(r.domain) ? "Adding…" : "Add"}
               </button>
             </li>
           ))}
