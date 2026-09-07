@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { CompetitorSuggestions } from "@/components/competitor-suggestions";
 
 export type Competitor = { id: string; domain: string };
 
@@ -173,6 +174,8 @@ export function CompetitorManager({ projectId, competitors }: { projectId: strin
           <p className="text-xs text-at-risk">{error}</p>
         ) : null}
       </form>
+
+      <CompetitorSuggestions projectId={projectId} atCap={atCap} />
     </div>
   );
 }
