@@ -78,4 +78,10 @@ describe("/api/settings/integrations", () => {
     expect(fieldOf(await res.json(), "dataforseo.login")).toMatchObject({ set: false });
     expect(fieldOf(await (await GET()).json(), "dataforseo.login")).toMatchObject({ set: false });
   });
+
+  it("PUT refuses hidden setup keys", async () => {
+    const res = await put({ "setup.llmStep": "done" });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/not editable/);
+  });
 });

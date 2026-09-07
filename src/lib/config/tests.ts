@@ -108,6 +108,13 @@ async function run(group: SettingGroupId, cfg: AppConfig, deps: { fetchImpl?: ty
       const j = (await r.json().catch(() => ({}))) as { data?: { username?: string }; error?: { message?: string } };
       return r.ok ? { ok: true, detail: `Connected as ${j.data?.username ?? "unknown user"}` } : { ok: false, detail: `apify ${r.status}: ${j.error?.message ?? "request failed"}` };
     }
+
+    // Hidden group: wizard progress, not an external integration. The
+    // Integrations page never renders a Test button for it (view.ts filters
+    // hidden groups) — this case exists only so the SettingGroupId switch
+    // stays exhaustive.
+    case "setup":
+      return { ok: false, detail: "Setup is not a testable integration." };
   }
 }
 

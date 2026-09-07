@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { SETTINGS, GROUPS, LLM_PRESETS, LLM_PROVIDERS, settingByKey, settingsInGroup } from "@/lib/config/registry";
+import { SETTINGS, GROUPS, LLM_PRESETS, LLM_PROVIDERS, settingByKey, settingsInGroup, settingGroup } from "@/lib/config/registry";
 
 describe("settings registry", () => {
   it("declares every key exactly once, as <group>.<field>", () => {
@@ -42,5 +42,10 @@ describe("settings registry", () => {
   });
   it("lists a group's settings in declaration order", () => {
     expect(settingsInGroup("dataforseo").map((s) => s.key)).toEqual(["dataforseo.login", "dataforseo.password"]);
+  });
+  it("keeps the setup group hidden from Integrations but resolvable by key", () => {
+    expect(settingGroup("setup")?.hidden).toBe(true);
+    expect(settingByKey("setup.llmStep")?.env).toBe("SETUP_LLM_STEP");
+    expect(GROUPS.filter((g) => !g.hidden).map((g) => g.id)).toEqual(["app", "dataforseo", "llm", "google", "edenai", "email", "reddit", "apify"]);
   });
 });

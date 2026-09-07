@@ -22,6 +22,7 @@ export interface AppConfig {
   };
   reddit: { clientId?: string; clientSecret?: string; userAgent: string; configured: boolean };
   apify: { apiKey?: string; redditActor: string; configured: boolean };
+  setup: { llmStep?: "done" | "skipped"; completedAt?: string; configured: boolean };
   sources: Record<string, "env" | "db">;
   problems: ConfigProblem[];
   undecryptable: string[];
@@ -89,6 +90,7 @@ export function finalizeConfig(
     },
     reddit: { clientId: g("reddit.clientId"), clientSecret: g("reddit.clientSecret"), userAgent: g("reddit.userAgent") ?? DEFAULT_REDDIT_USER_AGENT, configured: !!g("reddit.clientId") && !!g("reddit.clientSecret") },
     apify: { apiKey: g("apify.apiKey"), redditActor: g("apify.redditActor") ?? DEFAULT_APIFY_REDDIT_ACTOR, configured: !!g("apify.apiKey") },
+    setup: { llmStep: g("setup.llmStep") === "done" || g("setup.llmStep") === "skipped" ? (g("setup.llmStep") as "done" | "skipped") : undefined, completedAt: g("setup.completedAt"), configured: !!g("setup.completedAt") },
     sources: meta.sources,
     problems: meta.problems,
     undecryptable: meta.undecryptable,

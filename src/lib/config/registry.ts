@@ -6,12 +6,14 @@ import { LLM_PROVIDERS } from "./presets";
  * env parsing, the encrypted store, the Integrations form, the generated
  * docs page — is derived from this list. A setting exists in exactly one place.
  */
-export type SettingGroupId = "app" | "dataforseo" | "llm" | "google" | "edenai" | "email" | "reddit" | "apify";
+export type SettingGroupId = "app" | "dataforseo" | "llm" | "google" | "edenai" | "email" | "reddit" | "apify" | "setup";
 
 export interface SettingGroup {
   id: SettingGroupId;
   label: string;
   description: string;
+  /** Not an integration; never rendered on the Integrations page or written through its PUT. */
+  hidden?: boolean;
 }
 
 export interface SettingDef {
@@ -43,6 +45,7 @@ export type { LlmProviderId, LlmPreset } from "./presets";
 
 export const EMAIL_PROVIDERS = ["none", "resend", "smtp"] as const;
 export const EFFORT_LEVELS = ["low", "medium", "high"] as const;
+export const SETUP_LLM_STEPS = ["done", "skipped"] as const;
 
 export const GROUPS: readonly SettingGroup[] = [
   { id: "app", label: "App", description: "How this install is reached from the outside." },
@@ -53,6 +56,7 @@ export const GROUPS: readonly SettingGroup[] = [
   { id: "email", label: "Email", description: "Weekly AI-visibility report and the daily Reddit digest." },
   { id: "reddit", label: "Reddit API", description: "Primary source for Conversations worth joining (free, application-only OAuth)." },
   { id: "apify", label: "Apify", description: "Fallback Reddit source when the official API is absent or fails." },
+  { id: "setup", label: "Setup", description: "Wizard progress. Written by the setup wizard, not an integration.", hidden: true },
 ];
 
 const text = z.string().trim().min(1, "required");
@@ -111,6 +115,9 @@ export const SETTINGS: readonly SettingDef[] = [
 
   def({ group: "apify", field: "apiKey", label: "API token", description: "From console.apify.com → Integrations.", secret: true, env: "APIFY_API_KEY", schema: text }),
   def({ group: "apify", field: "redditActor", label: "Reddit actor", description: "Apify actor id used to scrape Reddit.", secret: false, env: "APIFY_REDDIT_ACTOR", schema: text, placeholder: "automation-lab~reddit-scraper" }),
+
+  def({ group: "setup", field: "llmStep", label: "AI assistant step", description: "Whether the setup wizard's AI step was completed or skipped.", secret: false, env: "SETUP_LLM_STEP", schema: z.enum(SETUP_LLM_STEPS), options: SETUP_LLM_STEPS }),
+  def({ group: "setup", field: "completedAt", label: "Setup completed at", description: "ISO timestamp of the first full wizard completion.", secret: false, env: "SETUP_COMPLETED_AT", schema: text }),
 ];
 
 const BY_KEY = new Map(SETTINGS.map((s) => [s.key, s]));
@@ -121,4 +128,8 @@ export function settingByKey(key: string): SettingDef | undefined {
 
 export function settingsInGroup(group: SettingGroupId): SettingDef[] {
   return SETTINGS.filter((s) => s.group === group);
+}
+
+export function settingGroup(id: SettingGroupId): SettingGroup | undefined {
+  return GROUPS.find((g) => g.id === id);
 }

@@ -45,7 +45,7 @@ export async function buildIntegrationsView(db: any): Promise<IntegrationsView> 
   const envKeys = new Set(envOverriddenKeys());
   const problems = new Map(cfg.problems.map((p) => [p.key, p.message]));
 
-  const groups = GROUPS.map((g) => ({
+  const groups = GROUPS.filter((g) => !g.hidden).map((g) => ({
     id: g.id,
     label: g.label,
     description: g.description,
