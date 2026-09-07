@@ -16,6 +16,8 @@ import { AdminOnly } from "@/components/setup/admin-only";
 import { DataForSeoStep } from "@/components/setup/dataforseo-step";
 import { LlmStep } from "@/components/setup/llm-step";
 import { SiteStep } from "@/components/setup/site-step";
+import { ProfileStep } from "@/components/setup/profile-step";
+import { CompetitorsStep } from "@/components/setup/competitors-step";
 
 export const dynamic = "force-dynamic";
 
@@ -55,12 +57,18 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
     body = <LlmStep />;
   } else if (sel.step === "site") {
     body = <SiteStep />;
+  } else if (sel.step === "profile" && sel.project) {
+    const [candidates, tracked] = await Promise.all([listProfileCandidates(db, sel.project.id), listTrackedKeywords(db, sel.project.id)]);
+    const p = projects.find((x: { id: string; name: string; domain: string; defaultLocationCode: number; defaultLanguageCode: string }) => x.id === sel.project!.id)!;
+    body = <ProfileStep project={{ id: p.id, name: p.name, domain: p.domain, defaultLocationCode: p.defaultLocationCode, defaultLanguageCode: p.defaultLanguageCode }} candidates={candidates} trackedCount={tracked.length} />;
+  } else if (sel.step === "competitors" && sel.project) {
+    body = <CompetitorsStep projectId={sel.project.id} competitors={await listCompetitors(db, sel.project.id)} />;
   } else {
-    // Steps 5–8 arrive in Tasks 9–10; until then the page shows where it stopped.
+    // Step 7 (build) arrives in Task 10; until then the page shows where it stopped.
     body = <p className="text-sm text-neutral-400">Step “{sel.step}” is not built yet.</p>;
   }
-  // Keep these loads here so later tasks only extend the switch above:
-  void listProfileCandidates; void listTrackedKeywords; void listCompetitors; void readOnboarding;
+  // readOnboarding stays imported for Task 10 (the build step reads it directly).
+  void readOnboarding;
 
   return <SetupWizard step={sel.step}>{body}</SetupWizard>;
 }
