@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { getCurrentProject } from "@/lib/current-project";
 import { getConfig } from "@/lib/config/resolve";
 import { listLatestConversations } from "@/lib/reddit/conversations-store";
+import { isDemoMode } from "@/lib/demo/mode";
 import { EmptyState, IntegrationLink } from "@/components/empty-state";
 import { RedditConversations } from "@/components/reddit-conversations";
 import { RunConversationsScanButton } from "@/components/run-conversations-scan-button";
@@ -16,7 +17,9 @@ export default async function TrendsPage() {
   }
 
   const cfg = await getConfig(db);
-  const configured = cfg.reddit.configured || cfg.apify.configured;
+  // The demo seeds conversations but never holds Reddit or Apify keys, so the
+  // demo reads as connected here; the scan and status controls stay disabled.
+  const configured = cfg.reddit.configured || cfg.apify.configured || isDemoMode();
   const conversations = configured ? await listLatestConversations(db, project.id, 20) : [];
   // RedditConversations filters status !== "dismissed" internally and defers the
   // empty state to this page (its doc comment), so the branch below must count

@@ -82,7 +82,9 @@ export default async function GaPage({ searchParams }: { searchParams: Promise<{
 
   const cfg = await getConfig(db);
   const demo = isDemoMode();
-  const configured = cfg.google.oauthReady || Boolean(cfg.google.serviceAccountKey);
+  // The demo seeds a connection with a GA4 property and 90 days of data but
+  // never holds Google credentials, so the demo reads as configured here.
+  const configured = cfg.google.oauthReady || Boolean(cfg.google.serviceAccountKey) || demo;
   const sp = await searchParams;
   const errorMsg = sp.error ? ERROR_COPY[sp.error] ?? `Couldn't connect: ${sp.error}` : null;
 

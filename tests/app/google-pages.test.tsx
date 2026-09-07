@@ -31,6 +31,8 @@ vi.mock("@/lib/demo/mode", () => ({ isDemoMode: vi.fn() }));
 import GscPage from "@/app/(app)/gsc/page";
 import GaPage from "@/app/(app)/ga/page";
 import { isDemoMode } from "@/lib/demo/mode";
+import { getConfig } from "@/lib/config/resolve";
+import { getConnection } from "@/lib/google/store";
 
 const render = async (Page: (p: any) => Promise<any>) =>
   renderToStaticMarkup((await Page({ searchParams: Promise.resolve({}) })) as any);
@@ -51,5 +53,22 @@ describe.each([
     expect(html).not.toContain("/api/google/");
     expect(html).toContain("Reconnect");
     expect(html).toContain('title="Read-only demo"');
+  });
+
+  // The demo seeds a connection and 90 days of data but never holds Google
+  // credentials; the page must not hide that data behind "isn't connected".
+  it("reads as connected in demo mode even without Google credentials", async () => {
+    (isDemoMode as any).mockReturnValue(true);
+    (getConfig as any).mockResolvedValueOnce({ google: { oauthReady: false, serviceAccountKey: null } });
+    const html = await render(Page as any);
+    // React escapes the apostrophe in the title, so assert on the action label.
+    expect(html).not.toContain("Connect Google");
+    expect(getConnection).toHaveBeenCalled();
+  });
+
+  it("shows the not-connected state without credentials outside demo mode", async () => {
+    (getConfig as any).mockResolvedValueOnce({ google: { oauthReady: false, serviceAccountKey: null } });
+    const html = await render(Page as any);
+    expect(html).toContain("Connect Google");
   });
 });

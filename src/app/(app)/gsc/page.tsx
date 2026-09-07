@@ -65,7 +65,9 @@ export default async function GscPage({ searchParams }: { searchParams: Promise<
 
   const cfg = await getConfig(db);
   const demo = isDemoMode();
-  const configured = cfg.google.oauthReady || Boolean(cfg.google.serviceAccountKey);
+  // The demo seeds a connection and 90 days of data but never holds Google
+  // credentials, so the demo reads as configured here; Reconnect and Sync stay disabled.
+  const configured = cfg.google.oauthReady || Boolean(cfg.google.serviceAccountKey) || demo;
   const sp = await searchParams;
   const errorMsg = sp.error ? ERROR_COPY[sp.error] ?? `Couldn't connect: ${sp.error}` : null;
 

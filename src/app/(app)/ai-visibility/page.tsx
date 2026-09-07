@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { getCurrentProject } from "@/lib/current-project";
 import { getConfig } from "@/lib/config/resolve";
 import { getLatestScan, getScanHistory } from "@/lib/ai-visibility/store";
+import { isDemoMode } from "@/lib/demo/mode";
 import { EmptyState, IntegrationLink } from "@/components/empty-state";
 import { AiVisibilityDashboard } from "@/components/ai-visibility-dashboard";
 import { RunAiVisibilityButton } from "@/components/run-ai-visibility-button";
@@ -36,7 +37,9 @@ export default async function AiVisibilityPage() {
   }
 
   const cfg = await getConfig(db);
-  const configured = cfg.edenai.configured;
+  // The demo seeds scans but never holds an Eden AI key, so the demo reads as
+  // connected here; every scan control is still disabled by the demo boundary.
+  const configured = cfg.edenai.configured || isDemoMode();
   const latest = configured ? await getLatestScan(db, project.id) : null;
   const history = latest ? await getScanHistory(db, project.id, 30) : [];
 
