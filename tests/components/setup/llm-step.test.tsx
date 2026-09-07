@@ -36,14 +36,24 @@ describe("LlmStep", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(JSON.parse((fetchMock.mock.calls[0] as any)[1].body)).toEqual({ llmStep: "skipped" });
   });
-  it("shows the provider's failure and stays", async () => {
-    vi.stubGlobal("fetch", vi.fn(async (url: string) =>
-      String(url).endsWith("/llm/test") ? new Response(JSON.stringify({ ok: false, detail: "LLM 401" }), { status: 200 }) : new Response("{}", { status: 200 })));
+  it("shows the provider's failure, clears the saved settings, and stays", async () => {
+    const fetchMock = vi.fn(async (url: string, _init?: RequestInit) =>
+      String(url).endsWith("/llm/test") ? new Response(JSON.stringify({ ok: false, detail: "LLM 401" }), { status: 200 }) : new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
     render(<LlmStep />);
     fireEvent.change(screen.getByLabelText(/provider/i), { target: { value: "openai" } });
     fireEvent.change(screen.getByLabelText(/api key/i), { target: { value: "sk-bad" } });
     fireEvent.click(screen.getByRole("button", { name: /test & continue/i }));
     expect(await screen.findByRole("alert")).toHaveTextContent("LLM 401");
     expect(refresh).not.toHaveBeenCalled();
+    // The test ran against the stored settings, so a second PUT must null out
+    // every key the first PUT wrote — otherwise the provider counts as configured.
+    const puts = fetchMock.mock.calls.filter((c) => (c[1] as RequestInit | undefined)?.method === "PUT");
+    expect(puts).toHaveLength(2);
+    const saved = JSON.parse((puts[0] as any)[1].body).values as Record<string, string>;
+    const cleared = JSON.parse((puts[1] as any)[1].body).values as Record<string, null>;
+    expect(Object.keys(cleared).sort()).toEqual(Object.keys(saved).sort());
+    expect(Object.values(cleared).every((v) => v === null)).toBe(true);
+    expect(fetchMock).not.toHaveBeenCalledWith("/api/setup/state", expect.anything());
   });
 });

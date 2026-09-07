@@ -21,6 +21,13 @@ export function DataForSeoStep() {
   const [detail, setDetail] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  async function clearSaved() {
+    await fetch("/api/settings/integrations", {
+      method: "PUT", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ values: { "dataforseo.login": null, "dataforseo.password": null } }),
+    }).catch(() => undefined);
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true); setError(null); setDetail(null);
@@ -32,8 +39,14 @@ export function DataForSeoStep() {
       if (!put.ok) { setError(await readError(put, "Could not save the credentials.")); return; }
       const test = await fetch("/api/settings/integrations/dataforseo/test", { method: "POST" });
       const body = (await test.json().catch(() => ({}))) as { ok?: boolean; detail?: string; error?: string };
-      if (!test.ok) { setError(body.error ?? "Test failed."); return; }
-      if (!body.ok) { setError(body.detail ?? "DataForSEO did not accept these credentials."); return; }
+      if (!test.ok || !body.ok) {
+        // The test runs against the stored credentials, so they were saved
+        // first; a failed test must not leave them behind, or the install
+        // counts as configured and the wizard skips this step next time.
+        await clearSaved();
+        setError(!test.ok ? body.error ?? "Test failed." : body.detail ?? "DataForSEO did not accept these credentials.");
+        return;
+      }
       setDetail(body.detail ?? "Connected");
       router.refresh(); // the server picks the next pending step
     } catch { setError("Network error — please try again."); } finally { setBusy(false); }

@@ -46,7 +46,15 @@ export function LlmStep() {
       if (!put.ok) { setError(await readError(put, "Could not save the settings.")); return; }
       const test = await fetch("/api/settings/integrations/llm/test", { method: "POST" });
       const body = (await test.json().catch(() => ({}))) as { ok?: boolean; detail?: string; error?: string };
-      if (!test.ok || !body.ok) { setError(body.detail ?? body.error ?? "The provider did not answer."); return; }
+      if (!test.ok || !body.ok) {
+        // The test runs against the stored settings, so they were saved first;
+        // a failed test must not leave them behind, or the install counts as
+        // configured and the wizard skips this step next time.
+        const cleared = Object.fromEntries(Object.keys(values).map((k) => [k, null]));
+        await fetch("/api/settings/integrations", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ values: cleared }) }).catch(() => undefined);
+        setError(body.detail ?? body.error ?? "The provider did not answer.");
+        return;
+      }
       await recordStep("done");
       router.refresh();
     } catch (e) { setError(e instanceof Error ? e.message : "Network error — please try again."); } finally { setBusy(false); }
