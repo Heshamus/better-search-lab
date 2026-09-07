@@ -5,6 +5,8 @@ import { resolveSessionUser } from "@/lib/auth/session";
 import { safeCallback } from "@/lib/auth/safe-callback";
 import { LoginForm } from "@/components/login-form";
 import { Logo } from "@/components/icons";
+import { isDemoMode } from "@/lib/demo/mode";
+import { getDemoSeedStatus } from "@/lib/demo/boot";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if ((await countUsers(db)) === 0) redirect("/setup"); // first run
   const sp = await searchParams;
   if (await resolveSessionUser()) redirect(safeCallback(sp.callbackUrl));
+
+  const demo = isDemoMode();
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 py-16">
@@ -23,8 +27,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         </div>
       </div>
       <section className="panel p-6">
-        <h1 className="mb-5 text-base font-semibold text-white">Sign in</h1>
-        <LoginForm callbackUrl={safeCallback(sp.callbackUrl)} reason={sp.reason} />
+        <h1 className="mb-5 text-base font-semibold text-white">{demo ? "Try Better Search Lab" : "Sign in"}</h1>
+        <LoginForm callbackUrl={safeCallback(sp.callbackUrl)} reason={sp.reason} demo={demo} seedError={demo ? getDemoSeedStatus()?.error : undefined} />
       </section>
     </main>
   );

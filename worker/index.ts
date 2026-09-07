@@ -37,8 +37,15 @@ import type { AppConfig } from "../src/lib/config/app-config";
 import type { DataForSeoClient } from "../src/lib/dataforseo/client";
 import { recipientWarning } from "../src/lib/email/recipient-warning";
 import { loadEnv } from "../src/config/env";
+import { isDemoMode } from "../src/lib/demo/mode";
 
 loadEnv(); // fail fast on a bad bootstrap env
+
+if (isDemoMode()) {
+  console.log("[worker] demo mode — nothing to schedule or drain; exiting");
+  process.exit(0);
+}
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // Plain-text summary of a project's own site, for seeding its Reddit knowledge & voice brief.

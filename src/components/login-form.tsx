@@ -17,7 +17,17 @@ const REASON_COPY: Record<string, string> = {
  * /api/auth/callback/credentials) — no Server Action, so nothing depends on
  * the request Origin matching a forwarded host behind a reverse proxy.
  */
-export function LoginForm({ callbackUrl, reason }: { callbackUrl: string; reason?: string }) {
+export function LoginForm({
+  callbackUrl,
+  reason,
+  demo = false,
+  seedError,
+}: {
+  callbackUrl: string;
+  reason?: string;
+  demo?: boolean;
+  seedError?: string;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,6 +52,29 @@ export function LoginForm({ callbackUrl, reason }: { callbackUrl: string; reason
     } finally {
       setBusy(false);
     }
+  }
+
+  async function explore() {
+    setBusy(true); setError(null);
+    try {
+      const res = await signIn("credentials", { email: "demo@example.com", password: "demo-password", redirect: false });
+      if (!res || res.error) { setError("The demo account is not available yet — the dataset may still be seeding."); return; }
+      router.push(callbackUrl);
+      router.refresh();
+    } catch { setError("Network error — please try again."); } finally { setBusy(false); }
+  }
+
+  if (demo) {
+    return (
+      <div className="flex flex-col gap-4">
+        <p className="text-sm text-neutral-400">Two synthetic sites with ninety days of history. Nothing you do here is saved.</p>
+        {seedError ? <p role="alert" className="text-sm text-at-risk">Demo data failed to seed: {seedError}</p> : null}
+        {error ? <p role="alert" className="text-sm text-at-risk">{error}</p> : null}
+        <button type="button" disabled={busy || !!seedError} onClick={() => void explore()} className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-neutral-900 transition-opacity disabled:opacity-50">
+          {busy ? "Signing in…" : "Explore the demo"}
+        </button>
+      </div>
+    );
   }
 
   return (

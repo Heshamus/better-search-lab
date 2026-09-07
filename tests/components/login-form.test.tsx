@@ -53,4 +53,16 @@ describe("LoginForm", () => {
       cleanup();
     }
   });
+  it("in demo mode shows only the Explore button, which signs in with the demo account", async () => {
+    signIn.mockResolvedValue({ ok: true, error: undefined, code: undefined });
+    render(<LoginForm callbackUrl="/overview" demo />);
+    expect(screen.queryByLabelText(/email/i)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /explore the demo/i }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/overview"));
+    expect(signIn).toHaveBeenCalledWith("credentials", { email: "demo@example.com", password: "demo-password", redirect: false });
+  });
+  it("shows the seeding failure honestly", () => {
+    render(<LoginForm callbackUrl="/overview" demo seedError="disk full" />);
+    expect(screen.getByRole("alert")).toHaveTextContent(/Demo data failed to seed: disk full/);
+  });
 });
