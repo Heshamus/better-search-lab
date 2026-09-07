@@ -12,14 +12,33 @@
  * treatment — that needs full control-flow analysis, which happens too late
  * to save a `next build` that fails while resolving Node built-ins for edge.
  * Keep this nested inside the `if` block, not hoisted out of it.
+ *
+ * `ensureDemoSeeded` already never throws (it catches its own errors), but
+ * the try/catch below makes the WHOLE hook throw-proof by construction —
+ * including the dynamic imports themselves, which could in principle fail
+ * to resolve. A caught failure is recorded through the same status path
+ * (`recordDemoSeedFailure`), so /login still shows an honest seedError
+ * instead of the server crashing at boot.
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    const { isDemoMode } = await import("@/lib/demo/mode");
-    if (isDemoMode()) {
-      const { ensureDemoSeeded } = await import("@/lib/demo/boot");
-      const { db } = await import("@/db/client");
-      await ensureDemoSeeded(db);
+    try {
+      const { isDemoMode } = await import("@/lib/demo/mode");
+      if (isDemoMode()) {
+        const { ensureDemoSeeded } = await import("@/lib/demo/boot");
+        const { db } = await import("@/db/client");
+        await ensureDemoSeeded(db);
+      }
+    } catch (e) {
+      const error = e instanceof Error ? e.message : String(e);
+      try {
+        const { recordDemoSeedFailure } = await import("@/lib/demo/boot");
+        recordDemoSeedFailure(error);
+      } catch {
+        // Even the recovery import failed — nothing more we can do; the
+        // server still boots, /login just won't have a specific reason.
+        console.error(`[demo] boot hook failed: ${error}`);
+      }
     }
   }
 }

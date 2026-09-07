@@ -25,10 +25,15 @@ vi.mock("@/lib/auth/users", () => ({ countUsers: vi.fn() }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
 vi.mock("@/lib/config/resolve", () => ({ getConfig: vi.fn(async () => ({ dataforseo: { configured: false }, setup: { llmStep: undefined, completedAt: undefined } })) }));
 vi.mock("@/lib/projects", () => ({ listProjects: vi.fn(async () => []) }));
+// Bare vi.fn() returns undefined (falsy) by default, so every pre-existing
+// test below runs as non-demo without touching it — only the demo-specific
+// test configures a return value.
+vi.mock("@/lib/demo/mode", () => ({ isDemoMode: vi.fn() }));
 
 import { auth } from "@/auth";
 import { requireAdminUser } from "@/lib/auth/session";
 import { countUsers } from "@/lib/auth/users";
+import { isDemoMode } from "@/lib/demo/mode";
 import AppLayout from "@/app/(app)/layout";
 import SettingsLayout from "@/app/(app)/settings/layout";
 import LoginPage from "@/app/(auth)/login/page";
@@ -65,6 +70,7 @@ async function redirectOf(run: () => Promise<unknown>): Promise<string | null> {
 beforeEach(() => {
   (auth as any).mockReset();
   (countUsers as any).mockReset();
+  (isDemoMode as any).mockReset();
   userRows = [];
 });
 
@@ -130,6 +136,14 @@ describe("(auth) pages", () => {
     (countUsers as any).mockResolvedValue(1);
     signedInAs(null);
     const sp = Promise.resolve({ callbackUrl: "/rankings" });
+    expect(await redirectOf(() => LoginPage({ searchParams: sp }))).toBeNull();
+  });
+
+  it("does not redirect to /setup with zero users when demo mode is on — a failed seed must render here, not loop", async () => {
+    (countUsers as any).mockResolvedValue(0);
+    (isDemoMode as any).mockReturnValue(true);
+    signedInAs(null);
+    const sp = Promise.resolve({});
     expect(await redirectOf(() => LoginPage({ searchParams: sp }))).toBeNull();
   });
 

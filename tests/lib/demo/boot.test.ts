@@ -8,7 +8,7 @@ vi.mock("@/lib/demo/seed", async () => {
 
 import { seedDemo, DEMO_ADMIN } from "@/lib/demo/seed";
 import { ensureDemoSeeded, getDemoSeedStatus, resetDemoSeedStatus } from "@/lib/demo/boot";
-import { createFirstAdmin } from "@/lib/auth/users";
+import { createFirstAdmin, findUserByEmail } from "@/lib/auth/users";
 
 let close: () => Promise<void>;
 afterEach(async () => { await close?.(); resetDemoSeedStatus(); vi.mocked(seedDemo).mockClear(); });
@@ -26,5 +26,18 @@ describe("ensureDemoSeeded", () => {
     vi.mocked(seedDemo).mockRejectedValueOnce(new Error("disk full"));
     await expect(ensureDemoSeeded(t.db)).resolves.toBeUndefined();
     expect(getDemoSeedStatus()).toMatchObject({ ok: false, error: "disk full" });
+  });
+  it("actually seeds a fresh database and records success", async () => {
+    const t = await createTestDb(); close = t.close;
+    await ensureDemoSeeded(t.db);
+    expect(seedDemo).toHaveBeenCalledTimes(1);
+    expect(await findUserByEmail(t.db, DEMO_ADMIN.email)).toMatchObject({ role: "admin" });
+    expect(getDemoSeedStatus()).toMatchObject({ ok: true });
+  }, 180_000);
+  it("treats seedDemo's \"demo already seeded\" throw as success, not a failure", async () => {
+    const t = await createTestDb(); close = t.close;
+    vi.mocked(seedDemo).mockRejectedValueOnce(new Error("demo already seeded"));
+    await expect(ensureDemoSeeded(t.db)).resolves.toBeUndefined();
+    expect(getDemoSeedStatus()).toMatchObject({ ok: true });
   });
 });

@@ -16,11 +16,15 @@ vi.mock("@/lib/competitors", () => ({ listCompetitors: vi.fn(async () => []) }))
 vi.mock("@/lib/reddit/reddit-config", () => ({
   getRedditConfig: vi.fn(async () => ({ knowledgeBrief: null, subreddits: [] })),
 }));
+// Bare vi.fn() returns undefined (falsy) by default, so every pre-existing
+// test below runs as non-demo without touching it.
+vi.mock("@/lib/demo/mode", () => ({ isDemoMode: vi.fn() }));
 
 import { renderToStaticMarkup } from "react-dom/server";
 import SettingsPage from "@/app/(app)/settings/page";
+import { isDemoMode } from "@/lib/demo/mode";
 
-afterEach(() => cleanup());
+afterEach(() => { cleanup(); (isDemoMode as any).mockReset(); });
 
 describe("Settings page admin_only notice", () => {
   it("explains the bounce when a member was sent here from an admin-only section", async () => {
@@ -45,5 +49,12 @@ describe("Settings page add-a-site link", () => {
     expect(html).toContain('href="/setup?step=site"');
     expect(html).toContain("Add a site");
     expect(html).not.toContain("Create a project");
+  });
+
+  it("hides the Add a site section entirely in demo mode — it's a mutation entry point", async () => {
+    (isDemoMode as any).mockReturnValue(true);
+    const html = renderToStaticMarkup((await SettingsPage({ searchParams: Promise.resolve({}) })) as any);
+    expect(html).not.toContain("Add a site");
+    expect(html).not.toContain('href="/setup?step=site"');
   });
 });

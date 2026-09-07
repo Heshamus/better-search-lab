@@ -10,6 +10,7 @@ import { ProfileReview } from "@/components/profile-review";
 import { CompetitorManager } from "@/components/competitor-manager";
 import { SettingsForm } from "@/components/settings-form";
 import { RedditBriefEditor } from "@/components/reddit-brief-editor";
+import { isDemoMode } from "@/lib/demo/mode";
 
 // This page reads the DB (listProjects/getCurrentProject/listProfileCandidates/
 // listCompetitors) via cookies() on every request — force-dynamic skips the
@@ -35,6 +36,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   // out loud is the difference between "the app ignored my click" and "that
   // section needs an admin" — see src/lib/auth/session.ts.
   const adminOnly = (await searchParams).error === "admin_only";
+  const demo = isDemoMode();
   const [allProjects, project] = await Promise.all([
     listProjects(db),
     getCurrentProject(db, (await cookies()).get("sp_project")?.value),
@@ -132,11 +134,16 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         </section>
       ) : null}
 
-      <section className="flex flex-col gap-2">
-        <h2 className={sectionHeadingClass}>Add a site</h2>
-        <p className="text-xs text-neutral-400">The setup wizard profiles the site, suggests competitors and runs the first build.</p>
-        <a href="/setup?step=site" className="self-start rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-90">Add a site</a>
-      </section>
+      {/* Demo mode: the wizard is a mutation entry point (redirects itself
+          to /overview — see (auth)/setup/page.tsx), so linking to it here
+          would just be a dead click. */}
+      {!demo ? (
+        <section className="flex flex-col gap-2">
+          <h2 className={sectionHeadingClass}>Add a site</h2>
+          <p className="text-xs text-neutral-400">The setup wizard profiles the site, suggests competitors and runs the first build.</p>
+          <a href="/setup?step=site" className="self-start rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-90">Add a site</a>
+        </section>
+      ) : null}
     </div>
   );
 }

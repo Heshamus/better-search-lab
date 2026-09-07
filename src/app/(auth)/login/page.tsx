@@ -11,11 +11,14 @@ import { getDemoSeedStatus } from "@/lib/demo/boot";
 export const dynamic = "force-dynamic";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ callbackUrl?: string; reason?: string }> }) {
-  if ((await countUsers(db)) === 0) redirect("/setup"); // first run
+  const demo = isDemoMode();
+  // Never bounce to /setup in demo mode: the demo admin is seeded at boot,
+  // but a failed seed can leave zero users too — and /setup would render
+  // CreateAdminForm, hiding the seed-error alert this page shows below.
+  // Staying here lets a failed seed surface honestly instead of looping.
+  if ((await countUsers(db)) === 0 && !demo) redirect("/setup"); // first run
   const sp = await searchParams;
   if (await resolveSessionUser()) redirect(safeCallback(sp.callbackUrl));
-
-  const demo = isDemoMode();
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 py-16">

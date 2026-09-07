@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { countUsers } from "@/lib/auth/users";
 import { resolveSessionUser } from "@/lib/auth/session";
+import { isDemoMode } from "@/lib/demo/mode";
 import { getConfig } from "@/lib/config/resolve";
 import { listProjects } from "@/lib/projects";
 import { listProfileCandidates } from "@/lib/profile";
@@ -30,6 +31,11 @@ export const dynamic = "force-dynamic";
  * step needs a session, and steps 2–3 need an admin.
  */
 export default async function SetupPage({ searchParams }: { searchParams: Promise<{ step?: string }> }) {
+  // The demo admin exists but never configures DataForSEO, so selectSetupStep
+  // below would otherwise land the seeded admin on a live, submittable
+  // DataForSeoStep — a mutation entry point the demo boundary is supposed to
+  // close off. The wizard has no place in a read-only demo at all.
+  if (isDemoMode()) redirect("/overview");
   const sp = await searchParams;
   const userCount = await countUsers(db);
   const session = userCount === 0 ? null : await resolveSessionUser();
