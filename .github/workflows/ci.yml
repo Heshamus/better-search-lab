@@ -52,3 +52,27 @@ jobs:
         run: cd mcp && npm ci && npx vitest run && npm run build
       - name: Docker image builds
         run: docker build -t better-search-lab:ci .
+
+  demo-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Boot the read-only demo
+        run: docker compose -f docker-compose.demo.yml up -d --build
+      - name: Wait for /api/health
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:3000/api/health | grep -q '"ok":true'; then echo ready; exit 0; fi
+            sleep 5
+          done
+          echo "health never became ok"; docker compose -f docker-compose.demo.yml logs web; exit 1
+      - name: The demo login is offered and writes are refused
+        run: |
+          curl -fsS http://localhost:3000/login | grep -q "Explore the demo"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3000/api/users)
+          test "$code" = "403"
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.demo.yml down -v

@@ -1,0 +1,36 @@
+# The read-only demo (spec §13): two synthetic sites, no keys, no worker.
+#   docker compose -f docker-compose.demo.yml up -d   → http://localhost:3000
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bsl
+      POSTGRES_PASSWORD: bsl
+      POSTGRES_DB: bsl_demo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bsl -d bsl_demo"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build: .
+    image: ghcr.io/your-org/better-search-lab:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://bsl:bsl@db:5432/bsl_demo
+      # A fixed secret is fine here: the demo holds nothing real and refuses every write.
+      AUTH_SECRET: demo-only-secret-not-for-production-0123456789
+      DEMO_MODE: "true"
+      APP_URL: ${APP_URL:-http://localhost:3000}
+    command: ["sh", "-c", "pnpm db:migrate && pnpm start"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s

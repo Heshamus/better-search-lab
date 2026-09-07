@@ -1,0 +1,51 @@
+# Better Search Lab — self-hosted, one command: `docker compose up -d`.
+# Put AUTH_SECRET (and APP_URL) in a .env file next to this file; see .env.example.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bsl
+      POSTGRES_PASSWORD: bsl
+      POSTGRES_DB: bsl
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bsl -d bsl"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build: .
+    image: ghcr.io/your-org/better-search-lab:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://bsl:bsl@db:5432/bsl
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env (openssl rand -base64 32)}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+    command: ["sh", "-c", "pnpm db:migrate && pnpm start"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  worker:
+    build: .
+    image: ghcr.io/your-org/better-search-lab:latest
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://bsl:bsl@db:5432/bsl
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env (openssl rand -base64 32)}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+    command: pnpm worker
+
+volumes:
+  db-data:
