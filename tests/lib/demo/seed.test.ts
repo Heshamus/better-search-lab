@@ -29,7 +29,9 @@ describe("demo seeder (spec §13)", () => {
     expect(projectIds).toHaveLength(2);
     expect(await findUserByEmail(t.db, DEMO_ADMIN.email)).toMatchObject({ role: "admin" });
     expect(await validateApiToken(t.db, DEMO_MCP_TOKEN)).toBe(true);
-    expect((await listProjects(t.db)).map((p: any) => p.name)).toEqual(["Northwind Outdoor", "Harbor & Vale Legal"]);
+    // listProjects has no ORDER BY, so sort on a stable key rather than asserting insertion order.
+    expect([...(await listProjects(t.db))].sort((a: any, b: any) => a.domain.localeCompare(b.domain)).map((p: any) => p.name))
+      .toEqual(["Harbor & Vale Legal", "Northwind Outdoor"]);
     expect((await getConfig(t.db, { fresh: true })).setup.completedAt).toBeTruthy();
 
     for (const [i, id] of projectIds.entries()) {
@@ -60,8 +62,14 @@ describe("demo seeder (spec §13)", () => {
     const b = await createTestDb(); closers.push(b.close);
     const ra = await seedDemo(a.db, { now });
     const rb = await seedDemo(b.db, { now });
+    // listOpportunities orders by score alone and listRankings not at all, so
+    // rows tied on the ordering column may come back in either row order.
+    // Both sides are sorted on a stable key before comparing, so a difference
+    // here is a difference in the DATA, never in the row order.
     const fingerprint = async (db: any, id: string) => ({
-      opps: (await listOpportunities(db, id)).map((o: any) => [o.keyword, o.type, Number(o.score.toFixed(4))]),
+      opps: (await listOpportunities(db, id))
+        .map((o: any) => [o.keyword, o.type, Number(o.score.toFixed(4))])
+        .sort((a: any[], b: any[]) => `${a[0]}|${a[1]}`.localeCompare(`${b[0]}|${b[1]}`)),
       ranks: (await listRankings(db, id, now)).map((r) => [r.keyword, r.rankAbsolute]).sort(),
     });
     expect(await fingerprint(a.db, ra.projectIds[0])).toEqual(await fingerprint(b.db, rb.projectIds[0]));
