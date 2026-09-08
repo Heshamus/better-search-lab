@@ -17,7 +17,8 @@ services:
 
   web:
     build: .
-    image: ghcr.io/your-org/better-search-lab:latest
+    # The published image; override with BSL_IMAGE (a fork's registry, or a local tag in CI).
+    image: ${BSL_IMAGE:-registry.gitlab.com/betterbrainlab/better-search-lab:latest}
     depends_on:
       db:
         condition: service_healthy
@@ -37,7 +38,8 @@ services:
 
   worker:
     build: .
-    image: ghcr.io/your-org/better-search-lab:latest
+    # The published image; override with BSL_IMAGE (a fork's registry, or a local tag in CI).
+    image: ${BSL_IMAGE:-registry.gitlab.com/betterbrainlab/better-search-lab:latest}
     depends_on:
       web:
         condition: service_healthy

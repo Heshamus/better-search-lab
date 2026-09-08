@@ -38,27 +38,18 @@ Bigger changes start as a design document under `docs/superpowers/specs/`, becom
 - After changing `src/lib/config/registry.ts`, run `pnpm docs:config`.
 - After changing `src/db/schema.ts`, run `pnpm db:generate` and commit the migration.
 
-## Before you tag a release
+## Releasing (maintainers)
 
-A fork substitutes two placeholders before it publishes anything. Neither is a secret — both are literal text, and `tests/repo/placeholders.test.ts` recomputes the lists below from the tree, so they cannot go stale.
+1. Bump `version` in `package.json` and `mcp/package.json` to the same value, then `cd mcp && npm install --package-lock-only` so the lockfile follows. Set the release date and the two link definitions at the bottom of `CHANGELOG.md` (`1.0.0` still ships as `2026-09-XX` until the first tag).
+2. Push `main` and wait for a green pipeline.
+3. Tag and push the tag: `git tag v1.2.3 && git push origin v1.2.3`.
+4. The tag pipeline runs `preflight` (the tag matches both versions, `NPM_TOKEN` exists), `image` (multi-arch to `registry.gitlab.com/betterbrainlab/better-search-lab:1.2.3` and `:latest`, plus Docker Hub when configured), `npm` (`@better-search-lab/mcp`), and `release` (a GitLab Release whose notes are the CHANGELOG section for that version).
 
-Replace the org placeholder (`<org>`) with your GitHub organisation or user name in:
+CI variables, under Settings → CI/CD → Variables, masked: `NPM_TOKEN` (required, an npm automation token for `@better-search-lab`); `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (optional, adds a Docker Hub copy under `DOCKERHUB_NAMESPACE`, which defaults to the username).
 
-- `.github/ISSUE_TEMPLATE/config.yml` — the "Report a vulnerability" link in the new-issue chooser.
-- `CHANGELOG.md` — the two link definitions at the bottom (the `Unreleased` comparison and the `1.0.0` tag). Set the release date in the same pass: `1.0.0` ships as `2026-09-XX`.
-- `README.md` — the `git clone` URL in the quick start.
-- `SECURITY.md` — the private vulnerability reporting link.
-- `docs/install.md` — the `git clone` URL in the install steps.
-- `mcp/package.json` — `repository`, `homepage` and `bugs` for the published MCP package.
-- `package.json` — `repository`, `homepage` and `bugs` for the app package.
-- `src/lib/demo/links.ts` — `REPO_URL`, the source link the demo banner renders.
+The GitHub repository at https://github.com/Heshamus/better-search-lab is a read-only mirror: configure it once under Settings → Repository → Mirroring repositories (push, `https://github.com/Heshamus/better-search-lab.git`, a fine-grained token with contents read/write), and on GitHub turn off Issues, Wiki and Projects. The `.github/` folder in this tree only redirects people here.
 
-Replace the image name (`ghcr.io/your-org/better-search-lab`) with the image that workflow publishes in:
-
-- `docker-compose.yml` — the `web` and `worker` services.
-- `docker-compose.demo.yml` — the one `web` service.
-
-Then enable private vulnerability reporting in the repository settings (Security → Code security), so the link in `SECURITY.md` accepts reports.
+Forks change nothing in the tree: the image name comes from `CI_REGISTRY_IMAGE`, the compose files read `BSL_IMAGE`, and `install.sh` reads `BSL_IMAGE` and `BSL_REF`.
 
 ## Pull requests
 

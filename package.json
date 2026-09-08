@@ -16,9 +16,9 @@
     "docs:config": "tsx scripts/gen-config-docs.ts"
   },
   "license": "AGPL-3.0-only",
-  "repository": { "type": "git", "url": "git+https://github.com/<org>/better-search-lab.git" },
-  "homepage": "https://github.com/<org>/better-search-lab#readme",
-  "bugs": { "url": "https://github.com/<org>/better-search-lab/issues" },
+  "repository": { "type": "git", "url": "git+https://gitlab.com/betterbrainlab/better-search-lab.git" },
+  "homepage": "https://gitlab.com/betterbrainlab/better-search-lab",
+  "bugs": { "url": "https://gitlab.com/betterbrainlab/better-search-lab/-/issues" },
   "keywords": ["seo", "rank-tracking", "keyword-research", "dataforseo", "ai-visibility", "self-hosted", "mcp"],
   "packageManager": "pnpm@10.32.1",
   "dependencies": {

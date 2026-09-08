@@ -1,2 +1,2 @@
-/** Public home of the project. `<org>` is replaced when the GitHub organisation exists (Task 20). */
-export const REPO_URL = "https://github.com/<org>/better-search-lab";
+/** Public home of the project: the canonical GitLab repository. The demo banner links here. */
+export const REPO_URL = "https://gitlab.com/betterbrainlab/better-search-lab";

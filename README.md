@@ -9,7 +9,7 @@ Powered by the [DataForSEO](https://dataforseo.com) API on a pay-as-you-go basis
 ## Try it in five minutes
 
 ```bash
-git clone https://github.com/<org>/better-search-lab.git
+git clone https://gitlab.com/betterbrainlab/better-search-lab.git
 cd better-search-lab
 cp .env.example .env            # set AUTH_SECRET (openssl rand -base64 32) and APP_URL
 docker compose up -d

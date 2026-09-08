@@ -12,11 +12,10 @@ describe("community files", () => {
     expect(log).toMatch(/keepachangelog\.com/);
     expect(log).toMatch(/## \[1\.0\.0\]/);
   });
-  // A `security@….example` address bounces after substitution (`.example` is a
-  // reserved TLD), so both files route reports through GitHub's private
-  // vulnerability reporting instead.
-  it("routes security and conduct reports through GitHub private reporting", () => {
-    expect(readFileSync("SECURITY.md", "utf8")).toContain("/security/advisories/new");
+  // A `security@….example` address bounces (`.example` is a reserved TLD), so
+  // reports go through a GitLab confidential issue, visible only to maintainers.
+  it("routes security and conduct reports through a GitLab confidential issue", () => {
+    expect(readFileSync("SECURITY.md", "utf8")).toContain("https://gitlab.com/betterbrainlab/better-search-lab/-/issues/new?issue%5Bconfidential%5D=true");
     for (const f of ["SECURITY.md", "CODE_OF_CONDUCT.md"]) expect(readFileSync(f, "utf8"), f).not.toMatch(/security@/);
     expect(readFileSync("CODE_OF_CONDUCT.md", "utf8")).toMatch(/private reporting link in SECURITY\.md/);
   });

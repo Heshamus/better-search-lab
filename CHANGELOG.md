@@ -23,5 +23,5 @@ The first public release.
 - *Migration:* emails must be unique case-insensitively.
 - Report emails require a configured recipient (no hardcoded fallback).
 
-[Unreleased]: https://github.com/<org>/better-search-lab/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/<org>/better-search-lab/releases/tag/v1.0.0
+[Unreleased]: https://gitlab.com/betterbrainlab/better-search-lab/-/compare/v1.0.0...main
+[1.0.0]: https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.0.0
