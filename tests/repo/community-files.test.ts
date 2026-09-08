@@ -3,7 +3,25 @@ import { existsSync, readFileSync } from "node:fs";
 
 describe("community files", () => {
   it("exist", () => {
-    for (const f of ["CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SECURITY.md", "CHANGELOG.md", "CLAUDE.md", ".github/ISSUE_TEMPLATE/bug.yml", ".github/ISSUE_TEMPLATE/feature.yml", ".github/PULL_REQUEST_TEMPLATE.md", "docs/superpowers/README.md"]) expect(existsSync(f), f).toBe(true);
+    for (const f of [
+      "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SECURITY.md", "CHANGELOG.md", "CLAUDE.md", "docs/superpowers/README.md",
+      ".gitlab/issue_templates/Bug.md", ".gitlab/issue_templates/Feature.md", ".gitlab/merge_request_templates/Default.md",
+      ".github/ISSUE_TEMPLATE/config.yml", ".github/PULL_REQUEST_TEMPLATE.md",
+    ]) expect(existsSync(f), f).toBe(true);
+  });
+  // GitHub only mirrors the repository. Its folder must send people to GitLab
+  // and must not carry anything that would run or accept work there.
+  it("the GitHub folder only redirects to GitLab, and the docs speak of merge requests", () => {
+    const cfg = readFileSync(".github/ISSUE_TEMPLATE/config.yml", "utf8");
+    expect(cfg).toMatch(/blank_issues_enabled:\s*false/);
+    for (const url of cfg.match(/url:\s*(\S+)/g) ?? []) expect(url).toContain("gitlab.com/betterbrainlab/better-search-lab");
+    expect(cfg).toContain("issue%5Bconfidential%5D=true");
+    expect(readFileSync(".github/PULL_REQUEST_TEMPLATE.md", "utf8")).toMatch(/mirror/i);
+    for (const gone of [".github/ISSUE_TEMPLATE/bug.yml", ".github/ISSUE_TEMPLATE/feature.yml", ".github/workflows"]) expect(existsSync(gone), gone).toBe(false);
+    const readme = readFileSync("README.md", "utf8");
+    expect(readme).toContain("https://github.com/Heshamus/better-search-lab");
+    expect(readme).not.toMatch(/pull request/i);
+    expect(readFileSync("CONTRIBUTING.md", "utf8")).not.toMatch(/pull request/i);
   });
   it("the code of conduct is the Contributor Covenant 2.1 and the changelog follows Keep a Changelog", () => {
     expect(readFileSync("CODE_OF_CONDUCT.md", "utf8")).toMatch(/Contributor Covenant/);

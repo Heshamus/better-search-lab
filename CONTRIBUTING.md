@@ -27,7 +27,7 @@ Every change ships with tests. DataForSEO calls are tested against recorded fixt
 
 ## How work happens
 
-Bigger changes start as a design document under `docs/superpowers/specs/`, become a plan under `docs/superpowers/plans/`, and are built task by task from the plan — see [docs/superpowers/README.md](docs/superpowers/README.md). Small fixes can go straight to a pull request.
+Bigger changes start as a design document under `docs/superpowers/specs/`, become a plan under `docs/superpowers/plans/`, and are built task by task from the plan — see [docs/superpowers/README.md](docs/superpowers/README.md). Small fixes can go straight to a merge request.
 
 ## Conventions
 
@@ -51,6 +51,6 @@ The GitHub repository at https://github.com/Heshamus/better-search-lab is a read
 
 Forks change nothing in the tree: the image name comes from `CI_REGISTRY_IMAGE`, the compose files read `BSL_IMAGE`, and `install.sh` reads `BSL_IMAGE` and `BSL_REF`.
 
-## Pull requests
+## Merge requests
 
-Fill in the template. Keep one concern per pull request; note anything the reviewer must set up to verify.
+Fill in the template. Keep one concern per merge request; note anything the reviewer must set up to verify.

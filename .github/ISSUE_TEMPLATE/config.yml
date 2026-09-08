@@ -1,5 +1,13 @@
-blank_issues_enabled: true
+# This GitHub repository is a read-only mirror of
+# https://gitlab.com/betterbrainlab/better-search-lab. Issues live there.
+blank_issues_enabled: false
 contact_links:
-  - name: Security report
-    url: https://gitlab.com/betterbrainlab/better-search-lab/-/blob/main/SECURITY.md
-    about: Please report vulnerabilities privately.
+  - name: Report a bug
+    url: https://gitlab.com/betterbrainlab/better-search-lab/-/issues/new?issuable_template=Bug
+    about: Opens the bug template on GitLab, where the project is developed.
+  - name: Request a feature
+    url: https://gitlab.com/betterbrainlab/better-search-lab/-/issues/new?issuable_template=Feature
+    about: Feature requests and questions live on GitLab too.
+  - name: Report a vulnerability
+    url: https://gitlab.com/betterbrainlab/better-search-lab/-/issues/new?issue%5Bconfidential%5D=true
+    about: Opens a confidential issue that only maintainers can see.

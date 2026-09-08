@@ -1,5 +1,7 @@
 # Better Search Lab
 
+Canonical repository: [gitlab.com/betterbrainlab/better-search-lab](https://gitlab.com/betterbrainlab/better-search-lab). The copy at [github.com/Heshamus/better-search-lab](https://github.com/Heshamus/better-search-lab) is a read-only mirror; issues and merge requests live on GitLab.
+
 Self-hosted SEO and AI-search visibility for people who run their own sites: rank tracking, keyword research, competitor gaps, backlinks, site audits, Search Console and Analytics in one place, a weekly **opportunity engine** that turns all of it into a short list of things to do, and an **MCP server** so your coding agent can read the same data.
 
 ![Overview](docs/screenshots/overview.png)
@@ -62,7 +64,7 @@ Next.js 15 (App Router) + Postgres, one image for the web app and a worker. Page
 
 ## Contributing
 
-Issues and pull requests are welcome — start with [CONTRIBUTING.md](CONTRIBUTING.md). Security reports: [SECURITY.md](SECURITY.md). Every change ships with tests; the suite runs on an in-memory Postgres and never touches the network.
+Issues and merge requests are welcome on GitLab — start with [CONTRIBUTING.md](CONTRIBUTING.md). Security reports: [SECURITY.md](SECURITY.md). Every change ships with tests; the suite runs on an in-memory Postgres and never touches the network.
 
 ## License
 
