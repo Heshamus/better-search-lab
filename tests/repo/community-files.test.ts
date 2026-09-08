@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 
 describe("community files", () => {
@@ -18,6 +19,7 @@ describe("community files", () => {
     expect(cfg).toContain("issue%5Bconfidential%5D=true");
     expect(readFileSync(".github/PULL_REQUEST_TEMPLATE.md", "utf8")).toMatch(/mirror/i);
     for (const gone of [".github/ISSUE_TEMPLATE/bug.yml", ".github/ISSUE_TEMPLATE/feature.yml", ".github/workflows"]) expect(existsSync(gone), gone).toBe(false);
+    expect(execFileSync("git", ["ls-files", ".github"], { encoding: "utf8" }).trim().split("\n").sort()).toEqual([".github/ISSUE_TEMPLATE/config.yml", ".github/PULL_REQUEST_TEMPLATE.md"]);
     const readme = readFileSync("README.md", "utf8");
     expect(readme).toContain("https://github.com/Heshamus/better-search-lab");
     expect(readme).not.toMatch(/pull request/i);

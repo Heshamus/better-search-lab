@@ -46,10 +46,23 @@ describe("the GitLab pipeline", () => {
     expect(ci).toMatch(/\$CI_COMMIT_TAG =~ \/\^v\//);
     expect(job("preflight")).toContain("NPM_TOKEN");
     expect(job("preflight")).toContain("release-notes.md");
-    expect(job("image")).toContain("linux/amd64,linux/arm64");
-    expect(job("image")).toContain("$CI_REGISTRY_IMAGE");
+    expect(job("publish-image")).toContain("linux/amd64,linux/arm64");
+    expect(job("publish-image")).toContain("$CI_REGISTRY_IMAGE");
     expect(job("npm")).toContain("npm publish --access public");
     expect(job("release")).toContain("release-cli");
-    for (const j of ["image", "npm", "release"]) expect(job(j), `${j} needs preflight`).toMatch(/needs:[^\n]*preflight/);
+    for (const j of ["publish-image", "npm", "release"]) expect(job(j), `${j} needs preflight`).toMatch(/needs:[^\n]*preflight/);
+  });
+  it("uses no reserved keyword as a job name, and every needs target is a job in this file", () => {
+    // GitLab rejects the whole pipeline when a job carries a global keyword's
+    // name (`image` was this file's first name for the publish job).
+    const RESERVED = ["image", "services", "stages", "types", "before_script", "after_script", "variables", "cache", "include", "default", "workflow", "true", "false", "nil"];
+    const jobs = [...ci.matchAll(/^([\w-]+):\n((?:[ \t]+.*\n?)*)/gm)]
+      .filter(([, , body]) => /^\s+(script|stage):/m.test(body))
+      .map(([, name]) => name);
+    expect(jobs).toEqual(["test", "demo-smoke", "preflight", "publish-image", "npm", "release"]);
+    for (const j of jobs) expect(RESERVED, `${j} is a reserved keyword`).not.toContain(j);
+    for (const [, list] of ci.matchAll(/^\s+needs:\s*\[([^\]]*)\]/gm)) {
+      for (const target of list.split(",").map((s) => s.trim())) expect(jobs, `needs target ${target}`).toContain(target);
+    }
   });
 });

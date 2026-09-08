@@ -25,8 +25,8 @@ describe("compose and image contract (spec §14.3)", () => {
   });
   it("the Dockerfile is three-stage and never bakes an env file", () => {
     const d = read("Dockerfile");
-    expect(d).toMatch(/FROM node:22-alpine AS deps/);
-    expect(d).toMatch(/FROM node:22-alpine AS build/);
+    expect(d).toMatch(/FROM --platform=\$BUILDPLATFORM node:22-alpine AS deps/);
+    expect(d).toMatch(/FROM --platform=\$BUILDPLATFORM node:22-alpine AS build/);
     expect(d).toMatch(/FROM node:22-alpine AS runner/);
     expect(d).toContain("ENV AUTH_TRUST_HOST=true");
     expect(d).toContain("pnpm install --prod --frozen-lockfile");

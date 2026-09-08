@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Stdio MCP server exposing a Better Search Lab install's read-only /api/mcp/* endpoints to coding agents.",
   "license": "AGPL-3.0-only",
-  "repository": { "type": "git", "url": "git+https://gitlab.com/betterbrainlab/better-search-lab.git" },
+  "repository": { "type": "git", "url": "git+https://gitlab.com/betterbrainlab/better-search-lab.git", "directory": "mcp" },
   "homepage": "https://gitlab.com/betterbrainlab/better-search-lab/-/tree/main/mcp",
   "bugs": { "url": "https://gitlab.com/betterbrainlab/better-search-lab/-/issues" },
   "keywords": ["mcp", "model-context-protocol", "seo", "better-search-lab"],

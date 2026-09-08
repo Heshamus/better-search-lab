@@ -31,7 +31,8 @@ describe("install.sh", () => {
     const ci = readFileSync(".gitlab-ci.yml", "utf8");
     const smoke = ci.match(/\ndemo-smoke:\n([\s\S]*?)(?=\n[\w.-]+:\n|$)/)?.[1] ?? "";
     expect(smoke).toContain("sh install.sh --demo");
-    expect(smoke).toContain("BSL_IMAGE=");
+    expect(smoke).toContain("docker build -t better-search-lab:ci .");
+    expect(smoke).toContain("BSL_IMAGE=better-search-lab:ci");
   });
   it("the docs lead with the one-liner", () => {
     const oneLiner = "curl -fsSL https://gitlab.com/betterbrainlab/better-search-lab/-/raw/main/install.sh | sh";

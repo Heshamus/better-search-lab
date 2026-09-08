@@ -8,6 +8,10 @@
 # publish of mcp/, and a GitLab Release whose notes are the CHANGELOG section.
 stages: [test, smoke, release]
 
+# A push that lands while an earlier pipeline is still running cancels it.
+default:
+  interruptible: true
+
 variables:
   PNPM_VERSION: "10.32.1"
   # docker-in-docker with TLS, the gitlab.com shared-runner default.
@@ -41,6 +45,8 @@ workflow:
     DOCKER_CERT_PATH: /certs/client
 
 .release:
+  # A release, once started, must not be auto-cancelled by a newer pipeline on the same ref.
+  interruptible: false
   rules:
     - if: $CI_COMMIT_TAG =~ /^v/
 
@@ -104,7 +110,7 @@ preflight:
       echo "tag $CI_COMMIT_TAG matches package.json and mcp/package.json"
     - |
       if [ -z "${NPM_TOKEN:-}" ]; then
-        echo "NPM_TOKEN is not set. Add it under Settings → CI/CD → Variables (masked) before pushing a release tag, or the npm job fails after the image is already published."
+        echo "NPM_TOKEN is not set for this pipeline. Add it under Settings → CI/CD → Variables (protected, masked) and protect the v* tags under Settings → Repository → Protected tags — a protected variable is only exposed on protected refs. Without it the npm job fails after the image is already published."
         exit 1
       fi
       echo "NPM_TOKEN is set"
@@ -116,11 +122,12 @@ preflight:
     paths: [release-notes.md]
     expire_in: 1 week
 
-image:
+publish-image:
   stage: release
   extends: [.docker, .release]
   needs: [preflight]
-  timeout: 60m
+  # The arm64 half of the build runs under QEMU emulation and is several times slower.
+  timeout: 2h
   script:
     - v="${CI_COMMIT_TAG#v}"
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
@@ -157,7 +164,7 @@ release:
   stage: release
   extends: .release
   image: registry.gitlab.com/gitlab-org/release-cli:latest
-  needs: [preflight, image, npm]
+  needs: [preflight, publish-image, npm]
   timeout: 10m
   script:
     - release-cli create --name "Better Search Lab $CI_COMMIT_TAG" --tag-name "$CI_COMMIT_TAG" --description "$(cat release-notes.md)"

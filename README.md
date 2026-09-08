@@ -10,7 +10,7 @@ Powered by the [DataForSEO](https://dataforseo.com) API on a pay-as-you-go basis
 
 ## Try it in five minutes
 
-Docker is the only requirement:
+Docker and curl are the only requirements:
 
 ```bash
 curl -fsSL https://gitlab.com/betterbrainlab/better-search-lab/-/raw/main/install.sh | sh
@@ -20,7 +20,7 @@ This creates a `better-search-lab` folder, generates a secret, starts Postgres, 
 
 Want to look before you connect anything? Add `-s -- --demo` to the command above (`… | sh -s -- --demo`) for a read-only demo with two synthetic sites and ninety days of history (`DEMO_MODE`).
 
-Prefer the source? `git clone https://gitlab.com/betterbrainlab/better-search-lab.git && cd better-search-lab && cp .env.example .env && docker compose up -d --build`, after setting `AUTH_SECRET` in `.env`.
+Prefer the source? Clone the repository, copy `.env.example` to `.env`, set `AUTH_SECRET`, then `docker compose up -d --build`; [docs/install.md](docs/install.md) has the exact lines.
 
 ## What it does
 

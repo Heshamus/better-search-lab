@@ -2,11 +2,13 @@ import { describe, it, expect } from "vitest";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
-// Until 2026-09-08 the tree carried release placeholders (`<org>`, the image
-// name) that a fork substituted before tagging. They are gone: the project
-// lives at gitlab.com/betterbrainlab/better-search-lab and publishes to the
-// GitLab registry. This guard keeps them from creeping back, and keeps the old
-// GitHub registry name out too. Spelled from parts so this file never matches.
+// Until 2026-09-08 the tree carried release placeholders (an org placeholder
+// in angle brackets, a placeholder image name) that a fork substituted before
+// tagging. They are gone: the project lives at
+// gitlab.com/betterbrainlab/better-search-lab and publishes to the GitLab
+// registry. This guard keeps them from creeping back, and keeps the old GitHub
+// registry host out too. The needles are assembled from parts, and this file
+// is excluded from the scan by name (SELF), so it never matches itself.
 const NEEDLES = [["<", "org", ">"].join(""), ["your", "-org"].join(""), ["ghcr", ".io/"].join("")];
 const SELF = "tests/repo/placeholders.test.ts";
 

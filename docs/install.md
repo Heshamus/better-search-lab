@@ -15,7 +15,12 @@ For the read-only demo instead: `curl -fsSL https://gitlab.com/betterbrainlab/be
 - Update: `cd better-search-lab && docker compose pull && docker compose up -d`. Migrations run on every start and are idempotent; see [upgrading.md](upgrading.md).
 - Logs: `docker compose logs -f web worker`.
 - Backups: the database lives in the `db-data` volume; `docker compose exec db pg_dump -U bsl bsl > backup.sql`.
-- Forks and other registries: `BSL_IMAGE=your.registry/better-search-lab:tag` in the environment before the command runs that image instead.
+- Forks and other registries: export the override first, then run the installer — a variable written on the `curl` line reaches only `curl`:
+
+  ```bash
+  export BSL_IMAGE=your.registry/better-search-lab:tag   # also BSL_DIR (target folder) and BSL_REF (git ref the compose file is fetched from)
+  curl -fsSL https://gitlab.com/betterbrainlab/better-search-lab/-/raw/main/install.sh | sh
+  ```
 
 ## From source
 
@@ -53,7 +58,7 @@ pnpm worker                   # in a second process
 The installer's `--demo` flag is the short way; from a clone:
 
 ```bash
-docker compose -f docker-compose.demo.yml up -d
+docker compose -f docker-compose.demo.yml up -d --build
 ```
 
 boots the read-only demo (`DEMO_MODE=true`): two synthetic sites, every page populated, every write refused. Sign in with **Explore the demo**. The demo MCP token is `bsl_demo_readonly`.

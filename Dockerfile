@@ -5,14 +5,15 @@
 # page is force-dynamic. Nothing from a .env file is ever copied in (.dockerignore).
 
 # deps: install every dependency (dev + prod) once, cached by the lockfile hash.
-FROM node:22-alpine AS deps
+# deps and build run on the build host's own architecture; the .next output is architecture-independent.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat && corepack enable
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # build: compile the Next.js app from the deps layer's node_modules and the full source.
-FROM node:22-alpine AS build
+FROM --platform=$BUILDPLATFORM node:22-alpine AS build
 RUN corepack enable
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
