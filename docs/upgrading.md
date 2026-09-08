@@ -19,4 +19,4 @@ Migrations run automatically when the `web` container starts (`pnpm db:migrate`)
 
 ## Between 1.x releases
 
-`git pull && docker compose up -d --build`. Check the [CHANGELOG](../CHANGELOG.md) for anything marked *migration*.
+Installer and image installs: `docker compose pull && docker compose up -d`. Source installs: `git pull && docker compose up -d --build`. Check the [CHANGELOG](../CHANGELOG.md) for anything marked *migration*.

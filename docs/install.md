@@ -1,26 +1,32 @@
 # Install
 
-## Docker Compose (recommended)
+## One command (recommended)
 
-Requirements: Docker with Compose v2.
+Requirements: Docker with Compose v2, and `curl`.
+
+```bash
+curl -fsSL https://gitlab.com/betterbrainlab/better-search-lab/-/raw/main/install.sh | sh
+```
+
+The installer creates a `better-search-lab` folder next to where you ran it, downloads `docker-compose.yml`, writes a `.env` with a generated `AUTH_SECRET` and `APP_URL=http://localhost:3000`, pulls the published image, starts `db` (Postgres 16 on a named volume), `web` (runs the migrations, then the app on port 3000) and `worker` (scheduled refreshes and on-demand jobs), and waits for `/api/health`. Open the address it prints and follow the wizard. Behind a domain, set `APP_URL` in that `.env` to the public address and run `docker compose up -d` again.
+
+For the read-only demo instead: `curl -fsSL https://gitlab.com/betterbrainlab/better-search-lab/-/raw/main/install.sh | sh -s -- --demo`.
+
+- Update: `cd better-search-lab && docker compose pull && docker compose up -d`. Migrations run on every start and are idempotent; see [upgrading.md](upgrading.md).
+- Logs: `docker compose logs -f web worker`.
+- Backups: the database lives in the `db-data` volume; `docker compose exec db pg_dump -U bsl bsl > backup.sql`.
+- Forks and other registries: `BSL_IMAGE=your.registry/better-search-lab:tag` in the environment before the command runs that image instead.
+
+## From source
 
 ```bash
 git clone https://gitlab.com/betterbrainlab/better-search-lab.git
 cd better-search-lab
-cp .env.example .env
+cp .env.example .env            # set AUTH_SECRET (openssl rand -base64 32) and APP_URL
+docker compose up -d --build
 ```
 
-Edit `.env`: set `AUTH_SECRET` to the output of `openssl rand -base64 32`, and `APP_URL` to the address people will open (`http://localhost:3000` on a laptop; `https://seo.example.com` behind a domain). Then:
-
-```bash
-docker compose up -d
-```
-
-Compose starts three services: `db` (Postgres 16 on a named volume), `web` (runs the migrations, then the app on port 3000), and `worker` (scheduled refreshes and on-demand jobs). Open `APP_URL` and follow the wizard.
-
-- Update: `git pull && docker compose up -d --build`. Migrations run on every start and are idempotent; see [upgrading.md](upgrading.md).
-- Logs: `docker compose logs -f web worker`.
-- Backups: the database lives in the `db-data` volume; `docker compose exec db pg_dump -U bsl bsl > backup.sql`.
+The same three services, built from the working tree. Update with `git pull && docker compose up -d --build`.
 
 ## Behind a reverse proxy
 
@@ -43,6 +49,8 @@ pnpm worker                   # in a second process
 ```
 
 ## The demo
+
+The installer's `--demo` flag is the short way; from a clone:
 
 ```bash
 docker compose -f docker-compose.demo.yml up -d

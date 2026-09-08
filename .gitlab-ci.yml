@@ -75,20 +75,17 @@ demo-smoke:
   before_script:
     - apk add --no-cache curl
   script:
-    - docker compose -f docker-compose.demo.yml up -d --build
+    - docker build -t better-search-lab:ci .
+    # The same installer a self-hoster runs, pointed at the image just built.
     # Ports published inside docker-in-docker are reachable on the service's
     # hostname ("docker"), not on localhost.
-    - |
-      for i in $(seq 1 60); do
-        curl -fsS http://docker:3000/api/health | grep -q '"ok":true' && break
-        sleep 5
-      done
-      curl -fsS http://docker:3000/api/health | grep -q '"ok":true'
+    - export BSL_IMAGE=better-search-lab:ci BSL_PULL=0 BSL_DIR=.smoke BSL_COMPOSE_FILE=docker-compose.demo.yml BSL_HEALTH_URL=http://docker:3000/api/health
+    - sh install.sh --demo
     - curl -fsS http://docker:3000/login | grep -q "Explore the demo"
     - test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://docker:3000/api/users)" = "403"
   after_script:
-    - docker compose -f docker-compose.demo.yml logs --no-color --tail=50 web || true
-    - docker compose -f docker-compose.demo.yml down -v || true
+    - docker compose -f .smoke/docker-compose.demo.yml logs --no-color --tail=50 web || true
+    - docker compose -f .smoke/docker-compose.demo.yml down -v || true
 
 preflight:
   stage: release

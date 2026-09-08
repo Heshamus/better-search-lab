@@ -10,16 +10,17 @@ Powered by the [DataForSEO](https://dataforseo.com) API on a pay-as-you-go basis
 
 ## Try it in five minutes
 
+Docker is the only requirement:
+
 ```bash
-git clone https://gitlab.com/betterbrainlab/better-search-lab.git
-cd better-search-lab
-cp .env.example .env            # set AUTH_SECRET (openssl rand -base64 32) and APP_URL
-docker compose up -d
+curl -fsSL https://gitlab.com/betterbrainlab/better-search-lab/-/raw/main/install.sh | sh
 ```
 
-Open `http://localhost:3000` — on first run it redirects to `/setup`, which creates your admin account, connects DataForSEO (a $5 balance is plenty to start), profiles your site, suggests competitors, and builds the first picture. Active time: about five minutes; DataForSEO spend for a 150-keyword site: about $0.37. Everything else — an AI assistant, Google, email, Reddit — is optional and lives under **Settings → Integrations**.
+This creates a `better-search-lab` folder, generates a secret, starts Postgres, the app and the worker, and prints the address. Open `http://localhost:3000` — on first run it redirects to `/setup`, which creates your admin account, connects DataForSEO (a $5 balance is plenty to start), profiles your site, suggests competitors, and builds the first picture. Active time: about five minutes; DataForSEO spend for a 150-keyword site: about $0.37. Everything else — an AI assistant, Google, email, Reddit — is optional and lives under **Settings → Integrations**.
 
-Want to look before you connect anything? `docker compose -f docker-compose.demo.yml up -d` boots a read-only demo with two synthetic sites and ninety days of history (`DEMO_MODE`).
+Want to look before you connect anything? Add `-s -- --demo` to the command above (`… | sh -s -- --demo`) for a read-only demo with two synthetic sites and ninety days of history (`DEMO_MODE`).
+
+Prefer the source? `git clone https://gitlab.com/betterbrainlab/better-search-lab.git && cd better-search-lab && cp .env.example .env && docker compose up -d --build`, after setting `AUTH_SECRET` in `.env`.
 
 ## What it does
 
@@ -38,7 +39,7 @@ Want to look before you connect anything? `docker compose -f docker-compose.demo
 
 ## Install
 
-- **Docker Compose** (recommended): the five lines above. `docs/install.md` covers volumes, reverse proxies, and the worker.
+- **One command** (recommended): the installer above. `docs/install.md` covers updates, volumes, reverse proxies, and the worker.
 - **Railway**: the repo ships `railway.json` (web) and `railway.worker.json` (worker).
 - **Bare metal**: Node 22, pnpm, Postgres 16; `pnpm install && pnpm db:migrate && pnpm build && pnpm start`, plus `pnpm worker`.
 

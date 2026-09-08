@@ -34,3 +34,6 @@ next-env.d.ts
 .superpowers/
 
 .worktrees/
+
+# install.sh smoke runs (CI and local)
+.smoke/
