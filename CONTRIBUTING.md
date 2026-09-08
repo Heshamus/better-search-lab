@@ -45,7 +45,6 @@ A fork substitutes two placeholders before it publishes anything. Neither is a s
 Replace the org placeholder (`<org>`) with your GitHub organisation or user name in:
 
 - `.github/ISSUE_TEMPLATE/config.yml` — the "Report a vulnerability" link in the new-issue chooser.
-- `.github/workflows/release.yml` — the GHCR image the release workflow builds and pushes.
 - `CHANGELOG.md` — the two link definitions at the bottom (the `Unreleased` comparison and the `1.0.0` tag). Set the release date in the same pass: `1.0.0` ships as `2026-09-XX`.
 - `README.md` — the `git clone` URL in the quick start.
 - `SECURITY.md` — the private vulnerability reporting link.
@@ -53,7 +52,6 @@ Replace the org placeholder (`<org>`) with your GitHub organisation or user name
 - `mcp/package.json` — `repository`, `homepage` and `bugs` for the published MCP package.
 - `package.json` — `repository`, `homepage` and `bugs` for the app package.
 - `src/lib/demo/links.ts` — `REPO_URL`, the source link the demo banner renders.
-- `tests/repo/release.test.ts` — the assertion pinning the release workflow's image name; it has to keep matching the workflow.
 
 Replace the image name (`ghcr.io/your-org/better-search-lab`) with the image that workflow publishes in:
 

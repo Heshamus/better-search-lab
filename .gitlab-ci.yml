@@ -1,0 +1,166 @@
+# GitLab CI for Better Search Lab.
+#
+# Merge requests and main run the same gates as the local checklist (typecheck,
+# generated docs current, the pglite suite plus the real-Postgres suite, a build
+# with an empty environment, the MCP package), then boot the read-only demo from
+# a locally built image. Tags matching v* add the release: preflight, a
+# multi-arch image to the GitLab registry (and Docker Hub when configured), npm
+# publish of mcp/, and a GitLab Release whose notes are the CHANGELOG section.
+stages: [test, smoke, release]
+
+variables:
+  PNPM_VERSION: "10.32.1"
+  # docker-in-docker with TLS, the gitlab.com shared-runner default.
+  DOCKER_TLS_CERTDIR: "/certs"
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v/
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+.node:
+  image: node:22
+  before_script:
+    - corepack enable
+    - corepack prepare "pnpm@${PNPM_VERSION}" --activate
+    - pnpm config set store-dir "$CI_PROJECT_DIR/.pnpm-store"
+  cache:
+    key:
+      files: [pnpm-lock.yaml]
+    paths: [.pnpm-store]
+
+.docker:
+  image: docker:27
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_VERIFY: "1"
+    DOCKER_CERT_PATH: /certs/client
+
+.release:
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v/
+
+test:
+  stage: test
+  extends: .node
+  timeout: 30m
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+  variables:
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: bsl_test
+    TEST_DATABASE_URL: postgres://postgres:postgres@postgres:5432/bsl_test
+    NEXT_TELEMETRY_DISABLED: "1"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm exec tsc --noEmit
+    - pnpm docs:config --check
+    - pnpm exec vitest run
+    # env -i proves the build needs no secret. PATH and HOME come back in because
+    # corepack's pnpm shim and the Next telemetry notice both need them.
+    - env -i PATH="$PATH" HOME="$HOME" NEXT_TELEMETRY_DISABLED=1 pnpm build
+    - cd mcp && npm ci && npx vitest run && npm run build
+
+# The image build lives here rather than in `test` because this job has Docker.
+demo-smoke:
+  stage: smoke
+  extends: .docker
+  needs: [test]
+  timeout: 30m
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - docker compose -f docker-compose.demo.yml up -d --build
+    # Ports published inside docker-in-docker are reachable on the service's
+    # hostname ("docker"), not on localhost.
+    - |
+      for i in $(seq 1 60); do
+        curl -fsS http://docker:3000/api/health | grep -q '"ok":true' && break
+        sleep 5
+      done
+      curl -fsS http://docker:3000/api/health | grep -q '"ok":true'
+    - curl -fsS http://docker:3000/login | grep -q "Explore the demo"
+    - test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://docker:3000/api/users)" = "403"
+  after_script:
+    - docker compose -f docker-compose.demo.yml logs --no-color --tail=50 web || true
+    - docker compose -f docker-compose.demo.yml down -v || true
+
+preflight:
+  stage: release
+  extends: .release
+  image: node:22
+  timeout: 5m
+  script:
+    - v="${CI_COMMIT_TAG#v}"
+    - root_v="$(node -p "require('./package.json').version")"
+    - mcp_v="$(node -p "require('./mcp/package.json').version")"
+    - |
+      if [ "$v" != "$root_v" ] || [ "$v" != "$mcp_v" ]; then
+        echo "release tag $CI_COMMIT_TAG (version $v) does not match package.json ($root_v) and/or mcp/package.json ($mcp_v)"
+        exit 1
+      fi
+      echo "tag $CI_COMMIT_TAG matches package.json and mcp/package.json"
+    - |
+      if [ -z "${NPM_TOKEN:-}" ]; then
+        echo "NPM_TOKEN is not set. Add it under Settings → CI/CD → Variables (masked) before pushing a release tag, or the npm job fails after the image is already published."
+        exit 1
+      fi
+      echo "NPM_TOKEN is set"
+    # The release notes are this version's CHANGELOG section; the release job reads the artifact.
+    - |
+      awk -v v="$v" '$0 ~ "^## \\[" v "\\]" {p=1; next} /^## \[/ {p=0} p' CHANGELOG.md > release-notes.md
+      test -s release-notes.md || echo "See CHANGELOG.md" > release-notes.md
+  artifacts:
+    paths: [release-notes.md]
+    expire_in: 1 week
+
+image:
+  stage: release
+  extends: [.docker, .release]
+  needs: [preflight]
+  timeout: 60m
+  script:
+    - v="${CI_COMMIT_TAG#v}"
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - tags="-t $CI_REGISTRY_IMAGE:$v -t $CI_REGISTRY_IMAGE:latest"
+    - |
+      if [ -n "${DOCKERHUB_USERNAME:-}" ] && [ -n "${DOCKERHUB_TOKEN:-}" ]; then
+        echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+        hub="${DOCKERHUB_NAMESPACE:-$DOCKERHUB_USERNAME}/better-search-lab"
+        tags="$tags -t $hub:$v -t $hub:latest"
+        echo "also publishing to Docker Hub as $hub"
+      else
+        echo "DOCKERHUB_USERNAME/DOCKERHUB_TOKEN not set: publishing to the GitLab registry only"
+      fi
+    - docker run --privileged --rm tonistiigi/binfmt --install arm64
+    - docker buildx create --use --name bsl-builder
+    - docker buildx build --platform linux/amd64,linux/arm64 --push $tags .
+
+npm:
+  stage: release
+  extends: .release
+  image: node:22
+  needs: [preflight]
+  timeout: 15m
+  # npm provenance accepts GitLab CI/CD as a trusted builder through this OIDC token.
+  id_tokens:
+    SIGSTORE_ID_TOKEN:
+      aud: sigstore
+  script:
+    - cd mcp && npm ci && npx vitest run && npm run build
+    - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
+    - npm publish --access public --provenance
+
+release:
+  stage: release
+  extends: .release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs: [preflight, image, npm]
+  timeout: 10m
+  script:
+    - release-cli create --name "Better Search Lab $CI_COMMIT_TAG" --tag-name "$CI_COMMIT_TAG" --description "$(cat release-notes.md)"

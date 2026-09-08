@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 describe("release metadata", () => {
   it("both packages are at the same release version with repository metadata", () => {
@@ -15,24 +15,41 @@ describe("release metadata", () => {
       expect(p.license).toBe("AGPL-3.0-only");
     }
   });
-  it("the release workflow builds a multi-arch image, publishes the MCP package, and cuts a GitHub release on tags", () => {
-    const y = readFileSync(".github/workflows/release.yml", "utf8");
-    expect(y).toMatch(/tags:\s*\n\s*- ["']?v\*/);
-    expect(y).toContain("linux/amd64,linux/arm64");
-    expect(y).toContain("ghcr.io/<org>/better-search-lab");
-    expect(y).toContain("npm publish");
-    expect(y).toContain("softprops/action-gh-release");
+});
+
+const ci = readFileSync(".gitlab-ci.yml", "utf8");
+/** One top-level job's body: from its unindented `name:` line to the next unindented key. */
+const job = (name: string): string => ci.match(new RegExp(`\\n${name}:\\n([\\s\\S]*?)(?=\\n[\\w.-]+:\\n|$)`))?.[1] ?? "";
+
+describe("the GitLab pipeline", () => {
+  it("is the only pipeline: no GitHub workflow or Dependabot file remains", () => {
+    expect(existsSync(".github/workflows")).toBe(false);
+    expect(existsSync(".github/dependabot.yml")).toBe(false);
   });
-  it("gates the image, npm and github-release jobs behind a preflight job", () => {
-    const y = readFileSync(".github/workflows/release.yml", "utf8");
-    expect(y).toMatch(/\n {2}preflight:\n/);
-    // Crude per-job slice: from a top-level (2-space-indented) job header to the next one.
-    const jobBlock = (job: string) => {
-      const m = y.match(new RegExp(`\\n {2}${job}:\\n([\\s\\S]*?)(?=\\n {2}[\\w-]+:\\n|$)`));
-      return m?.[1] ?? "";
-    };
-    for (const job of ["image", "npm", "github-release"]) {
-      expect(jobBlock(job), `${job} job body`).toMatch(/needs:.*preflight/);
+  it("runs every local gate in the test job, with a real Postgres for the concurrency suite", () => {
+    const t = job("test");
+    for (const cmd of ["pnpm install --frozen-lockfile", "pnpm exec tsc --noEmit", "pnpm docs:config --check", "pnpm exec vitest run", "pnpm build", "npx vitest run && npm run build"]) {
+      expect(t, cmd).toContain(cmd);
     }
+    expect(t).toContain("postgres:16-alpine");
+    expect(t).toContain("TEST_DATABASE_URL: postgres://postgres:postgres@postgres:5432/bsl_test");
+  });
+  it("boots the demo before anything is published and proves the login and the write refusal", () => {
+    const s = job("demo-smoke");
+    expect(s).toContain("docker-compose.demo.yml");
+    expect(s).toContain("/api/health");
+    expect(s).toContain("Explore the demo");
+    expect(s).toContain('"403"');
+    expect(s).toMatch(/needs:.*test/);
+  });
+  it("on a v* tag: preflight, a multi-arch image to the GitLab registry, npm publish, a GitLab release", () => {
+    expect(ci).toMatch(/\$CI_COMMIT_TAG =~ \/\^v\//);
+    expect(job("preflight")).toContain("NPM_TOKEN");
+    expect(job("preflight")).toContain("release-notes.md");
+    expect(job("image")).toContain("linux/amd64,linux/arm64");
+    expect(job("image")).toContain("$CI_REGISTRY_IMAGE");
+    expect(job("npm")).toContain("npm publish --access public");
+    expect(job("release")).toContain("release-cli");
+    for (const j of ["image", "npm", "release"]) expect(job(j), `${j} needs preflight`).toMatch(/needs:[^\n]*preflight/);
   });
 });

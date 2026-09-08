@@ -8,7 +8,7 @@ import { deriveKey } from "@/lib/config/crypto";
 import { readAllSettings, writeSettings } from "@/lib/config/store";
 
 // Runs only against a real Postgres: TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5433/bsl_test
-// CI provides a service container on 5432 (see .github/workflows/ci.yml); the
+// CI provides a service container on 5432 (the test job in .gitlab-ci.yml); the
 // 5433 above matches tests/postgres/README.md's throwaway container, which maps
 // off 5432 so it cannot collide with a Postgres you already run locally.
 const url = process.env.TEST_DATABASE_URL;
