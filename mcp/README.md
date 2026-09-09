@@ -20,11 +20,11 @@ Full design: `docs/superpowers/specs/2026-08-06-better-search-lab-mcp-design.md`
 
 ## Install
 
-No clone needed:
+No clone and no npm account needed: every release attaches the built package, and `npx` runs it from that URL.
 
-    npx @better-search-lab/mcp
+    npx -y https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.0.0/downloads/better-search-lab-mcp.tgz
 
-(or `npm i -g @better-search-lab/mcp` and run `better-search-lab-mcp`). To develop against this repo instead: `cd mcp && npm i && npm run build`, then run `node dist/server.js`.
+(or `npm i -g` that URL and run `better-search-lab-mcp`). To develop against this repo instead: `cd mcp && npm i && npm run build`, then run `node dist/server.js`.
 
 ## Configuration
 
@@ -42,7 +42,7 @@ Set via environment variables:
   "mcpServers": {
     "better-search-lab": {
       "command": "npx",
-      "args": ["-y", "@better-search-lab/mcp"],
+      "args": ["-y", "https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.0.0/downloads/better-search-lab-mcp.tgz"],
       "env": {
         "BSL_URL": "https://your-install.example.com",
         "BSL_TOKEN": "bsl_your_minted_token_here"

@@ -42,15 +42,23 @@ describe("the GitLab pipeline", () => {
     expect(s).toContain('"403"');
     expect(s).toMatch(/needs:.*test/);
   });
-  it("on a v* tag: preflight, a multi-arch image to the GitLab registry, npm publish, a GitLab release", () => {
+  it("on a v* tag: preflight, a multi-arch image to the GitLab registry, the MCP tarball, a GitLab release", () => {
     expect(ci).toMatch(/\$CI_COMMIT_TAG =~ \/\^v\//);
-    expect(job("preflight")).toContain("NPM_TOKEN");
     expect(job("preflight")).toContain("release-notes.md");
+    expect(job("preflight")).not.toContain("NPM_TOKEN");
     expect(job("publish-image")).toContain("linux/amd64,linux/arm64");
     expect(job("publish-image")).toContain("$CI_REGISTRY_IMAGE");
-    expect(job("npm")).toContain("npm publish --access public");
-    expect(job("release")).toContain("release-cli");
-    for (const j of ["publish-image", "npm", "release"]) expect(job(j), `${j} needs preflight`).toMatch(/needs:[^\n]*preflight/);
+    expect(job("package-mcp")).toContain("npm pack");
+    expect(job("package-mcp")).toContain("packages/generic/mcp/");
+    expect(job("package-mcp")).toContain("better-search-lab-mcp.tgz");
+    expect(job("release")).toContain("glab release create");
+    expect(job("release")).toContain("--notes-file release-notes.md");
+    expect(job("release")).toContain('\\"direct_asset_path\\":\\"/better-search-lab-mcp.tgz\\"');
+    expect(job("release")).toContain("GLAB_ENABLE_CI_AUTOLOGIN");
+    for (const j of ["publish-image", "package-mcp", "release"]) expect(job(j), `${j} needs preflight`).toMatch(/needs:[^\n]*preflight/);
+  });
+  it("never publishes to npm", () => {
+    expect(ci).not.toMatch(/npm publish|NPM_TOKEN|registry\.npmjs\.org|release-cli/);
   });
   it("uses no reserved keyword as a job name, and every needs target is a job in this file", () => {
     // GitLab rejects the whole pipeline when a job carries a global keyword's
@@ -59,7 +67,7 @@ describe("the GitLab pipeline", () => {
     const jobs = [...ci.matchAll(/^([\w-]+):\n((?:[ \t]+.*\n?)*)/gm)]
       .filter(([, , body]) => /^\s+(script|stage):/m.test(body))
       .map(([, name]) => name);
-    expect(jobs).toEqual(["test", "demo-smoke", "preflight", "publish-image", "npm", "release"]);
+    expect(jobs).toEqual(["test", "demo-smoke", "preflight", "publish-image", "package-mcp", "release"]);
     for (const j of jobs) expect(RESERVED, `${j} is a reserved keyword`).not.toContain(j);
     for (const [, list] of ci.matchAll(/^\s+needs:\s*\[([^\]]*)\]/gm)) {
       for (const target of list.split(",").map((s) => s.trim())) expect(jobs, `needs target ${target}`).toContain(target);

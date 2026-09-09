@@ -4,8 +4,10 @@
 # generated docs current, the pglite suite plus the real-Postgres suite, a build
 # with an empty environment, the MCP package), then boot the read-only demo from
 # a locally built image. Tags matching v* add the release: preflight, a
-# multi-arch image to the GitLab registry (and Docker Hub when configured), npm
-# publish of mcp/, and a GitLab Release whose notes are the CHANGELOG section.
+# multi-arch image to the GitLab registry (and Docker Hub when configured),
+# the MCP server packed as a tarball in the project's generic package registry,
+# and a GitLab Release (created with glab) whose notes are the CHANGELOG section
+# and whose one asset is that tarball.
 stages: [test, smoke, release]
 
 # A push that lands while an earlier pipeline is still running cancels it.
@@ -108,12 +110,6 @@ preflight:
         exit 1
       fi
       echo "tag $CI_COMMIT_TAG matches package.json and mcp/package.json"
-    - |
-      if [ -z "${NPM_TOKEN:-}" ]; then
-        echo "NPM_TOKEN is not set for this pipeline. Add it under Settings → CI/CD → Variables (protected, masked) and protect the v* tags under Settings → Repository → Protected tags — a protected variable is only exposed on protected refs. Without it the npm job fails after the image is already published."
-        exit 1
-      fi
-      echo "NPM_TOKEN is set"
     # The release notes are this version's CHANGELOG section; the release job reads the artifact.
     - |
       awk -v v="$v" '$0 ~ "^## \\[" v "\\]" {p=1; next} /^## \[/ {p=0} p' CHANGELOG.md > release-notes.md
@@ -145,26 +141,39 @@ publish-image:
     - docker buildx create --use --name bsl-builder
     - docker buildx build --platform linux/amd64,linux/arm64 --push $tags .
 
-npm:
+package-mcp:
   stage: release
   extends: .release
   image: node:22
   needs: [preflight]
   timeout: 15m
-  # npm provenance accepts GitLab CI/CD as a trusted builder through this OIDC token.
-  id_tokens:
-    SIGSTORE_ID_TOKEN:
-      aud: sigstore
   script:
-    - cd mcp && npm ci && npx vitest run && npm run build
-    - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
-    - npm publish --access public --provenance
+    - v="${CI_COMMIT_TAG#v}"
+    # npm shrinkwrap pins @modelcontextprotocol/sdk and zod for everyone who runs the
+    # tarball, instead of re-resolving ^ ranges at each user's first npx. npm always
+    # includes npm-shrinkwrap.json in the pack, regardless of the package's `files`.
+    - cd mcp && npm ci && npx vitest run && npm run build && npm shrinkwrap
+    - npm pack --pack-destination "$CI_PROJECT_DIR"
+    - cd "$CI_PROJECT_DIR"
+    - mv better-search-lab-mcp-*.tgz better-search-lab-mcp.tgz
+    # The tarball lives in the project's generic package registry (anonymous download on a
+    # public project); the release job links it under a stable /-/releases/<tag>/downloads/ path.
+    - 'curl --fail-with-body --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file better-search-lab-mcp.tgz "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/mcp/$v/better-search-lab-mcp.tgz"'
+  artifacts:
+    paths: [better-search-lab-mcp.tgz]
+    expire_in: 1 week
 
 release:
   stage: release
   extends: .release
-  image: registry.gitlab.com/gitlab-org/release-cli:latest
-  needs: [preflight, publish-image, npm]
+  # glab, the GitLab CLI, replaces the release tool GitLab deprecated in 18.0.
+  image: registry.gitlab.com/gitlab-org/cli:latest
+  needs: [preflight, publish-image, package-mcp]
   timeout: 10m
+  variables:
+    GLAB_ENABLE_CI_AUTOLOGIN: "true"
   script:
-    - release-cli create --name "Better Search Lab $CI_COMMIT_TAG" --tag-name "$CI_COMMIT_TAG" --description "$(cat release-notes.md)"
+    - v="${CI_COMMIT_TAG#v}"
+    - asset="$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/mcp/$v/better-search-lab-mcp.tgz"
+    # direct_asset_path is what makes /-/releases/<tag>/downloads/better-search-lab-mcp.tgz resolve.
+    - 'glab release create "$CI_COMMIT_TAG" -R "$CI_PROJECT_PATH" --name "Better Search Lab $CI_COMMIT_TAG" --notes-file release-notes.md --assets-links "[{\"name\":\"better-search-lab-mcp.tgz\",\"url\":\"$asset\",\"direct_asset_path\":\"/better-search-lab-mcp.tgz\",\"link_type\":\"package\"}]"'

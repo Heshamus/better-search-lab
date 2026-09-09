@@ -19,6 +19,6 @@ describe("docs", () => {
   it("the README no longer describes the pre-M1 product", () => {
     const readme = readFileSync("README.md", "utf8");
     for (const stale of ["ALLOWLIST", "working name", "Internal, self-hosted", "Phase 0", "seed one manually"]) expect(readme).not.toContain(stale);
-    for (const present of ["docker compose up", "/setup", "AGPL", "npx @better-search-lab/mcp", "docs/configuration.md", "DEMO_MODE"]) expect(readme).toContain(present);
+    for (const present of ["docker compose up", "/setup", "AGPL", "better-search-lab-mcp.tgz", "docs/configuration.md", "DEMO_MODE"]) expect(readme).toContain(present);
   });
 });

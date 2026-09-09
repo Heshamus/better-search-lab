@@ -33,7 +33,7 @@ Prefer the source? Clone the repository, copy `.env.example` to `.env`, set `AUT
 | **Backlinks, audit, organic** | DataForSEO backlink snapshots with trends; an on-page audit from our own crawler (free); organic keywords |
 | **AI visibility** | Weekly scans of Perplexity, ChatGPT and Gemini: are you named, are you cited, who is |
 | **Reddit conversations** | Threads worth joining, judged for fit and drafted with citations |
-| **MCP** | `npx @better-search-lab/mcp` gives Claude Code (or any MCP client) read-only tools over your data |
+| **MCP** | One `npx` command runs the bundled MCP server straight from the release download, giving Claude Code (or any MCP client) read-only tools over your data |
 
 ![Opportunities](docs/screenshots/opportunities.png)
 
@@ -54,7 +54,7 @@ DataForSEO bills per request; the in-app **Usage** page shows exactly what was s
 Mint a token under **Settings → MCP**, then register the server with your agent:
 
 ```json
-{ "mcpServers": { "better-search-lab": { "command": "npx", "args": ["-y", "@better-search-lab/mcp"], "env": { "BSL_URL": "https://your-install.example.com", "BSL_TOKEN": "bsl_…" } } } }
+{ "mcpServers": { "better-search-lab": { "command": "npx", "args": ["-y", "https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.0.0/downloads/better-search-lab-mcp.tgz"], "env": { "BSL_URL": "https://your-install.example.com", "BSL_TOKEN": "bsl_…" } } } }
 ```
 
 Eleven read-only tools — projects, opportunities, gaps, competitors, audit, backlinks, Search Console, Analytics, AI visibility, Reddit conversations, keyword overview. See [docs/mcp.md](docs/mcp.md).
