@@ -23,8 +23,7 @@ describe("the MCP server is distributed as a release download", () => {
   });
   it("the pipeline links that file under that path", () => {
     const ci = readFileSync(".gitlab-ci.yml", "utf8");
-    expect(ci).toContain("direct_asset_path");
-    expect(ci).toContain("/better-search-lab-mcp.tgz");
+    expect(ci).toContain('\\"direct_asset_path\\":\\"/better-search-lab-mcp.tgz\\"');
     expect(ci).not.toMatch(/npm publish|NPM_TOKEN|registry\.npmjs\.org/);
   });
 });

@@ -149,7 +149,10 @@ package-mcp:
   timeout: 15m
   script:
     - v="${CI_COMMIT_TAG#v}"
-    - cd mcp && npm ci && npx vitest run && npm run build
+    # npm shrinkwrap pins @modelcontextprotocol/sdk and zod for everyone who runs the
+    # tarball, instead of re-resolving ^ ranges at each user's first npx. npm always
+    # includes npm-shrinkwrap.json in the pack, regardless of the package's `files`.
+    - cd mcp && npm ci && npx vitest run && npm run build && npm shrinkwrap
     - npm pack --pack-destination "$CI_PROJECT_DIR"
     - cd "$CI_PROJECT_DIR"
     - mv better-search-lab-mcp-*.tgz better-search-lab-mcp.tgz
@@ -173,4 +176,4 @@ release:
     - v="${CI_COMMIT_TAG#v}"
     - asset="$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/mcp/$v/better-search-lab-mcp.tgz"
     # direct_asset_path is what makes /-/releases/<tag>/downloads/better-search-lab-mcp.tgz resolve.
-    - 'glab release create "$CI_COMMIT_TAG" --name "Better Search Lab $CI_COMMIT_TAG" --notes-file release-notes.md --assets-links "[{\"name\":\"better-search-lab-mcp.tgz\",\"url\":\"$asset\",\"direct_asset_path\":\"/better-search-lab-mcp.tgz\",\"link_type\":\"package\"}]"'
+    - 'glab release create "$CI_COMMIT_TAG" -R "$CI_PROJECT_PATH" --name "Better Search Lab $CI_COMMIT_TAG" --notes-file release-notes.md --assets-links "[{\"name\":\"better-search-lab-mcp.tgz\",\"url\":\"$asset\",\"direct_asset_path\":\"/better-search-lab-mcp.tgz\",\"link_type\":\"package\"}]"'

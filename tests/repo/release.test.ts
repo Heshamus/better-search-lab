@@ -53,8 +53,7 @@ describe("the GitLab pipeline", () => {
     expect(job("package-mcp")).toContain("better-search-lab-mcp.tgz");
     expect(job("release")).toContain("glab release create");
     expect(job("release")).toContain("--notes-file release-notes.md");
-    expect(job("release")).toContain("direct_asset_path");
-    expect(job("release")).toContain("/better-search-lab-mcp.tgz");
+    expect(job("release")).toContain('\\"direct_asset_path\\":\\"/better-search-lab-mcp.tgz\\"');
     expect(job("release")).toContain("GLAB_ENABLE_CI_AUTOLOGIN");
     for (const j of ["publish-image", "package-mcp", "release"]) expect(job(j), `${j} needs preflight`).toMatch(/needs:[^\n]*preflight/);
   });

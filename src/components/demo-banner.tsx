@@ -1,7 +1,7 @@
 "use client";
 
 import { useDemo } from "@/components/demo-provider";
-import { REPO_URL } from "@/lib/demo/links";
+import { REPO_URL } from "@/lib/repo";
 
 export function DemoBanner() {
   if (!useDemo()) return null;

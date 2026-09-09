@@ -1,7 +1,7 @@
 // Default import + destructure, as src/app/api/health/route.ts does: Next's
 // bundler warns about named exports from JSON modules.
 import pkg from "../../package.json";
-import { REPO_URL } from "@/lib/demo/links";
+import { REPO_URL } from "@/lib/repo";
 
 const { version } = pkg;
 

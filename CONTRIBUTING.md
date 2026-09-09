@@ -47,6 +47,8 @@ Bigger changes start as a design document under `docs/superpowers/specs/`, becom
 
 No CI variable is required. `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (protected and masked) optionally add a Docker Hub copy under `DOCKERHUB_NAMESPACE`, which defaults to the username. Protect the `v*` tags (Settings → Repository → Protected tags, create: Maintainers) so only maintainers can start a release; protected variables are exposed only on protected refs, so keep the two together if you add any. Leave "run pipelines for merge requests from forks in the parent project" off.
 
+The MCP download URL is anonymous only while the project is **public** with the Package registry and Releases features enabled — making the project private, or disabling either feature, breaks every `npx` snippet in the README and docs. When re-running a release for a tag that already exists, delete that release's `better-search-lab-mcp.tgz` asset link first (the API rejects a duplicate link name), and consider Settings → Packages and registries → Generic packages → **Reject duplicates** so the tarball is write-once (this makes a same-tag re-run of `package-mcp` fail by design).
+
 The GitHub repository at https://github.com/Heshamus/better-search-lab is a read-only mirror: configure it once under Settings → Repository → Mirroring repositories (push, `https://github.com/Heshamus/better-search-lab.git`, a fine-grained token with contents read/write), and on GitHub turn off Issues, Wiki and Projects. The `.github/` folder in this tree only redirects people here.
 
 Forks change nothing in the tree: the image name comes from `CI_REGISTRY_IMAGE`, the compose files read `BSL_IMAGE`, and `install.sh` reads `BSL_IMAGE` and `BSL_REF`.
