@@ -1,0 +1,46 @@
+# Better Search Lab — single-container demo image for a Hugging Face Docker Space.
+# A Space runs exactly one container, so this image carries its own Postgres 16
+# next to the app. It is the read-only demo (DEMO_MODE=true): the dataset is
+# re-seeded on every boot, nothing is persisted, every write is refused.
+# Not for real installs — use docker-compose.yml / install.sh for those.
+
+FROM --platform=$BUILDPLATFORM node:22-alpine AS deps
+RUN apk add --no-cache libc6-compat && corepack enable
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+FROM --platform=$BUILDPLATFORM node:22-alpine AS build
+RUN corepack enable
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN pnpm build
+
+FROM node:22-alpine AS runner
+RUN apk add --no-cache libc6-compat postgresql16 postgresql16-contrib su-exec && corepack enable
+WORKDIR /app
+ENV NODE_ENV=production
+ENV AUTH_TRUST_HOST=true
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV COREPACK_HOME=/app/.corepack
+# Space conventions: the app listens on 7860; everything else is demo-only.
+ENV PORT=7860
+ENV DEMO_MODE=true
+ENV PGDATA=/data/pg
+ENV DATABASE_URL=postgres://bsl:bsl@127.0.0.1:5432/bsl_demo
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
+COPY src ./src
+COPY drizzle ./drizzle
+COPY worker ./worker
+COPY next.config.ts tsconfig.json ./
+COPY scripts/start-hf.sh /usr/local/bin/start-hf.sh
+RUN chmod +x /usr/local/bin/start-hf.sh && mkdir -p /data && chown -R node:node /app /data
+# Postgres refuses to run as root and Spaces expect an unprivileged user (uid 1000 = node).
+USER node
+EXPOSE 7860
+CMD ["/usr/local/bin/start-hf.sh"]
