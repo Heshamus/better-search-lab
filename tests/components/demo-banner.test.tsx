@@ -13,6 +13,12 @@ describe("DemoBanner", () => {
     cleanup();
     render(<DemoProvider demo={true}><DemoBanner /></DemoProvider>);
     expect(screen.getByRole("note")).toHaveTextContent(/read-only demo/i);
-    expect(screen.getByRole("link", { name: /install your own/i })).toHaveAttribute("href", expect.stringContaining("better-search-lab"));
+    const link = screen.getByRole("link", { name: /install your own/i });
+    expect(link).toHaveAttribute("href", expect.stringContaining("better-search-lab"));
+    // The demo runs inside the Hugging Face iframe; a same-frame navigation to
+    // the repo is refused (gitlab.com denies framing), so the link must open a
+    // new top-level tab.
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
   });
 });
