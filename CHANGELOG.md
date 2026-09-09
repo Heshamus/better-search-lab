@@ -15,7 +15,7 @@ The first public release.
 - Provider-pluggable AI assistant (OpenAI-compatible and Anthropic) and email (Resend, SMTP).
 - Read-only demo mode with two synthetic sites (`DEMO_MODE=true`).
 - `/api/health`, a three-stage Docker image, `docker-compose.yml`, `docker-compose.demo.yml`.
-- The `@better-search-lab/mcp` package on npm.
+- The MCP server (`@better-search-lab/mcp`), attached to every release as a tarball that `npx` runs from its URL.
 - Generated configuration docs, install and upgrade guides.
 
 ### Changed

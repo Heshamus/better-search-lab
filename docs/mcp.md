@@ -1,6 +1,6 @@
 # MCP server
 
-`@better-search-lab/mcp` is a stdio MCP server that exposes your install's read-only `/api/mcp/*` routes to any MCP client (Claude Code, Claude Desktop, Cursor, …). It never writes.
+`@better-search-lab/mcp` is a stdio MCP server that exposes your install's read-only `/api/mcp/*` routes to any MCP client (Claude Code, Claude Desktop, Cursor, …). It never writes. It is not on npm: every release attaches it as a tarball, and `npx` downloads and runs it from that URL, so nothing is installed globally and no account is involved.
 
 ## Setup
 
@@ -12,7 +12,7 @@
   "mcpServers": {
     "better-search-lab": {
       "command": "npx",
-      "args": ["-y", "@better-search-lab/mcp"],
+      "args": ["-y", "https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.0.0/downloads/better-search-lab-mcp.tgz"],
       "env": { "BSL_URL": "https://your-install.example.com", "BSL_TOKEN": "bsl_your_token" }
     }
   }
@@ -20,6 +20,10 @@
 ```
 
 `BSL_URL` defaults to `http://localhost:3000`.
+
+## Updating
+
+Each release has its own URL, and `npx` keeps whatever it first fetched from a given URL. To move to a new version, change the version in the URL (the [releases page](https://gitlab.com/betterbrainlab/better-search-lab/-/releases) lists them). The permanent link `https://gitlab.com/betterbrainlab/better-search-lab/-/releases/permalink/latest/downloads/better-search-lab-mcp.tgz` always points at the newest release, but because of that caching it only helps a first-time download.
 
 ## Tools
 
