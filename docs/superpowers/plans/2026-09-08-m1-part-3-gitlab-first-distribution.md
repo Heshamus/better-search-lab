@@ -893,3 +893,12 @@ git commit -m "feat(install): one-command installer, run by CI against the built
 ## Left for later
 
 Docker Hub namespace (owner decides), Renovate on GitLab, the Codeberg mirror, the self-contained demo image and its hosting (stream B), and the reach work (stream E).
+
+## Execution notes (2026-09-09)
+
+Executed as branch `m1-part-3` (6166efb, 03f4149, 549d5c2, 94dcbf9, 64b2c44) and merged into `main` by fast-forward. Deviations from the text above, all from the final whole-branch review:
+
+- The release-stage job is named `publish-image`, not `image`: `image` is a reserved GitLab CI keyword, and a job by that name makes the whole pipeline invalid. `tests/repo/release.test.ts` now rejects reserved job names and dangling `needs` targets. Read every `image` job reference above as `publish-image`.
+- `.release` jobs are `interruptible: false` under a `default: interruptible: true`; the publish job's timeout is 2h (the arm64 half builds under QEMU); the Dockerfile's `deps` and `build` stages run on `$BUILDPLATFORM`.
+- `install.sh` runs inside a `main()` function invoked on its last line, refuses an empty generated secret, and downloads to a temporary name before moving it into place.
+- CONTRIBUTING asks for protected and masked CI variables and protected `v*` tags; `docs/install.md` shows overrides as an `export` line before the one-liner; `mcp/package.json` carries `"directory": "mcp"`.
