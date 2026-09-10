@@ -19,7 +19,7 @@ const HINTS: Record<string, string> = {
 
 export function HealthStrip({ metrics }: { metrics: Metric[] }) {
   return (
-    <dl className="panel grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-neutral-200">
+    <dl className="panel grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-0 lg:divide-x lg:divide-neutral-200">
       {metrics.map((metric) => {
         const empty = metric.value === "—" || metric.value === "";
         return (
