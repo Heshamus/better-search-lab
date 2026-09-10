@@ -17,9 +17,9 @@ const TYPE_META: Record<string, { label: string; tone: "good" | "risk" | "neutra
 };
 
 const CHIP: Record<string, string> = {
-  good: "bg-accent/12 text-accent",
-  risk: "bg-at-risk/15 text-at-risk",
-  neutral: "bg-neutral-800 text-neutral-300",
+  good: "bg-[--color-accent-tint] text-accent",
+  risk: "bg-[--color-at-risk-tint] text-at-risk",
+  neutral: "bg-neutral-100 text-neutral-700",
 };
 
 function Cell({ label, children }: { label: string; children: React.ReactNode }) {
@@ -43,7 +43,7 @@ export function OpportunityCard({ opp, maxVolume = 0 }: { opp: OpportunityRow; m
   const meta = TYPE_META[opp.type] ?? { label: opp.type, tone: "neutral" as const };
 
   return (
-    <article className={`panel flex flex-col p-4 transition-colors hover:border-neutral-700 ${isResolved ? "opacity-55" : ""}`}>
+    <article className={`panel flex flex-col p-4 transition-all hover:border-neutral-300 hover:shadow-pop ${isResolved ? "opacity-55" : ""}`}>
       <div className="flex items-start justify-between gap-2">
         <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[0.7rem] font-medium ${CHIP[meta.tone]}`}>
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
@@ -56,10 +56,10 @@ export function OpportunityCard({ opp, maxVolume = 0 }: { opp: OpportunityRow; m
         ) : null}
       </div>
 
-      <h3 className="mt-2.5 text-[0.95rem] font-semibold text-white">{opp.keyword}</h3>
-      <p className="mt-1 flex-1 text-sm leading-relaxed text-neutral-400">{opp.why}</p>
+      <h3 className="mt-2.5 text-[0.95rem] font-semibold text-neutral-900">{opp.keyword}</h3>
+      <p className="mt-1 flex-1 text-sm leading-relaxed text-neutral-600">{opp.why}</p>
 
-      <div className="mt-4 grid grid-cols-4 gap-3 border-t border-neutral-800/70 pt-3.5">
+      <div className="mt-4 grid grid-cols-4 gap-3 border-t border-neutral-200 pt-3.5">
         <Cell label="Volume"><VolumeBar value={opp.volume} max={maxVolume || (opp.volume ?? 1)} /></Cell>
         <Cell label="Position"><PositionBadge pos={opp.currentPosition} /></Cell>
         <Cell label="Difficulty"><KdMeter kd={opp.difficulty} /></Cell>

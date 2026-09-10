@@ -32,9 +32,9 @@ const GROUNDED = new Set(["ctr_gap", "content_vs_ranking"]);
 
 function HealthTile({ href, label, value, hint }: { href: string; label: string; value: string; hint: string }) {
   return (
-    <a href={href} className="panel group flex flex-col gap-1.5 px-4 py-3.5 transition-colors hover:border-neutral-700">
+    <a href={href} className="panel group flex flex-col gap-1.5 px-4 py-3.5 transition-all hover:border-neutral-300 hover:shadow-pop">
       <span className="eyebrow">{label}</span>
-      <span className="num text-[1.4rem] font-semibold leading-none tracking-tight text-white">{value}</span>
+      <span className="num text-[1.4rem] font-semibold leading-none tracking-tight text-neutral-900">{value}</span>
       <span className="text-[0.7rem] text-neutral-500">{hint}</span>
     </a>
   );
@@ -50,7 +50,7 @@ export default async function OverviewPage() {
       <EmptyState
         title="Add your first site"
         description="The setup wizard profiles it, suggests competitors, and builds the first picture of your rankings."
-        action={<a href="/setup?step=site" className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-90">Start setup</a>}
+        action={<a href="/setup?step=site" className="rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138]">Start setup</a>}
       />
     );
   }
@@ -74,8 +74,8 @@ export default async function OverviewPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <div className="eyebrow">Overview</div>
-          <p className="mt-1 text-sm text-neutral-400">
-            The state of search for <span className="font-medium text-neutral-200">{project.domain}</span>.
+          <p className="mt-1 text-sm text-neutral-600">
+            The state of search for <span className="font-medium text-neutral-800">{project.domain}</span>.
           </p>
         </div>
         <RefreshDataButton projectId={project.id} />
@@ -84,19 +84,19 @@ export default async function OverviewPage() {
       <OverviewHeadline gsc={gscHead} ga={gaHead} />
 
       <section className="flex flex-col gap-3.5">
-        <h2 className="text-sm font-semibold text-white">Do this next</h2>
+        <h2 className="text-sm font-semibold text-neutral-900">Do this next</h2>
         {actions.length ? (
           <ol className="flex flex-col gap-2.5">
             {actions.map((o, i) => (
               <li key={o.id}>
-                <a href="/opportunities" className="panel group flex items-start gap-3 px-4 py-3 transition-colors hover:border-neutral-700">
-                  <span className="tnum mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-semibold text-accent">{i + 1}</span>
+                <a href="/opportunities" className="panel group flex items-start gap-3 px-4 py-3 transition-all hover:border-neutral-300 hover:shadow-pop">
+                  <span className="tnum mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center text-xs font-semibold text-neutral-500">{i + 1}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-neutral-100">{o.why}</p>
+                    <p className="text-sm text-neutral-900">{o.why}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
                       <span className="eyebrow">{TYPE_LABEL[o.type] ?? o.type}</span>
                       {GROUNDED.has(o.type) ? (
-                        <span className="rounded bg-accent/10 px-1.5 py-0.5 text-[0.62rem] font-medium text-accent">grounded in Search Console</span>
+                        <span className="rounded bg-[--color-accent-tint] px-1.5 py-0.5 text-[0.62rem] font-medium text-accent">grounded in Search Console</span>
                       ) : null}
                       {o.upsideEstimate ? <span className="tnum text-[0.7rem] text-neutral-500">{o.upsideEstimate}</span> : null}
                     </div>
@@ -114,7 +114,7 @@ export default async function OverviewPage() {
       </section>
 
       <section className="flex flex-col gap-3.5">
-        <h2 className="text-sm font-semibold text-white">Health</h2>
+        <h2 className="text-sm font-semibold text-neutral-900">Health</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <HealthTile href="/audit" label="Site audit" value={audit ? String(audit.score) : "—"} hint="score / 100" />
           <HealthTile href="/backlinks" label="Referring domains" value={backlinks ? formatCompact(backlinks.referringDomains.length) : "—"} hint="linking sites" />

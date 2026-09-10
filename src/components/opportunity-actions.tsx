@@ -7,7 +7,7 @@ import { useDemo } from "@/components/demo-provider";
 type MutableStatus = "tracked" | "dismissed";
 
 const actionButtonClass =
-  "rounded-lg border border-neutral-200 px-3 py-1 font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800";
+  "rounded-lg border border-neutral-300 bg-white px-3 py-1 font-medium text-neutral-900 shadow-1 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50";
 
 /**
  * The mutation half of an opportunity card (§8). Track/Dismiss `fetch` the
@@ -81,7 +81,7 @@ export function OpportunityActions({
           title={demo ? "Read-only demo" : undefined}
           className={
             isTracked
-              ? "rounded-lg bg-accent/20 px-3 py-1 font-medium text-accent"
+              ? "rounded-lg bg-[--color-accent-tint] px-3 py-1 font-medium text-accent"
               : actionButtonClass
           }
         >
@@ -95,7 +95,7 @@ export function OpportunityActions({
           title={demo ? "Read-only demo" : undefined}
           className={
             isDismissed
-              ? "rounded-lg bg-neutral-200 px-3 py-1 font-medium text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
+              ? "rounded-lg bg-neutral-200 px-3 py-1 font-medium text-neutral-600"
               : actionButtonClass
           }
         >

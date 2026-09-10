@@ -90,8 +90,8 @@ export default async function OpportunitiesPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <div className="eyebrow">This week&rsquo;s shortlist</div>
-          <p className="mt-1 text-sm text-neutral-400">
-            The highest-leverage moves for <span className="font-medium text-neutral-200">{project.domain}</span>.
+          <p className="mt-1 text-sm text-neutral-600">
+            The highest-leverage moves for <span className="font-medium text-neutral-800">{project.domain}</span>.
           </p>
         </div>
         <RefreshDataButton projectId={project.id} />
@@ -101,7 +101,7 @@ export default async function OpportunitiesPage() {
 
       {hasData ? (
         <section className="flex flex-col gap-3.5">
-          <h2 className="text-sm font-semibold text-white">Overview</h2>
+          <h2 className="text-sm font-semibold text-neutral-900">Overview</h2>
           <DashboardCharts data={dashboard} />
         </section>
       ) : null}
@@ -118,8 +118,8 @@ export default async function OpportunitiesPage() {
           return (
             <section key={type} className="flex flex-col gap-3.5">
               <div className="flex items-center gap-2.5">
-                <h2 className="text-sm font-semibold text-white">{title}</h2>
-                <span className="tnum rounded-full bg-neutral-800/80 px-2 py-0.5 text-[0.7rem] text-neutral-400">{rows.length}</span>
+                <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
+                <span className="tnum rounded-full bg-neutral-100 px-2 py-0.5 text-[0.7rem] text-neutral-700">{rows.length}</span>
               </div>
               <div className="grid grid-cols-1 gap-3.5 xl:grid-cols-2">
                 {rows.map((opp) => (
