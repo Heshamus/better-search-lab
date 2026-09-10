@@ -14,7 +14,7 @@ export function RunBacklinksButton({ projectId, label = "Refresh backlinks" }: {
         disabled={job.demo || job.state === "running"}
         title={job.demo ? "Read-only demo" : undefined}
         aria-live="polite"
-        className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
+        className="rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50"
       >
         {job.state === "running" ? "Fetching… (~20s)" : label}
       </button>

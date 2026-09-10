@@ -9,8 +9,8 @@ import type { JobState } from "@/components/use-job";
 export function JobProgress({ state, progress, error }: { state: JobState; progress: string | null; error: string | null }) {
   if (state === "running") {
     return (
-      <span role="status" aria-live="polite" className="inline-flex items-center gap-1.5 text-xs text-neutral-400">
-        <span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+      <span role="status" aria-live="polite" className="inline-flex items-center gap-1.5 text-xs text-neutral-600">
+        <span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-[--color-accent]" />
         {progress ?? "Working…"}
       </span>
     );
