@@ -3,6 +3,7 @@
 services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: bsl
       POSTGRES_PASSWORD: bsl
@@ -19,6 +20,7 @@ services:
     build: .
     # The published image; override with BSL_IMAGE (a fork's registry, or a local tag in CI).
     image: ${BSL_IMAGE:-registry.gitlab.com/betterbrainlab/better-search-lab:latest}
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
@@ -40,6 +42,7 @@ services:
     build: .
     # The published image; override with BSL_IMAGE (a fork's registry, or a local tag in CI).
     image: ${BSL_IMAGE:-registry.gitlab.com/betterbrainlab/better-search-lab:latest}
+    restart: unless-stopped
     depends_on:
       web:
         condition: service_healthy
