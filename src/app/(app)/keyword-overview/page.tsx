@@ -11,8 +11,8 @@ export default function KeywordOverviewPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-lg font-semibold tracking-tight text-white">Keyword Overview</h2>
-        <p className="text-sm text-neutral-400">Bulk volume, difficulty and 12-month trend for any list of keywords. Nothing is saved.</p>
+        <h2 className="text-lg font-semibold tracking-tight text-neutral-900">Keyword Overview</h2>
+        <p className="text-sm text-neutral-600">Bulk volume, difficulty and 12-month trend for any list of keywords. Nothing is saved.</p>
       </div>
       <KeywordOverview />
     </div>

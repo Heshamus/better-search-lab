@@ -9,7 +9,7 @@ import { useDemo } from "@/components/demo-provider";
 export type KeywordManagerRow = typeof keywords.$inferSelect;
 
 const actionButtonClass =
-  "rounded-lg border border-neutral-200 px-3 py-1 font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800";
+  "rounded-lg border border-neutral-200 px-3 py-1 font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50";
 
 // Guardrail (brief): the parser splits on BOTH newlines and commas, trims
 // each piece, and drops empties — so a stray blank line or trailing comma
@@ -70,7 +70,7 @@ function KeywordTable({ rows }: { rows: KeywordManagerRow[] }) {
     <div className="panel overflow-x-auto">
       <table className="w-full min-w-[640px] border-collapse text-left text-sm">
         <thead>
-          <tr className="border-b border-neutral-800">
+          <tr className="border-b border-neutral-200">
             <th className="eyebrow px-4 py-2.5">Keyword</th>
             <th className="eyebrow px-4 py-2.5">Location</th>
             <th className="eyebrow px-4 py-2.5">Device</th>
@@ -83,19 +83,19 @@ function KeywordTable({ rows }: { rows: KeywordManagerRow[] }) {
             <tr
               key={row.id}
               data-testid={`keyword-row-${row.id}`}
-              className="border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20"
+              className="border-b border-neutral-200 transition-colors last:border-0 hover:bg-neutral-50"
             >
-              <td className="px-4 py-2.5 font-medium text-white">{row.keyword}</td>
+              <td className="px-4 py-2.5 font-medium text-neutral-900">{row.keyword}</td>
               <td className="px-4 py-2.5">
-                <span className="tnum text-xs text-neutral-400">{locationLabel(row.locationCode, row.languageCode)}</span>
+                <span className="tnum text-xs text-neutral-600">{locationLabel(row.locationCode, row.languageCode)}</span>
               </td>
-              <td className="px-4 py-2.5 text-neutral-400 capitalize">{row.device}</td>
+              <td className="px-4 py-2.5 text-neutral-600 capitalize">{row.device}</td>
               <td className="px-4 py-2.5">
                 <div className="flex flex-wrap gap-1">
                   {(row.tags ?? []).map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-md bg-neutral-800/70 px-1.5 py-0.5 text-[10px] font-medium text-neutral-400"
+                      className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-[10px] font-medium text-neutral-700"
                     >
                       {tag}
                     </span>
@@ -171,11 +171,11 @@ function AddKeywordsBox({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
+      className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-4"
     >
       <label
         htmlFor="add-keywords-input"
-        className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+        className="text-xs font-semibold uppercase tracking-wide text-neutral-500"
       >
         Add keywords
       </label>
@@ -185,7 +185,7 @@ function AddKeywordsBox({
         onChange={(event) => setValue(event.target.value)}
         placeholder="One keyword per line, or comma-separated"
         rows={3}
-        className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-accent dark:border-neutral-700 dark:bg-neutral-950 dark:text-white"
+        className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-accent"
       />
       {failed ? (
         <p className="text-xs text-at-risk">Couldn&rsquo;t add keywords — try again.</p>
@@ -194,7 +194,7 @@ function AddKeywordsBox({
         type="submit"
         disabled={demo || busy || parsed.length === 0}
         title={demo ? "Read-only demo" : undefined}
-        className="self-start rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
+        className="self-start rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50"
       >
         {busy ? "Adding…" : "Add keywords"}
       </button>
@@ -225,7 +225,7 @@ export function KeywordManager({
   return (
     <div className="flex flex-col gap-6">
       {rows.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400">
+        <p className="rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500">
           No tracked keywords yet — add some below.
         </p>
       ) : (

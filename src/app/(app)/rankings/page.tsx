@@ -56,7 +56,7 @@ export default async function RankingsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="eyebrow">Rank tracking</div>
-          <p className="mt-1 text-sm text-neutral-400">Where your tracked keywords sit in Google.</p>
+          <p className="mt-1 text-sm text-neutral-600">Where your tracked keywords sit in Google.</p>
         </div>
         <RefreshRankingsButton projectId={project.id} />
       </div>
@@ -73,7 +73,7 @@ export default async function RankingsPage() {
       <RankingsSummary rows={rows} />
 
       <section className="flex flex-col gap-3.5">
-        <h2 className="text-sm font-semibold text-white">All keywords</h2>
+        <h2 className="text-sm font-semibold text-neutral-900">All keywords</h2>
         <RankingsTable rows={rows} />
       </section>
     </div>

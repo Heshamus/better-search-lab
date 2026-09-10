@@ -32,10 +32,10 @@ function compareNullsLast(a: number | null, b: number | null, dir: 1 | -1): numb
 // genuine, exact 0 is neither and gets a neutral, arrow-less render so it's
 // never confused with the null "no recent data" case right above it.
 function DeltaCell({ value }: { value: number | null }) {
-  if (value == null) return <span className="text-neutral-400 dark:text-neutral-500">—</span>;
+  if (value == null) return <span className="text-neutral-600">—</span>;
   if (value > 0) return <span className="text-accent">{`▲${value}`}</span>;
   if (value < 0) return <span className="text-at-risk">{`▼${Math.abs(value)}`}</span>;
-  return <span className="text-neutral-500 dark:text-neutral-400">0</span>;
+  return <span className="text-neutral-500">0</span>;
 }
 
 // Position rendering rule (brief): "failed" shows an honest amber "not
@@ -67,10 +67,10 @@ function SortableHeader({
       <button
         type="button"
         onClick={onClick}
-        className="eyebrow flex items-center gap-1 transition-colors hover:text-neutral-200"
+        className="eyebrow flex items-center gap-1 transition-colors hover:text-neutral-800"
       >
         {label}
-        {active ? <span aria-hidden className="text-accent">{dir === 1 ? "▲" : "▼"}</span> : null}
+        {active ? <span aria-hidden className="text-neutral-900">{dir === 1 ? "▲" : "▼"}</span> : null}
       </button>
     </th>
   );
@@ -113,7 +113,7 @@ function HistoryDrilldown({ keywordId }: { keywordId: string }) {
   }, [keywordId]);
 
   if (state.status === "loading") {
-    return <p className="px-2 py-3 text-xs text-neutral-400 dark:text-neutral-500">Loading history…</p>;
+    return <p className="px-2 py-3 text-xs text-neutral-600">Loading history…</p>;
   }
   if (state.status === "error") {
     return <p className="px-2 py-3 text-xs text-at-risk">Couldn&rsquo;t load rank history — try again later.</p>;
@@ -159,7 +159,7 @@ export function RankingsTable({ rows }: { rows: RankingRow[] }) {
     <div className="panel overflow-x-auto">
       <table className="w-full min-w-[720px] border-collapse text-left text-sm">
         <thead>
-          <tr className="border-b border-neutral-800">
+          <tr className="border-b border-neutral-200">
             <PlainHeader label="Keyword" />
             <SortableHeader
               label="Position"
@@ -197,14 +197,14 @@ export function RankingsTable({ rows }: { rows: RankingRow[] }) {
                 <tr
                   data-testid={`ranking-row-${row.keywordId}`}
                   data-keyword-id={row.keywordId}
-                  className="border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20"
+                  className="border-b border-neutral-200 transition-colors last:border-0 hover:bg-neutral-50"
                 >
                   <td className="px-4 py-2.5">
                     <button
                       type="button"
                       onClick={() => toggleExpand(row.keywordId)}
                       aria-expanded={isExpanded}
-                      className="flex items-center gap-1.5 font-medium text-white transition-colors hover:text-accent"
+                      className="flex items-center gap-1.5 font-medium text-neutral-900 transition-colors hover:text-neutral-900"
                     >
                       <span aria-hidden className="text-neutral-500">
                         {isExpanded ? "▾" : "▸"}
@@ -221,7 +221,7 @@ export function RankingsTable({ rows }: { rows: RankingRow[] }) {
                   <td className="tnum px-4 py-2.5" data-testid={`delta30-${row.keywordId}`}>
                     <DeltaCell value={row.delta30} />
                   </td>
-                  <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(row.volume)}</span></td>
+                  <td className="px-4 py-2.5"><span className="tnum text-neutral-800">{formatCompact(row.volume)}</span></td>
                   <td className="px-4 py-2.5"><KdMeter kd={row.difficulty} /></td>
                   <td className="px-4 py-2.5">
                     <div className="flex flex-wrap gap-1">
@@ -233,8 +233,8 @@ export function RankingsTable({ rows }: { rows: RankingRow[] }) {
                             title={owned ? "You own this feature" : "Present on the SERP — not yours yet"}
                             className={
                               owned
-                                ? "rounded-md bg-accent/15 px-1.5 py-0.5 text-[10px] font-medium text-accent"
-                                : "rounded-md bg-neutral-800/70 px-1.5 py-0.5 text-[10px] font-medium text-neutral-400"
+                                ? "rounded-md bg-[--color-accent-tint] px-1.5 py-0.5 text-[10px] font-medium text-accent"
+                                : "rounded-md bg-neutral-100 px-1.5 py-0.5 text-[10px] font-medium text-neutral-700"
                             }
                           >
                             {owned ? "★ " : ""}
@@ -246,7 +246,7 @@ export function RankingsTable({ rows }: { rows: RankingRow[] }) {
                   </td>
                 </tr>
                 {isExpanded ? (
-                  <tr className="border-b border-neutral-800/50 bg-neutral-950/40">
+                  <tr className="border-b border-neutral-200 bg-neutral-50">
                     <td colSpan={7}>
                       <HistoryDrilldown keywordId={row.keywordId} />
                     </td>

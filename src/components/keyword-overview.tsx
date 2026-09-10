@@ -88,15 +88,15 @@ export function KeywordOverview() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4">
         <div className="flex flex-col gap-1">
-          <label htmlFor="ko-input" className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-            Keywords <span className="normal-case text-neutral-400">— one per line or comma-separated</span>
+          <label htmlFor="ko-input" className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            Keywords <span className="normal-case text-neutral-600">— one per line or comma-separated</span>
           </label>
           <textarea
             id="ko-input" rows={6} value={raw} onChange={(e) => setRaw(e.target.value)}
             placeholder={"project management software\nnotion alternative\nbest crm"}
-            className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-accent dark:border-neutral-700 dark:bg-neutral-950 dark:text-white"
+            className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-accent"
           />
           <div className="flex items-center justify-between text-xs text-neutral-500">
             <span className={parsed.keywords.length >= 100 ? "text-at-risk" : ""}>{parsed.keywords.length} / 100</span>
@@ -105,10 +105,10 @@ export function KeywordOverview() {
         </div>
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1">
-            <label htmlFor="ko-market" className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Market</label>
+            <label htmlFor="ko-market" className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Market</label>
             <select
               id="ko-market" value={marketLabel} onChange={(e) => setMarketLabel(e.target.value)}
-              className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white"
+              className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900"
             >
               {MARKETS.map((m) => <option key={m.locationCode} value={m.label}>{m.label}</option>)}
             </select>
@@ -116,7 +116,7 @@ export function KeywordOverview() {
           <button
             type="button" onClick={lookUp} disabled={demo || parsed.keywords.length === 0 || state.status === "loading"}
             title={demo ? "Read-only demo" : undefined}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
+            className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50"
           >
             {state.status === "loading" ? "Looking up…" : "Look up"}
           </button>
@@ -124,13 +124,13 @@ export function KeywordOverview() {
       </div>
 
       {state.status === "idle" ? (
-        <p className="rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400">
+        <p className="rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500">
           Paste up to 100 keywords, choose a market, and look up volume, difficulty and 12-month trend. Nothing is saved.
         </p>
       ) : null}
 
       {state.status === "error" ? (
-        <p className="rounded-xl border border-at-risk/40 bg-at-risk/10 px-4 py-3 text-sm text-at-risk">
+        <p className="rounded-xl border border-at-risk bg-[--color-at-risk-tint] px-4 py-3 text-sm text-at-risk">
           Couldn&rsquo;t look up those keywords — try again.
         </p>
       ) : null}
@@ -142,14 +142,14 @@ export function KeywordOverview() {
           ) : null}
           <div className="flex items-center justify-between">
             <span className="text-xs text-neutral-500">{rows.length} keyword{rows.length === 1 ? "" : "s"} · {state.market.label}</span>
-            <button type="button" onClick={download} className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:border-accent dark:border-neutral-700 dark:text-neutral-200">
+            <button type="button" onClick={download} className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:border-accent">
               Download CSV
             </button>
           </div>
           <div className="panel overflow-x-auto">
             <table className="w-full min-w-[720px] border-collapse text-left text-sm">
               <thead>
-                <tr className="border-b border-neutral-800">
+                <tr className="border-b border-neutral-200">
                   <th className="eyebrow px-4 py-2.5">Keyword</th>
                   <th className="eyebrow px-4 py-2.5">12-mo</th>
                   {HEADERS.map(([key, label]) => (
@@ -161,14 +161,14 @@ export function KeywordOverview() {
               </thead>
               <tbody>
                 {sorted.map((r) => (
-                  <tr key={r.keyword} data-testid={`ko-row-${r.keyword}`} className="border-b border-neutral-800/50 last:border-0 hover:bg-neutral-800/20">
-                    <td className="px-4 py-2.5 font-medium text-white">{r.keyword}</td>
+                  <tr key={r.keyword} data-testid={`ko-row-${r.keyword}`} className="border-b border-neutral-200 last:border-0 hover:bg-neutral-50">
+                    <td className="px-4 py-2.5 font-medium text-neutral-900">{r.keyword}</td>
                     <td className="px-4 py-2.5"><Sparkline values={r.monthly.map((m) => m.volume ?? 0)} /></td>
-                    <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(r.searchVolume)}</span></td>
+                    <td className="px-4 py-2.5"><span className="tnum text-neutral-800">{formatCompact(r.searchVolume)}</span></td>
                     <td className="px-4 py-2.5"><Delta value={r.trendPct} />{r.trendPct != null && r.trendPct !== 0 ? <span className="text-xs text-neutral-500">%</span> : null}</td>
                     <td className="px-4 py-2.5"><KdMeter kd={r.difficulty} /></td>
-                    <td className="px-4 py-2.5"><span className="tnum text-neutral-300">{fmtCpc(r.cpc)}</span></td>
-                    <td className="px-4 py-2.5"><span className="tnum text-neutral-400">{r.competition == null ? "—" : r.competition.toFixed(2)}</span></td>
+                    <td className="px-4 py-2.5"><span className="tnum text-neutral-700">{fmtCpc(r.cpc)}</span></td>
+                    <td className="px-4 py-2.5"><span className="tnum text-neutral-600">{r.competition == null ? "—" : r.competition.toFixed(2)}</span></td>
                   </tr>
                 ))}
               </tbody>

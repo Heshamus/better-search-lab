@@ -6,7 +6,7 @@ function Tile({ label, value, hint }: { label: string; value: string; hint: stri
   return (
     <div className="panel flex flex-col gap-1.5 px-4 py-3.5">
       <span className="eyebrow">{label}</span>
-      <span className="num text-[1.7rem] font-semibold leading-none tracking-tight text-white">{value}</span>
+      <span className="num text-[1.7rem] font-semibold leading-none tracking-tight text-neutral-900">{value}</span>
       <span className="text-[0.7rem] text-neutral-500">{hint}</span>
     </div>
   );
@@ -56,26 +56,26 @@ export function RankingsSummary({ rows }: { rows: RankingRow[] }) {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="panel flex flex-col gap-4 p-5">
-          <h3 className="text-sm font-semibold text-white">Position distribution</h3>
+          <h3 className="text-sm font-semibold text-neutral-900">Position distribution</h3>
           <Donut segments={segments} centerLabel="keywords" />
         </div>
 
         <div className="panel flex flex-col gap-3 p-5">
           <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-sm font-semibold text-white">Top movers</h3>
+            <h3 className="text-sm font-semibold text-neutral-900">Top movers</h3>
             <span className="eyebrow">last 7 days</span>
           </div>
           {movers.length ? (
             <ul className="flex flex-col">
               {movers.map((m) => (
-                <li key={m.keywordId} className="flex items-center justify-between gap-3 border-b border-neutral-800/50 py-2 text-sm last:border-0">
-                  <span className="truncate text-neutral-200">{m.keyword}</span>
+                <li key={m.keywordId} className="flex items-center justify-between gap-3 border-b border-neutral-200 py-2 text-sm last:border-0">
+                  <span className="truncate text-neutral-800">{m.keyword}</span>
                   <Delta value={m.delta7} />
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-neutral-800 py-8 text-xs text-neutral-600">
+            <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-neutral-300 py-8 text-xs text-neutral-600">
               No movement yet — check back after the next refresh
             </div>
           )}
