@@ -36,9 +36,9 @@ function SortableHeader({
 }: { label: string; active: boolean; dir: 1 | -1; onClick: () => void }) {
   return (
     <th className="px-4 py-2.5">
-      <button type="button" onClick={onClick} className="eyebrow flex items-center gap-1 transition-colors hover:text-neutral-200">
+      <button type="button" onClick={onClick} className="eyebrow flex items-center gap-1 transition-colors hover:text-neutral-800">
         {label}
-        {active ? <span aria-hidden className="text-accent">{dir === 1 ? "▲" : "▼"}</span> : null}
+        {active ? <span aria-hidden className="text-neutral-900">{dir === 1 ? "▲" : "▼"}</span> : null}
       </button>
     </th>
   );
@@ -109,13 +109,13 @@ export function OrganicKeywordsTable(props: {
       <div className="flex flex-wrap items-center gap-2">
         <input
           value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search keywords…"
-          className="rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-sm text-neutral-200"
+          className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm text-neutral-900"
         />
         <div className="flex gap-1">
           {BUCKETS.map((b) => (
             <button
               key={b.label} type="button" onClick={() => setBucket(b.max)}
-              className={`rounded-lg px-2.5 py-1 text-xs font-medium ${bucket === b.max ? "bg-accent/15 text-accent" : "text-neutral-400 hover:text-neutral-200"}`}
+              className={`rounded-lg px-2.5 py-1 text-xs font-medium ${bucket === b.max ? "bg-neutral-900 text-white" : "text-neutral-600 hover:text-neutral-800"}`}
             >{b.label}</button>
           ))}
         </div>
@@ -123,7 +123,7 @@ export function OrganicKeywordsTable(props: {
       <div className="panel overflow-x-auto">
         <table className="w-full min-w-[640px] border-collapse text-left text-sm">
           <thead>
-            <tr className="border-b border-neutral-800">
+            <tr className="border-b border-neutral-200">
               <th className="eyebrow px-4 py-2.5">Keyword</th>
               <SortableHeader label="Pos" active={sort === "position"} dir={1} onClick={() => setSort("position")} />
               <SortableHeader label="Volume" active={sort === "searchVolume"} dir={-1} onClick={() => setSort("searchVolume")} />
@@ -135,18 +135,18 @@ export function OrganicKeywordsTable(props: {
           </thead>
           <tbody>
             {pageRows.map((r) => (
-              <tr key={r.keyword} data-testid={`keyword-row-${r.keyword}`} className="border-b border-neutral-800/50 last:border-0 hover:bg-neutral-800/20">
-                <td className="px-4 py-2.5 font-medium text-white">{r.keyword}</td>
-                <td className="px-4 py-2.5 tnum text-neutral-200">{r.position ?? "—"}</td>
-                <td className="px-4 py-2.5 tnum text-neutral-300">{r.searchVolume != null ? formatCompact(r.searchVolume) : "—"}</td>
-                <td className="px-4 py-2.5 tnum text-neutral-300">{r.difficulty ?? "—"}</td>
+              <tr key={r.keyword} data-testid={`keyword-row-${r.keyword}`} className="border-b border-neutral-200 transition-colors last:border-0 hover:bg-neutral-50">
+                <td className="px-4 py-2.5 font-medium text-neutral-900">{r.keyword}</td>
+                <td className="px-4 py-2.5 tnum text-neutral-800">{r.position ?? "—"}</td>
+                <td className="px-4 py-2.5 tnum text-neutral-700">{r.searchVolume != null ? formatCompact(r.searchVolume) : "—"}</td>
+                <td className="px-4 py-2.5 tnum text-neutral-700">{r.difficulty ?? "—"}</td>
                 <td className="px-4 py-2.5">
-                  {r.url ? <a href={r.url} target="_blank" rel="noreferrer" className="text-neutral-300 hover:text-white" title={r.url}>{shortPath(r.url)}</a> : "—"}
+                  {r.url ? <a href={r.url} target="_blank" rel="noreferrer" className="text-neutral-700 hover:text-neutral-900" title={r.url}>{shortPath(r.url)}</a> : "—"}
                 </td>
-                <td className="px-4 py-2.5 tnum text-neutral-300">{r.estTraffic != null ? formatCompact(r.estTraffic) : "—"}</td>
+                <td className="px-4 py-2.5 tnum text-neutral-700">{r.estTraffic != null ? formatCompact(r.estTraffic) : "—"}</td>
                 <td className="px-4 py-2.5">
                   <button type="button" disabled={demo || tracked.has(r.keyword)} title={demo ? "Read-only demo" : undefined} onClick={() => void track(r.keyword)}
-                    className="rounded-md px-2 py-0.5 text-xs font-medium text-accent hover:bg-accent/10 disabled:text-neutral-500">
+                    className="rounded-md px-2 py-0.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100 disabled:text-neutral-500">
                     {tracked.has(r.keyword) ? "Tracked" : "Track"}
                   </button>
                 </td>
@@ -157,17 +157,17 @@ export function OrganicKeywordsTable(props: {
         </table>
       </div>
       {view.length > 0 ? (
-        <div className="flex items-center justify-between gap-3 px-1 text-xs text-neutral-400">
+        <div className="flex items-center justify-between gap-3 px-1 text-xs text-neutral-600">
           <span>{view.length} keyword{view.length === 1 ? "" : "s"}</span>
           <div className="flex items-center gap-3">
             <button
               type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage <= 1}
-              className="rounded-md px-2 py-1 font-medium text-neutral-300 transition-colors hover:text-white disabled:cursor-default disabled:opacity-40 disabled:hover:text-neutral-300"
+              className="rounded-md px-2 py-1 font-medium text-neutral-700 transition-colors hover:text-neutral-900 disabled:cursor-default disabled:opacity-40 disabled:hover:text-neutral-700"
             >Prev</button>
             <span>Page {currentPage} of {totalPages}</span>
             <button
               type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages}
-              className="rounded-md px-2 py-1 font-medium text-neutral-300 transition-colors hover:text-white disabled:cursor-default disabled:opacity-40 disabled:hover:text-neutral-300"
+              className="rounded-md px-2 py-1 font-medium text-neutral-700 transition-colors hover:text-neutral-900 disabled:cursor-default disabled:opacity-40 disabled:hover:text-neutral-700"
             >Next</button>
           </div>
         </div>

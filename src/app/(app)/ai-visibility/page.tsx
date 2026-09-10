@@ -15,13 +15,13 @@ const bareDomain = (d: string): string => d.replace(/^https?:\/\//, "").replace(
 function ScanPanel({ projectId }: { projectId: string }) {
   return (
     <div className="panel flex flex-col items-center gap-4 px-6 py-16 text-center">
-      <div aria-hidden className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
+      <div aria-hidden className="flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10z" />
         </svg>
       </div>
-      <h1 className="text-lg font-semibold text-white">Measure your AI visibility</h1>
-      <p className="max-w-md text-sm text-neutral-400">
+      <h1 className="text-lg font-semibold text-neutral-900">Measure your AI visibility</h1>
+      <p className="max-w-md text-sm text-neutral-600">
         See whether Perplexity, ChatGPT and Gemini cite your site when people ask buying questions in your niche —
         across your real Search Console queries plus generated buyer questions.
       </p>
@@ -48,8 +48,8 @@ export default async function AiVisibilityPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="eyebrow">AI Visibility</div>
-          <p className="mt-1 text-sm text-neutral-400">
-            Are AI engines citing <span className="font-medium text-neutral-200">{project.domain}</span>?
+          <p className="mt-1 text-sm text-neutral-600">
+            Are AI engines citing <span className="font-medium text-neutral-800">{project.domain}</span>?
           </p>
         </div>
         {latest ? <RunAiVisibilityButton projectId={project.id} label="Re-scan" /> : null}

@@ -33,8 +33,8 @@ export default async function OrganicKeywordsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="eyebrow">Organic Keywords</div>
-          <p className="mt-1 text-sm text-neutral-400">
-            Every keyword <span className="font-medium text-neutral-200">{project.domain}</span> ranks for in Google
+          <p className="mt-1 text-sm text-neutral-600">
+            Every keyword <span className="font-medium text-neutral-800">{project.domain}</span> ranks for in Google
             {capturedAt ? ` — refreshed ${timeAgo(capturedAt)}` : ""}.
           </p>
         </div>

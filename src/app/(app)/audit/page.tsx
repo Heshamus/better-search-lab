@@ -38,8 +38,8 @@ export default async function AuditPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="eyebrow">Site audit</div>
-          <p className="mt-1 text-sm text-neutral-400">
-            On-page technical SEO for <span className="font-medium text-neutral-200">{project.domain}</span>
+          <p className="mt-1 text-sm text-neutral-600">
+            On-page technical SEO for <span className="font-medium text-neutral-800">{project.domain}</span>
             {audit ? ` — ${audit.pagesCrawled} pages · ${timeAgo(audit.createdAt)}` : ""}.
           </p>
         </div>

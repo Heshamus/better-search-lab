@@ -18,7 +18,7 @@ function ScoreRing({ score }: { score: number }) {
   return (
     <div className="flex items-center gap-5">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-neutral-800)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-neutral-200)" strokeWidth={stroke} />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -30,7 +30,7 @@ function ScoreRing({ score }: { score: number }) {
           strokeDasharray={`${(score / 100) * c} ${c}`}
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
-        <text x={size / 2} y={size / 2 - 2} textAnchor="middle" fontSize="30" fontWeight="600" fill="white" fontFamily="var(--font-mono)" letterSpacing="-0.04em">
+        <text x={size / 2} y={size / 2 - 2} textAnchor="middle" fontSize="30" fontWeight="600" fill="var(--color-neutral-900)" fontFamily="var(--font-mono)" letterSpacing="-0.04em">
           {score}
         </text>
         <text x={size / 2} y={size / 2 + 17} textAnchor="middle" fontSize="9.5" fill="var(--color-neutral-500)" letterSpacing="0.06em">
@@ -39,7 +39,7 @@ function ScoreRing({ score }: { score: number }) {
       </svg>
       <div className="flex flex-col gap-1">
         <span className="text-lg font-semibold" style={{ color }}>{grade}</span>
-        <span className="text-sm text-neutral-400">Overall on-page health</span>
+        <span className="text-sm text-neutral-600">Overall on-page health</span>
       </div>
     </div>
   );
@@ -71,30 +71,30 @@ export function AuditReport({ audit }: { audit: AuditRow }) {
                 <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: SEV_COLOR[s] }} />
                 {SEV_LABEL[s]}
               </span>
-              <span className="num text-[1.7rem] font-semibold leading-none tracking-tight text-white">{bySev(s)}</span>
+              <span className="num text-[1.7rem] font-semibold leading-none tracking-tight text-neutral-900">{bySev(s)}</span>
               <span className="text-[0.7rem] text-neutral-500">issue types</span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="panel divide-y divide-neutral-800/60">
+      <div className="panel divide-y divide-neutral-200">
         {audit.issues.length === 0 ? (
-          <p className="px-5 py-6 text-center text-sm text-neutral-400">No issues found — the crawled pages passed every check. 🎉</p>
+          <p className="px-5 py-6 text-center text-sm text-neutral-600">No issues found — the crawled pages passed every check. 🎉</p>
         ) : (
           audit.issues.map((issue) => (
             <div key={issue.id} className="flex flex-col gap-2 px-5 py-4">
               <div className="flex flex-wrap items-center gap-2.5">
                 <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: SEV_COLOR[issue.severity] }} />
-                <span className="text-sm font-semibold text-white">{issue.label}</span>
-                <span className="rounded-md bg-neutral-800/70 px-1.5 py-0.5 text-[0.65rem] font-medium text-neutral-400">{issue.category}</span>
-                <span className="tnum ml-auto text-xs text-neutral-400">{issue.count} {issue.count === 1 ? "page" : "pages"}</span>
+                <span className="text-sm font-semibold text-neutral-900">{issue.label}</span>
+                <span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-[0.65rem] font-medium text-neutral-700">{issue.category}</span>
+                <span className="tnum ml-auto text-xs text-neutral-600">{issue.count} {issue.count === 1 ? "page" : "pages"}</span>
               </div>
-              <p className="text-sm text-neutral-400">{issue.help}</p>
+              <p className="text-sm text-neutral-600">{issue.help}</p>
               {issue.affected.length ? (
                 <div className="flex flex-wrap gap-1.5">
                   {issue.affected.map((u) => (
-                    <span key={u} className="tnum truncate rounded bg-neutral-800/50 px-1.5 py-0.5 text-[0.68rem] text-neutral-500" title={u}>{path(u)}</span>
+                    <span key={u} className="tnum truncate rounded bg-neutral-100 px-1.5 py-0.5 text-[0.68rem] text-neutral-500" title={u}>{path(u)}</span>
                   ))}
                 </div>
               ) : null}
