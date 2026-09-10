@@ -38,6 +38,8 @@ COPY src ./src
 COPY drizzle ./drizzle
 COPY worker ./worker
 COPY next.config.ts tsconfig.json ./
+# The baked demo snapshot: start-hf.sh restores it at boot instead of seeding.
+COPY scripts/demo-seed.sql ./demo-seed.sql
 COPY scripts/start-hf.sh /usr/local/bin/start-hf.sh
 RUN chmod +x /usr/local/bin/start-hf.sh && mkdir -p /data && chown -R node:node /app /data
 # Postgres refuses to run as root and Spaces expect an unprivileged user (uid 1000 = node).

@@ -13,7 +13,8 @@
     "worker": "tsx worker/index.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
-    "docs:config": "tsx scripts/gen-config-docs.ts"
+    "docs:config": "tsx scripts/gen-config-docs.ts",
+    "demo:seed": "tsx scripts/seed-demo.ts"
   },
   "license": "AGPL-3.0-only",
   "repository": { "type": "git", "url": "git+https://gitlab.com/betterbrainlab/better-search-lab.git" },
