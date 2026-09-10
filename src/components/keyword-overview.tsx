@@ -96,7 +96,7 @@ export function KeywordOverview() {
           <textarea
             id="ko-input" rows={6} value={raw} onChange={(e) => setRaw(e.target.value)}
             placeholder={"project management software\nnotion alternative\nbest crm"}
-            className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-accent"
+            className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-400"
           />
           <div className="flex items-center justify-between text-xs text-neutral-500">
             <span className={parsed.keywords.length >= 100 ? "text-at-risk" : ""}>{parsed.keywords.length} / 100</span>
@@ -142,7 +142,7 @@ export function KeywordOverview() {
           ) : null}
           <div className="flex items-center justify-between">
             <span className="text-xs text-neutral-500">{rows.length} keyword{rows.length === 1 ? "" : "s"} · {state.market.label}</span>
-            <button type="button" onClick={download} className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:border-accent">
+            <button type="button" onClick={download} className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:border-neutral-400">
               Download CSV
             </button>
           </div>

@@ -185,7 +185,7 @@ function AddKeywordsBox({
         onChange={(event) => setValue(event.target.value)}
         placeholder="One keyword per line, or comma-separated"
         rows={3}
-        className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-accent"
+        className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-400"
       />
       {failed ? (
         <p className="text-xs text-at-risk">Couldn&rsquo;t add keywords — try again.</p>
