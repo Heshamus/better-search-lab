@@ -50,7 +50,7 @@ export function OpportunityCard({ opp, maxVolume = 0 }: { opp: OpportunityRow; m
           {meta.label}
         </span>
         {opp.upsideEstimate ? (
-          <span className="tnum shrink-0 text-xs font-semibold text-accent" title="Projected monthly organic traffic">
+          <span className="tnum shrink-0 text-xs font-semibold text-neutral-500" title="Projected monthly organic traffic">
             {opp.upsideEstimate}
           </span>
         ) : null}
