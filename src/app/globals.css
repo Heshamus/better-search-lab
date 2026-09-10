@@ -1,111 +1,105 @@
 @import "tailwindcss";
 
 /*
-  Design system — "Signal": a precision search-visibility instrument.
+  Design system — "Daylight": light, near-monochrome, and quiet.
 
   The identity lives in the DATA, not a single accent colour. Three moves carry it:
-  1) a layered cool-INK dark palette (depth, not flat black) — we override
-     Tailwind's neutral ramp so every existing neutral-* utility in the app adopts
-     it at once;
-  2) mono tabular numerals for every metric (Geist Mono) — numbers are the product;
-  3) a real data-viz palette: KD heat, position tiers, and chart series colours,
-     so green reads as a brand accent inside a system rather than "the whole look".
+  1) a cool-gray neutral ramp (50 lightest → 950 ink) — light ground, ink text,
+     hairline borders — so every existing neutral-* utility in the app adopts it;
+  2) green demoted from brand chrome to a data-positive accent — deltas, easy KD,
+     evergreen tints — not "the whole look";
+  3) sans tabular numerals for figures (no mono family): numbers align in columns
+     without the dark-mode "instrument" affectation.
 */
 @theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Hanken Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
 
-  /* Cool-ink neutral ramp (light 50 → dark 950). Dark UI uses the dark end for
-     ground/surfaces and the light end for text; light mode is the inverse. */
-  --color-neutral-50: #f6f8fb;
-  --color-neutral-100: #eef1f6;
-  --color-neutral-200: #dee3ec;
-  --color-neutral-300: #c3cad6;
-  --color-neutral-400: #949eb1;
-  --color-neutral-500: #6b7688;
-  --color-neutral-600: #48505f;
-  --color-neutral-700: #2f3644;
-  --color-neutral-800: #222834;
-  --color-neutral-900: #141921;
-  --color-neutral-950: #0b0e14;
+  /* Cool-gray neutral ramp — LIGHT direction (50 lightest → 950 ink). */
+  --color-neutral-50:  #f6f7f9;
+  --color-neutral-100: #eef0f3;
+  --color-neutral-200: #e7e9ee;
+  --color-neutral-300: #d9dce3;
+  --color-neutral-400: #b8bec9;
+  --color-neutral-500: #8b93a0;
+  --color-neutral-600: #6b7280;
+  --color-neutral-700: #565e6b;
+  --color-neutral-800: #2b313b;
+  --color-neutral-900: #161a20;
+  --color-neutral-950: #0c0f14;
 
-  /* Brand accent (signal green) — used with restraint: CTAs, active nav,
-     positive deltas. Plus a dim variant for tints and a ring for focus. */
-  --color-accent: #7bf3a3;
-  --color-accent-strong: #4ade80;
-  --color-at-risk: #f5b44b;
+  /* Brand: kept only as a data-positive / whisper accent, not chrome. */
+  --color-accent: #157f5c;
+  --color-accent-strong: #10684c;
+  --color-accent-tint: #e9f4ef;
+  --color-at-risk: #b7791f;
+  --color-at-risk-tint: #f7f0e2;
 
-  /* Semantic + data-viz palette */
-  --color-up: #57d9a3;
-  --color-down: #fb7185;
-  --color-kd-easy: #57d9a3;
-  --color-kd-medium: #f5b44b;
-  --color-kd-hard: #f2724e;
-  --color-series-1: #7bf3a3;
-  --color-series-2: #5cc8f5;
-  --color-series-3: #b79bff;
-  --color-series-4: #f5b44b;
+  /* Data-viz (light-tuned): deltas, KD heat, chart series. */
+  --color-up: #157f5c;
+  --color-down: #c24457;
+  --color-kd-easy: #157f5c;
+  --color-kd-medium: #b7791f;
+  --color-kd-hard: #c24457;
+  --color-series-1: #2f6b5e;
+  --color-series-2: #3b7ea4;
+  --color-series-3: #7a6cc4;
+  --color-series-4: #b7791f;
 
-  --radius-xl: 14px;
+  --radius-xl: 12px;
+  --shadow-1: 0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.04);
+  --shadow-pop: 0 4px 14px rgba(16,24,40,.08);
 }
 
 @layer base {
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
   body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    /* Subtle top-lit atmosphere so the ground isn't a flat void. */
-    background-color: var(--color-neutral-950);
-    background-image: radial-gradient(120% 80% at 50% -10%, rgba(123, 243, 163, 0.05), transparent 60%);
-    background-attachment: fixed;
+    background-color: var(--color-neutral-50);
+    color: var(--color-neutral-900);
   }
 
-  /* Mono tabular figures for dense table cells — the instrument feel. */
+  /* Figures are sans tabular now — aligned columns without the mono instrument look. */
   .tnum {
-    font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
   }
-
-  /* Big display metrics use SANS tabular figures: aligned like mono, but with
-     proportional punctuation so currency like "$0.37" reads naturally (mono
-     centres the period in a full cell and looks spaced out). */
   .num {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
   }
 
   ::selection {
-    background: rgba(123, 243, 163, 0.25);
+    background: rgba(21, 127, 92, 0.16);
   }
 
-  /* Quiet, on-brand scrollbars instead of the default chrome. */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #2f3644 transparent;
+    scrollbar-color: #d9dce3 transparent;
   }
   *::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
   *::-webkit-scrollbar-thumb {
-    background: #2a3240;
+    background: #d9dce3;
     border: 2px solid transparent;
     background-clip: padding-box;
     border-radius: 9999px;
   }
   *::-webkit-scrollbar-thumb:hover {
-    background: #3a4353;
+    background: #b8bec9;
     background-clip: padding-box;
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-neutral-900);
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -113,9 +107,10 @@
 
 /* Reusable surface + label primitives so cards read as one system. */
 @utility panel {
-  background-color: color-mix(in oklab, var(--color-neutral-900) 92%, transparent);
-  border: 1px solid var(--color-neutral-800);
+  background-color: #ffffff;
+  border: 1px solid var(--color-neutral-200);
   border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
 }
 @utility eyebrow {
   font-size: 0.6875rem;

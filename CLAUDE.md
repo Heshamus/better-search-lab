@@ -1,6 +1,6 @@
 # Better Search Lab — notes for coding agents
 
-Stack: Next.js 15 App Router, React 19, TypeScript, Drizzle + Postgres (pglite in tests), Auth.js v5, zod 4, Tailwind v4 ("Signal" tokens in `src/app/globals.css`), Vitest 4. The MCP server is a separate npm package in `mcp/`.
+Stack: Next.js 15 App Router, React 19, TypeScript, Drizzle + Postgres (pglite in tests), Auth.js v5, zod 4, Tailwind v4 ("Daylight" tokens in `src/app/globals.css`), Vitest 4. The MCP server is a separate npm package in `mcp/`.
 
 Run before claiming anything is done: `pnpm exec tsc --noEmit`, `pnpm exec vitest run`, `pnpm build`; `cd mcp && npx vitest run` when `mcp/` changes. Read the output.
 
