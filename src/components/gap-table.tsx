@@ -88,7 +88,7 @@ function AddToTrackingButton({
         onClick={handleClick}
         disabled={demo || state === "busy"}
         title={demo ? "Read-only demo" : undefined}
-        className="rounded-lg border border-neutral-200 px-3 py-1 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+        className="rounded-lg border border-neutral-200 px-3 py-1 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50"
       >
         {state === "busy" ? "Adding…" : "Add to tracking"}
       </button>
@@ -127,7 +127,7 @@ export function GapTable({
 }) {
   if (rows.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400">
+      <p className="rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500">
         No gaps yet — refresh to collect.
       </p>
     );
@@ -136,26 +136,16 @@ export function GapTable({
   const sortedRows = sortGapRows(rows);
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="panel overflow-x-auto">
       <table className="w-full min-w-[560px] border-collapse text-left text-sm">
         <thead>
-          <tr className="border-b border-neutral-200 dark:border-neutral-800">
-            <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-              Keyword
-            </th>
-            <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-              Competitors
-            </th>
-            <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-              Competitors ranking
-            </th>
-            <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-              Volume
-            </th>
-            <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-              KD
-            </th>
-            <th className="px-4 py-2" />
+          <tr className="border-b border-neutral-200">
+            <th className="eyebrow px-4 py-2.5">Keyword</th>
+            <th className="eyebrow px-4 py-2.5">Competitors</th>
+            <th className="eyebrow px-4 py-2.5">Competitors ranking</th>
+            <th className="eyebrow px-4 py-2.5">Volume</th>
+            <th className="eyebrow px-4 py-2.5">KD</th>
+            <th className="px-4 py-2.5" />
           </tr>
         </thead>
         <tbody>
@@ -163,29 +153,29 @@ export function GapTable({
             <tr
               key={row.keyword}
               data-testid={`gap-row-${row.keyword}`}
-              className="border-b border-neutral-100 last:border-0 dark:border-neutral-800/60"
+              className="border-b border-neutral-200 transition-colors last:border-0 hover:bg-neutral-50"
             >
-              <td className="px-4 py-2 font-medium text-neutral-900 dark:text-white">{row.keyword}</td>
+              <td className="px-4 py-2.5 font-medium text-neutral-900">{row.keyword}</td>
               <td
-                className="px-4 py-2 text-neutral-600 dark:text-neutral-300"
+                className="px-4 py-2.5 text-neutral-600"
                 data-testid={`gap-competitors-${row.keyword}`}
               >
-                {row.competitorCount}
+                <span className="tnum">{row.competitorCount}</span>
               </td>
               <td
-                className="px-4 py-2 text-neutral-600 dark:text-neutral-300"
+                className="px-4 py-2.5 text-neutral-600"
                 data-testid={`gap-competitor-domains-${row.keyword}`}
               >
                 {row.competitorDomains.join(", ")}
               </td>
               <td
-                className="px-4 py-2 text-neutral-600 dark:text-neutral-300"
+                className="px-4 py-2.5 text-neutral-600"
                 data-testid={`gap-volume-${row.keyword}`}
               >
-                {formatMetric(row.volume)}
+                <span className="tnum">{formatMetric(row.volume)}</span>
               </td>
-              <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(row.difficulty)}</td>
-              <td className="px-4 py-2">
+              <td className="px-4 py-2.5 text-neutral-600"><span className="tnum">{formatMetric(row.difficulty)}</span></td>
+              <td className="px-4 py-2.5">
                 <AddToTrackingButton
                   projectId={projectId}
                   keyword={row.keyword}

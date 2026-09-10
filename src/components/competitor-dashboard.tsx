@@ -13,7 +13,7 @@ function Tile({ label, value, hint }: { label: string; value: string; hint: stri
   return (
     <div className="panel flex flex-col gap-1.5 px-4 py-3.5">
       <span className="eyebrow">{label}</span>
-      <span className="num text-[1.7rem] font-semibold leading-none tracking-tight text-white">{value}</span>
+      <span className="num text-[1.7rem] font-semibold leading-none tracking-tight text-neutral-900">{value}</span>
       <span className="text-[0.7rem] text-neutral-500">{hint}</span>
     </div>
   );
@@ -42,7 +42,7 @@ export function CompetitorDashboard({ stats, gapCount }: { stats: CompetitorStat
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="panel flex flex-col gap-4 p-5">
           <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-sm font-semibold text-white">Share of voice</h3>
+            <h3 className="text-sm font-semibold text-neutral-900">Share of voice</h3>
             <span className="eyebrow">ranked keywords</span>
           </div>
           <HBars
@@ -56,7 +56,7 @@ export function CompetitorDashboard({ stats, gapCount }: { stats: CompetitorStat
         <div className="panel overflow-x-auto">
           <table className="w-full min-w-[380px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-neutral-800">
+              <tr className="border-b border-neutral-200">
                 <th className="eyebrow px-4 py-2.5">Competitor</th>
                 <th className="eyebrow px-4 py-2.5">Keywords</th>
                 <th className="eyebrow px-4 py-2.5">Avg pos</th>
@@ -65,11 +65,11 @@ export function CompetitorDashboard({ stats, gapCount }: { stats: CompetitorStat
             </thead>
             <tbody>
               {ranked.map((c) => (
-                <tr key={c.domain} className="border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20">
-                  <td className="px-4 py-2.5 font-medium text-white">{c.domain}</td>
-                  <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{c.keywords}</span></td>
+                <tr key={c.domain} className="border-b border-neutral-200 transition-colors last:border-0 hover:bg-neutral-50">
+                  <td className="px-4 py-2.5 font-medium text-neutral-900">{c.domain}</td>
+                  <td className="px-4 py-2.5"><span className="tnum text-neutral-800">{c.keywords}</span></td>
                   <td className="px-4 py-2.5"><PositionBadge pos={c.avgPosition} /></td>
-                  <td className="px-4 py-2.5"><span className="tnum text-neutral-300">{formatCompact(c.volume)}</span></td>
+                  <td className="px-4 py-2.5"><span className="tnum text-neutral-700">{formatCompact(c.volume)}</span></td>
                 </tr>
               ))}
             </tbody>

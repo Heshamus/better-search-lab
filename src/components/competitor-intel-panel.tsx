@@ -7,23 +7,23 @@ import { useJob } from "@/components/use-job";
 import { JobProgress } from "@/components/job-progress";
 
 const emptyStateClass =
-  "rounded-xl border border-dashed border-neutral-700 bg-neutral-900/40 px-4 py-6 text-center text-sm text-neutral-400";
+  "rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500";
 
-const sectionHeadingClass = "text-sm font-semibold text-white";
+const sectionHeadingClass = "text-sm font-semibold text-neutral-900";
 
 const tableWrapperClass = "panel overflow-x-auto";
 
 const tableClass = "w-full min-w-[560px] border-collapse text-left text-sm";
 
-const theadRowClass = "border-b border-neutral-800";
+const theadRowClass = "border-b border-neutral-200";
 
 const thClass = "eyebrow px-4 py-2.5";
 
-const tdClass = "px-4 py-2.5 text-neutral-300";
+const tdClass = "px-4 py-2.5 text-neutral-700";
 
-const tdStrongClass = "px-4 py-2.5 font-medium text-white";
+const tdStrongClass = "px-4 py-2.5 font-medium text-neutral-900";
 
-const trClass = "border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20";
+const trClass = "border-b border-neutral-200 transition-colors last:border-0 hover:bg-neutral-50";
 
 /**
  * Task 12: the per-competitor "what they rank for" panel — top keywords and
@@ -64,7 +64,7 @@ export function CompetitorIntelPanel({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <h2 className="text-base font-semibold text-neutral-900 dark:text-white">{competitorDomain}</h2>
+        <h2 className="text-base font-semibold text-neutral-900">{competitorDomain}</h2>
         <div className="flex flex-col items-end gap-1">
           <button
             type="button"
@@ -72,7 +72,7 @@ export function CompetitorIntelPanel({
             disabled={job.demo || job.state === "running"}
             title={job.demo ? "Read-only demo" : undefined}
             aria-live="polite"
-            className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
+            className="rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50"
           >
             {job.state === "running" ? "Refreshing…" : "Refresh"}
           </button>
@@ -104,7 +104,7 @@ export function CompetitorIntelPanel({
                       <tr key={row.id} data-testid={`intel-keyword-row-${row.id}`} className={trClass}>
                         <td className={tdStrongClass}>{row.keyword}</td>
                         <td className="px-4 py-2.5"><PositionBadge pos={row.rankAbsolute} /></td>
-                        <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(row.volume)}</span></td>
+                        <td className="px-4 py-2.5"><span className="tnum text-neutral-800">{formatCompact(row.volume)}</span></td>
                         <td className="px-4 py-2.5"><KdMeter kd={row.difficulty} /></td>
                       </tr>
                     ))}
@@ -132,7 +132,7 @@ export function CompetitorIntelPanel({
                     {topPages.map((page) => (
                       <tr key={page.url} data-testid={`intel-page-row-${page.url}`} className={trClass}>
                         <td className={tdStrongClass}>{page.url}</td>
-                        <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(page.keywordCount)}</span></td>
+                        <td className="px-4 py-2.5"><span className="tnum text-neutral-800">{formatCompact(page.keywordCount)}</span></td>
                         <td className={tdClass}>{page.topKeywords.join(", ")}</td>
                       </tr>
                     ))}

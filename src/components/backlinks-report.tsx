@@ -6,7 +6,7 @@ function Tile({ label, value, hint }: { label: string; value: string; hint: stri
   return (
     <div className="panel flex flex-col gap-1.5 px-4 py-3.5">
       <span className="eyebrow">{label}</span>
-      <span className="num text-[1.7rem] font-semibold leading-none tracking-tight text-white">{value}</span>
+      <span className="num text-[1.7rem] font-semibold leading-none tracking-tight text-neutral-900">{value}</span>
       <span className="text-[0.7rem] text-neutral-500">{hint}</span>
     </div>
   );
@@ -15,14 +15,14 @@ function Tile({ label, value, hint }: { label: string; value: string; hint: stri
 /** Domain rank 0–1000 → a coloured badge (green strong, amber mid, muted low). */
 function RankBadge({ rank }: { rank: number | null }) {
   if (rank == null) return <span className="tnum text-xs text-neutral-600">—</span>;
-  const cls = rank >= 400 ? "bg-up/15 text-up" : rank >= 150 ? "bg-accent/15 text-accent" : "bg-neutral-800/70 text-neutral-400";
+  const cls = rank >= 400 ? "bg-up/15 text-up" : rank >= 150 ? "bg-[--color-accent-tint] text-accent" : "bg-neutral-100 text-neutral-700";
   return <span className={`tnum rounded-md px-1.5 py-0.5 text-xs font-medium ${cls}`}>{rank}</span>;
 }
 
 export function BacklinksReport({ data }: { data: BacklinkRow }) {
   const s = data.summary;
   if (!s) {
-    return <p className="panel px-6 py-16 text-center text-sm text-neutral-400">No backlink data returned for this domain.</p>;
+    return <p className="panel px-6 py-16 text-center text-sm text-neutral-600">No backlink data returned for this domain.</p>;
   }
   const dofollowPct = s.backlinks > 0 ? Math.round((s.dofollow / s.backlinks) * 100) : 0;
 
@@ -38,7 +38,7 @@ export function BacklinksReport({ data }: { data: BacklinkRow }) {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="panel flex flex-col gap-4 p-5">
-          <h3 className="text-sm font-semibold text-white">Link type</h3>
+          <h3 className="text-sm font-semibold text-neutral-900">Link type</h3>
           <Donut
             segments={[
               { label: "Dofollow", value: s.dofollow, color: "var(--color-up)" },
@@ -50,7 +50,7 @@ export function BacklinksReport({ data }: { data: BacklinkRow }) {
 
         <div className="panel flex flex-col gap-4 p-5">
           <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-sm font-semibold text-white">Referring domains by TLD</h3>
+            <h3 className="text-sm font-semibold text-neutral-900">Referring domains by TLD</h3>
             <span className="eyebrow">top {s.tldDistribution.length}</span>
           </div>
           <HBars
@@ -65,7 +65,7 @@ export function BacklinksReport({ data }: { data: BacklinkRow }) {
         <div className="panel overflow-x-auto">
           <table className="w-full min-w-[420px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-neutral-800">
+              <tr className="border-b border-neutral-200">
                 <th className="eyebrow px-4 py-2.5">Referring domain</th>
                 <th className="eyebrow px-4 py-2.5">Backlinks</th>
                 <th className="eyebrow px-4 py-2.5">DR</th>
@@ -74,11 +74,11 @@ export function BacklinksReport({ data }: { data: BacklinkRow }) {
             </thead>
             <tbody>
               {data.referringDomains.slice(0, 25).map((d) => (
-                <tr key={d.domain} className="border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20">
-                  <td className="px-4 py-2.5 font-medium text-white">{d.domain}</td>
-                  <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(d.backlinks)}</span></td>
+                <tr key={d.domain} className="border-b border-neutral-200 transition-colors last:border-0 hover:bg-neutral-50">
+                  <td className="px-4 py-2.5 font-medium text-neutral-900">{d.domain}</td>
+                  <td className="px-4 py-2.5"><span className="tnum text-neutral-800">{formatCompact(d.backlinks)}</span></td>
                   <td className="px-4 py-2.5"><RankBadge rank={d.rank} /></td>
-                  <td className="px-4 py-2.5"><span className="tnum text-neutral-400">{d.spamScore != null ? `${d.spamScore}%` : "—"}</span></td>
+                  <td className="px-4 py-2.5"><span className="tnum text-neutral-600">{d.spamScore != null ? `${d.spamScore}%` : "—"}</span></td>
                 </tr>
               ))}
               {data.referringDomains.length === 0 ? (
@@ -90,7 +90,7 @@ export function BacklinksReport({ data }: { data: BacklinkRow }) {
 
         <div className="panel flex flex-col gap-4 p-5">
           <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-sm font-semibold text-white">Top anchor texts</h3>
+            <h3 className="text-sm font-semibold text-neutral-900">Top anchor texts</h3>
             <span className="eyebrow">by backlinks</span>
           </div>
           <HBars

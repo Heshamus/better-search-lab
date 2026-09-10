@@ -17,8 +17,7 @@ import { CompetitorDashboard } from "@/components/competitor-dashboard";
 // Purely a build-time hint; the route was already `ƒ` Dynamic.
 export const dynamic = "force-dynamic";
 
-const sectionHeadingClass =
-  "text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400";
+const sectionHeadingClass = "text-sm font-semibold uppercase tracking-wide text-neutral-500";
 
 // Server component (Task 18, mirrors Tasks 8/12/14): resolves the current
 // project directly — no /api fetch; the (app) layout validates the session against the users table on every render (middleware only pre-filters for a JWT) —
@@ -104,14 +103,14 @@ export default async function CompetitorsPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-col gap-1">
             <h2 className={sectionHeadingClass}>Keyword gaps</h2>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-500">
               Keywords your competitors rank for and you don&rsquo;t.
             </p>
           </div>
           {competitorRows.length >= 1 ? (
             <RefreshGapsButton projectId={project.id} />
           ) : (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-500">
               Add a competitor above to find keyword gaps.
             </p>
           )}

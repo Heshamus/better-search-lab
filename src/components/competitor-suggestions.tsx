@@ -7,7 +7,7 @@ import { useDemo } from "@/components/demo-provider";
 interface Suggestion { domain: string; intersections: number; avgPosition: number | null }
 
 const buttonClass =
-  "rounded-lg border border-neutral-700 px-2.5 py-1 text-xs font-medium text-neutral-300 transition-colors hover:bg-neutral-800/60 disabled:cursor-default disabled:opacity-50";
+  "rounded-lg border border-neutral-200 px-2.5 py-1 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50";
 
 async function readError(res: Response, fallback: string): Promise<string> {
   try { const j = (await res.json()) as { error?: string }; return j.error || fallback; } catch { return fallback; }
@@ -69,10 +69,10 @@ export function CompetitorSuggestions({ projectId, atCap, onAdded }: { projectId
         <span className="text-[0.7rem] text-neutral-500">One DataForSEO Labs call (≈ $0.01).</span>
       </div>
       {rows && rows.length > 0 ? (
-        <ul className="panel divide-y divide-neutral-800/60 px-4">
+        <ul className="panel divide-y divide-neutral-200 px-4">
           {rows.map((r) => (
             <li key={r.domain} data-testid={`suggestion-${r.domain}`} className="flex flex-wrap items-center gap-3 py-2">
-              <span className="min-w-0 flex-1 truncate text-sm text-neutral-100">{r.domain}</span>
+              <span className="min-w-0 flex-1 truncate text-sm text-neutral-900">{r.domain}</span>
               <span className="tnum text-xs text-neutral-500">{r.intersections} shared keywords · avg. position {r.avgPosition === null ? "—" : r.avgPosition.toFixed(1)}</span>
               <button type="button" className={buttonClass} disabled={demo || atCap || adding.has(r.domain)} title={demo ? "Read-only demo" : atCap ? "Maximum 5 competitors" : undefined} onClick={() => void add(r.domain)}>
                 {adding.has(r.domain) ? "Adding…" : "Add"}

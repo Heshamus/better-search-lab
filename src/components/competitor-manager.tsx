@@ -22,7 +22,7 @@ const ADD_FAILURE_MESSAGE = "Couldn’t add competitor — try again.";
 const DELETE_FAILURE_MESSAGE = "Couldn’t delete — try again.";
 
 const deleteButtonClass =
-  "rounded-lg border border-neutral-200 px-3 py-1 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800";
+  "rounded-lg border border-neutral-200 px-3 py-1 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50";
 
 /**
  * One tracked-competitor row: domain + a Delete button. Mirrors
@@ -64,9 +64,9 @@ function CompetitorRow({ projectId, id, domain }: { projectId: string; id: strin
   return (
     <div
       data-testid={`competitor-row-${id}`}
-      className="flex items-center justify-between gap-3 border-b border-neutral-100 px-4 py-2 last:border-0 dark:border-neutral-800/60"
+      className="flex items-center justify-between gap-3 border-b border-neutral-100 px-4 py-2 last:border-0"
     >
-      <span className="font-medium text-neutral-900 dark:text-white">{domain}</span>
+      <span className="font-medium text-neutral-900">{domain}</span>
       <div className="flex flex-col items-end gap-1">
         <button type="button" onClick={handleDelete} disabled={demo || pending} title={demo ? "Read-only demo" : undefined} className={deleteButtonClass}>
           {pending ? "Deleting…" : "Delete"}
@@ -134,11 +134,11 @@ export function CompetitorManager({ projectId, competitors }: { projectId: strin
   return (
     <div className="flex flex-col gap-4">
       {competitors.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400">
+        <p className="rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500">
           No competitors yet — add one below.
         </p>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
           {competitors.map((c) => (
             <CompetitorRow key={c.id} projectId={projectId} id={c.id} domain={c.domain} />
           ))}
@@ -161,13 +161,13 @@ export function CompetitorManager({ projectId, competitors }: { projectId: strin
             onChange={(event) => setDomain(event.target.value)}
             placeholder="Competitor domain"
             disabled={demo || atCap}
-            className="flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm text-neutral-900 outline-none focus:border-accent disabled:cursor-default disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white"
+            className="flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm text-neutral-900 outline-none focus:border-neutral-400 disabled:cursor-default disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={demo || atCap || busy || domain.trim().length === 0}
             title={demo ? "Read-only demo" : undefined}
-            className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
+            className="rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50"
           >
             {busy ? "Adding…" : "Add"}
           </button>
