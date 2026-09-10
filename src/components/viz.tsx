@@ -1,10 +1,10 @@
 // Data-viz primitives — the design system's signature. Numbers are the product,
-// so every metric gets a considered mono/tabular treatment plus, where it helps,
+// so every metric gets a considered sans tabular treatment plus, where it helps,
 // a compact inline visual (difficulty heat, volume bar, position tier, trend line).
 // All presentational + server-renderable (no hooks), pure SVG/CSS.
 import { IconArrowUp, IconArrowDown } from "@/components/icons";
 
-/** Big/medium tabular-mono number. em-dash when null, muted. */
+/** Big/medium tabular number. em-dash when null, muted. */
 export function Stat({ value, className = "" }: { value: string | number | null; className?: string }) {
   const isEmpty = value == null || value === "—" || value === "";
   return (
@@ -25,7 +25,7 @@ export function KdMeter({ kd }: { kd: number | null }) {
   const pct = Math.max(4, Math.min(100, kd));
   return (
     <span className="inline-flex items-center gap-1.5" title={`Difficulty ${kd} · ${kdTier(kd).label}`}>
-      <span className="relative h-1.5 w-9 overflow-hidden rounded-full bg-neutral-800">
+      <span className="relative h-1.5 w-9 overflow-hidden rounded-full bg-neutral-200">
         <span className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, background: color }} />
       </span>
       <span className="tnum text-xs" style={{ color }}>{kd}</span>
@@ -36,7 +36,7 @@ export function KdMeter({ kd }: { kd: number | null }) {
 /** Position tier badge: rank 1–3 top, 4–10 page-one, 11–20 close, 20+ far, null unranked. */
 export function PositionBadge({ pos }: { pos: number | null }) {
   if (pos == null) {
-    return <span className="tnum rounded-md bg-neutral-800/60 px-1.5 py-0.5 text-xs text-neutral-500">—</span>;
+    return <span className="tnum rounded-md bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-500">—</span>;
   }
   const cls =
     pos <= 3
@@ -45,20 +45,20 @@ export function PositionBadge({ pos }: { pos: number | null }) {
         ? "bg-accent/15 text-accent"
         : pos <= 20
           ? "bg-at-risk/15 text-at-risk"
-          : "bg-neutral-800/60 text-neutral-400";
+          : "bg-neutral-100 text-neutral-700";
   return <span className={`tnum rounded-md px-1.5 py-0.5 text-xs font-medium ${cls}`}>#{pos}</span>;
 }
 
-/** A horizontal volume bar (relative to `max`) with the mono figure alongside. */
+/** A horizontal volume bar (relative to `max`) with the tabular figure alongside. */
 export function VolumeBar({ value, max }: { value: number | null; max: number }) {
   if (value == null) return <span className="tnum text-xs text-neutral-600">—</span>;
   const pct = max > 0 ? Math.max(3, Math.min(100, (value / max) * 100)) : 0;
   return (
     <span className="inline-flex items-center gap-2">
-      <span className="relative h-1.5 w-14 overflow-hidden rounded-full bg-neutral-800">
+      <span className="relative h-1.5 w-14 overflow-hidden rounded-full bg-neutral-200">
         <span className="absolute inset-y-0 left-0 rounded-full bg-series-2/70" style={{ width: `${pct}%` }} />
       </span>
-      <span className="tnum text-xs text-neutral-300">{Intl.NumberFormat("en", { notation: "compact" }).format(value)}</span>
+      <span className="tnum text-xs text-neutral-700">{Intl.NumberFormat("en", { notation: "compact" }).format(value)}</span>
     </span>
   );
 }

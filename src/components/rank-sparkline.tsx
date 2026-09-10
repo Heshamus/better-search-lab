@@ -32,7 +32,7 @@ export function RankSparkline({ points }: { points: RankSparklinePoint[] }) {
     .filter((r): r is number => r != null);
 
   if (knownRanks.length === 0) {
-    return <p className="text-xs text-neutral-400 dark:text-neutral-500">No rank history yet.</p>;
+    return <p className="text-xs text-neutral-600">No rank history yet.</p>;
   }
 
   const minRank = Math.min(...knownRanks);

@@ -19,13 +19,13 @@ const HINTS: Record<string, string> = {
 
 export function HealthStrip({ metrics }: { metrics: Metric[] }) {
   return (
-    <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <dl className="panel grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-neutral-200">
       {metrics.map((metric) => {
         const empty = metric.value === "—" || metric.value === "";
         return (
-          <div key={metric.label} className="panel flex flex-col gap-1.5 px-4 py-3.5">
+          <div key={metric.label} className="flex flex-col gap-1.5 px-4 py-3.5">
             <dt className="eyebrow">{metric.label}</dt>
-            <dd className={`num text-[1.7rem] font-semibold leading-none tracking-tight ${empty ? "text-neutral-600" : "text-white"}`}>
+            <dd className={`num text-[1.7rem] font-semibold leading-none tracking-tight ${empty ? "text-neutral-600" : "text-neutral-900"}`}>
               {empty ? "—" : metric.value}
             </dd>
             <dd className="text-[0.7rem] text-neutral-500">{empty ? "No data yet" : (metric.hint ?? HINTS[metric.label] ?? "")}</dd>

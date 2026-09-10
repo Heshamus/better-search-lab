@@ -5,7 +5,7 @@ function ChartPanel({ title, context, children }: { title: string; context?: str
   return (
     <div className="panel flex flex-col gap-4 p-5">
       <div className="flex items-baseline justify-between gap-2">
-        <h3 className="text-sm font-semibold text-white">{title}</h3>
+        <h3 className="text-sm font-semibold text-neutral-900">{title}</h3>
         {context ? <span className="eyebrow">{context}</span> : null}
       </div>
       {children}

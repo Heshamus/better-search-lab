@@ -1,5 +1,5 @@
-// Hand-built SVG chart set, styled to the design system (ink ground, series
-// palette, Geist Mono numerals). No charting dependency — full control over the
+// Hand-built SVG chart set, styled to the design system (light ground, series
+// palette, sans tabular numerals). No charting dependency — full control over the
 // look so the analytics read as one instrument, not a bolted-on library.
 //
 // All charts are responsive (viewBox + width:100%), server-renderable (no hooks),
@@ -9,7 +9,7 @@ const SERIES = ["var(--color-series-1)", "var(--color-series-2)", "var(--color-s
 
 function EmptyChart({ height = 160, label = "No data yet" }: { height?: number; label?: string }) {
   return (
-    <div className="flex items-center justify-center rounded-lg border border-dashed border-neutral-800 text-xs text-neutral-600" style={{ height }}>
+    <div className="flex items-center justify-center rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-600" style={{ height }}>
       {label}
     </div>
   );
@@ -80,8 +80,8 @@ export function AreaTrend({
         const gy = y(gv);
         return (
           <g key={i}>
-            <line x1={padL} y1={gy} x2={W - padR} y2={gy} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-            <text x={padL - 6} y={gy + 3} textAnchor="end" fontSize="9" fill="var(--color-neutral-500)" fontFamily="var(--font-mono)">
+            <line x1={padL} y1={gy} x2={W - padR} y2={gy} stroke="var(--color-neutral-200)" strokeWidth="1" />
+            <text x={padL - 6} y={gy + 3} textAnchor="end" fontSize="9" fill="var(--color-neutral-500)">
               {yFormat(invert ? -gv : gv)}
             </text>
           </g>
@@ -89,7 +89,7 @@ export function AreaTrend({
       })}
       <path d={area} fill={`url(#${gid})`} />
       <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r="3.5" fill={color} stroke="var(--color-neutral-950)" strokeWidth="1.5" />
+      <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r="3.5" fill={color} stroke="#ffffff" strokeWidth="1.5" />
       {labels.length ? (
         <>
           <text x={padL} y={H - 6} textAnchor="start" fontSize="9" fill="var(--color-neutral-500)">{labels[0]}</text>
@@ -149,9 +149,9 @@ export function Donut({
   return (
     <div className="flex items-center gap-5">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0" role="img">
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--color-neutral-800)" strokeWidth={stroke} />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--color-neutral-200)" strokeWidth={stroke} />
         {arcs}
-        <text x={cx} y={cy - 2} textAnchor="middle" fontSize="26" fontWeight="600" fill="white" fontFamily="var(--font-mono)" letterSpacing="-0.03em">
+        <text x={cx} y={cy - 2} textAnchor="middle" fontSize="26" fontWeight="600" fill="var(--color-neutral-900)" letterSpacing="-0.03em">
           {total}
         </text>
         {centerLabel ? (
@@ -164,8 +164,8 @@ export function Donut({
         {segments.map((seg) => (
           <li key={seg.label} className="flex items-center gap-2 text-xs">
             <span className="h-2.5 w-2.5 shrink-0 rounded-[3px]" style={{ background: seg.color }} />
-            <span className="truncate text-neutral-400">{seg.label}</span>
-            <span className="tnum ml-auto pl-2 text-neutral-200">{seg.value}</span>
+            <span className="truncate text-neutral-600">{seg.label}</span>
+            <span className="tnum ml-auto pl-2 text-neutral-800">{seg.value}</span>
           </li>
         ))}
       </ul>
@@ -183,7 +183,7 @@ export function BarHistogram({ bars, height = 150 }: { bars: { label: string; va
         const h = (bar.value / max) * (height - 26);
         return (
           <div key={bar.label} className="flex flex-1 flex-col items-center justify-end gap-1.5">
-            <span className="tnum text-[0.7rem] text-neutral-300">{bar.value}</span>
+            <span className="tnum text-[0.7rem] text-neutral-700">{bar.value}</span>
             <div className="w-full overflow-hidden rounded-t-md" style={{ height: Math.max(2, h), background: bar.color, minHeight: 2 }} />
             <span className="text-[0.62rem] text-neutral-500">{bar.label}</span>
           </div>
@@ -212,14 +212,14 @@ export function HBars({
     <ul className="flex flex-col gap-2.5">
       {items.map((item, i) => (
         <li key={item.label} className="flex items-center gap-3">
-          <span className="w-36 shrink-0 truncate text-xs text-neutral-300" title={item.label}>{item.label}</span>
-          <span className="relative h-4 flex-1 overflow-hidden rounded-md bg-neutral-800/60">
+          <span className="w-36 shrink-0 truncate text-xs text-neutral-700" title={item.label}>{item.label}</span>
+          <span className="relative h-4 flex-1 overflow-hidden rounded-md bg-neutral-200">
             <span
               className="absolute inset-y-0 left-0 rounded-md"
               style={{ width: `${Math.max(2, (item.value / max) * 100)}%`, background: i === 0 ? color : "color-mix(in oklab, var(--color-series-2) 75%, transparent)" }}
             />
           </span>
-          <span className="tnum w-14 shrink-0 text-right text-xs text-neutral-200">{valueFormat(item.value)}</span>
+          <span className="tnum w-14 shrink-0 text-right text-xs text-neutral-800">{valueFormat(item.value)}</span>
         </li>
       ))}
     </ul>
