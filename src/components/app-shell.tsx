@@ -24,12 +24,12 @@ export function AppShell({ user, children }: { user: { email: string; role: "adm
   const activeLabel = NAV.find(([slug]) => slug === active)?.[1] ?? "";
 
   return (
-    <div className="flex min-h-dvh text-neutral-100">
-      <aside className="sticky top-0 flex h-dvh w-60 shrink-0 flex-col border-r border-neutral-800/70 bg-neutral-900/40 px-3 py-5 backdrop-blur-xl">
+    <div className="flex min-h-dvh text-neutral-900">
+      <aside className="sticky top-0 flex h-dvh w-60 shrink-0 flex-col border-r border-neutral-200 bg-white px-3 py-5">
         <div className="mb-7 flex items-center gap-2.5 px-2">
           <Logo />
           <div className="leading-tight">
-            <div className="text-sm font-semibold tracking-tight text-white">Better Search Lab</div>
+            <div className="text-sm font-semibold tracking-tight text-neutral-900">Better Search Lab</div>
             <div className="text-[0.65rem] font-medium tracking-wide text-neutral-500">SEARCH &amp; GEO VISIBILITY</div>
           </div>
         </div>
@@ -38,7 +38,7 @@ export function AppShell({ user, children }: { user: { email: string; role: "adm
 
         <div className="mt-auto flex flex-col gap-2 px-3 pt-5">
           <div className="min-w-0">
-            <div className="truncate text-xs font-medium text-neutral-300">{user.email}</div>
+            <div className="truncate text-xs font-medium text-neutral-700">{user.email}</div>
             <div className="eyebrow text-[0.6rem]">{user.role}</div>
           </div>
           <button
@@ -52,7 +52,7 @@ export function AppShell({ user, children }: { user: { email: string; role: "adm
               router.push("/login");
               router.refresh();
             }}
-            className="self-start rounded-lg border border-neutral-700 px-2.5 py-1 text-xs font-medium text-neutral-300 transition-colors hover:bg-neutral-800/60"
+            className="self-start rounded-lg border border-neutral-300 px-2.5 py-1 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-100"
           >
             Sign out
           </button>
@@ -60,8 +60,8 @@ export function AppShell({ user, children }: { user: { email: string; role: "adm
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-800/60 bg-neutral-950/70 px-7 py-3.5 backdrop-blur-xl">
-          <h1 className="text-[0.95rem] font-semibold tracking-tight text-white">{activeLabel}</h1>
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-200 bg-white/80 px-7 py-3.5 backdrop-blur">
+          <h1 className="text-[0.95rem] font-semibold tracking-tight text-neutral-900">{activeLabel}</h1>
           <SiteSwitcher />
         </header>
 

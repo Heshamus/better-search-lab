@@ -27,11 +27,11 @@ function DisabledPlaceholder() {
       type="button"
       disabled
       aria-label="Site switcher (no sites yet)"
-      className="flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-500 disabled:cursor-default dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400"
+      className="flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-500 disabled:cursor-default"
     >
-      <span aria-hidden className="h-2 w-2 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+      <span aria-hidden className="h-2 w-2 rounded-full bg-neutral-300" />
       No sites yet
-      <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4 text-neutral-400 dark:text-neutral-500">
+      <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4 text-neutral-400">
         <path d="M5.5 7.5 10 12l4.5-4.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </button>
@@ -86,7 +86,7 @@ export function SiteSwitcher() {
       aria-label="Site switcher"
       value={value}
       onChange={handleChange}
-      className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200"
+      className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700"
     >
       {projects.map((project) => (
         <option key={project.id} value={project.id}>

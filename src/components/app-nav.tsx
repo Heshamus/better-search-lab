@@ -46,14 +46,11 @@ export function AppNav({ active }: { active: string }) {
                 aria-current={isActive ? "page" : undefined}
                 className={`group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
                   isActive
-                    ? "bg-accent/10 font-medium text-white"
-                    : "font-medium text-neutral-400 hover:bg-neutral-800/50 hover:text-neutral-100"
+                    ? "bg-white font-semibold text-neutral-900 shadow-1"
+                    : "font-medium text-neutral-700 hover:bg-neutral-100"
                 }`}
               >
-                {isActive ? (
-                  <span aria-hidden className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent" />
-                ) : null}
-                <Icon className={isActive ? "text-accent" : "text-neutral-500 transition-colors group-hover:text-neutral-300"} />
+                <Icon className={isActive ? "text-neutral-900" : "text-neutral-500 transition-colors group-hover:text-neutral-700"} />
                 {LABELS[slug]}
               </a>
             );
