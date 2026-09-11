@@ -7,9 +7,9 @@ import type { IntegrationFieldView, IntegrationGroupView, IntegrationsView } fro
 import { useDemo } from "@/components/demo-provider";
 
 const inputClass =
-  "w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-accent disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400 disabled:cursor-not-allowed disabled:opacity-60";
 const buttonClass =
-  "rounded-lg border border-neutral-700 px-2.5 py-1 text-xs font-medium text-neutral-300 transition-colors hover:bg-neutral-800/60 disabled:cursor-default disabled:opacity-50";
+  "rounded-lg border border-neutral-200 px-2.5 py-1 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50";
 
 async function readError(res: Response, fallback: string): Promise<string> {
   try {
@@ -33,11 +33,11 @@ function Field({
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between gap-2">
         <label htmlFor={id} className="eyebrow">{field.label}</label>
-        {disabled ? <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-[0.62rem] font-medium text-neutral-400">set via {field.env}</span> : null}
+        {disabled ? <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[0.62rem] font-medium text-neutral-700">set via {field.env}</span> : null}
       </div>
       {maskedSecret ? (
         <div className="flex items-center gap-2">
-          <span className="tnum text-sm text-neutral-400">•••••••• set</span>
+          <span className="tnum text-sm text-neutral-600">•••••••• set</span>
           <button type="button" aria-label={`Replace ${field.label}`} className={buttonClass} disabled={demo} title={demo ? "Read-only demo" : undefined} onClick={onReveal}>Replace</button>
         </div>
       ) : field.options ? (
@@ -143,10 +143,10 @@ function GroupCard({ group }: { group: IntegrationGroupView }) {
     <section id={group.id} data-testid={`integration-${group.id}`} className="panel flex flex-col gap-4 p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-white">{group.label}</h2>
+          <h2 className="text-sm font-semibold text-neutral-900">{group.label}</h2>
           <p className="text-xs text-neutral-500">{group.description}</p>
         </div>
-        <span className={`rounded-full px-2 py-0.5 text-[0.7rem] font-medium ${group.configured ? "bg-accent/12 text-accent" : "bg-neutral-800 text-neutral-400"}`}>
+        <span className={`rounded-full px-2 py-0.5 text-[0.7rem] font-medium ${group.configured ? "bg-[--color-accent-tint] text-accent" : "bg-neutral-100 text-neutral-700"}`}>
           {group.configured ? "Connected" : "Not connected"}
         </span>
       </div>
@@ -168,7 +168,7 @@ function GroupCard({ group }: { group: IntegrationGroupView }) {
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button type="submit" disabled={demo || busy || dirty.size === 0} title={demo ? "Read-only demo" : undefined} className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 disabled:opacity-50">
+          <button type="submit" disabled={demo || busy || dirty.size === 0} title={demo ? "Read-only demo" : undefined} className="rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50">
             {status.kind === "saving" ? "Saving…" : "Save"}
           </button>
           <button type="button" onClick={() => void test()} disabled={demo || busy} title={demo ? "Read-only demo" : undefined} className={buttonClass}>

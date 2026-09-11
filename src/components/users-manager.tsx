@@ -13,9 +13,11 @@ export interface UserSummaryLike {
 }
 
 const inputClass =
-  "rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-accent";
+  "rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400";
 const buttonClass =
-  "rounded-lg border border-neutral-700 px-2.5 py-1 text-xs font-medium text-neutral-300 transition-colors hover:bg-neutral-800/60 disabled:cursor-default disabled:opacity-50";
+  "rounded-lg border border-neutral-200 px-2.5 py-1 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50";
+const dangerButtonClass =
+  "rounded-lg border border-at-risk px-2.5 py-1 text-xs font-medium text-at-risk transition-colors hover:bg-[--color-at-risk-tint] disabled:cursor-default disabled:opacity-50";
 
 const fmt = (v: string | Date | null): string => (v ? (typeof v === "string" ? new Date(v) : v).toISOString().slice(0, 10) : "never");
 
@@ -79,10 +81,10 @@ function UserRow({ user, isSelf }: { user: UserSummaryLike; isSelf: boolean }) {
   }
 
   return (
-    <li data-testid={`user-row-${user.id}`} className="flex flex-col gap-2 border-b border-neutral-800/60 py-3 last:border-0">
+    <li data-testid={`user-row-${user.id}`} className="flex flex-col gap-2 border-b border-neutral-200 py-3 last:border-0">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="min-w-0 flex-1 truncate text-sm text-neutral-100">{user.email}{isSelf ? <span className="ml-2 text-xs text-neutral-500">(you)</span> : null}</span>
-        <span className="flex items-center gap-1.5 text-xs text-neutral-400">
+        <span className="min-w-0 flex-1 truncate text-sm text-neutral-900">{user.email}{isSelf ? <span className="ml-2 text-xs text-neutral-500">(you)</span> : null}</span>
+        <span className="flex items-center gap-1.5 text-xs text-neutral-600">
           Role
           {/* Your own role is read-only here. The API already refuses to demote
               the last admin, but a lone admin demoting themselves would lock
@@ -97,7 +99,7 @@ function UserRow({ user, isSelf }: { user: UserSummaryLike; isSelf: boolean }) {
         {!isSelf ? (
           confirmingDelete ? (
             <>
-              <button type="button" className={`${buttonClass} border-at-risk/60 text-at-risk`} disabled={demo || busy} title={demo ? "Read-only demo" : undefined} onClick={() => void remove()}>Confirm delete</button>
+              <button type="button" className={dangerButtonClass} disabled={demo || busy} title={demo ? "Read-only demo" : undefined} onClick={() => void remove()}>Confirm delete</button>
               <button type="button" className={buttonClass} disabled={busy} onClick={() => setConfirmingDelete(false)}>Cancel</button>
             </>
           ) : (
@@ -107,7 +109,7 @@ function UserRow({ user, isSelf }: { user: UserSummaryLike; isSelf: boolean }) {
       </div>
       {resetting ? (
         <form className="flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); void patch({ password: newPassword }, "Password reset — they must sign in again."); }}>
-          <label htmlFor={`pw-${user.id}`} className="text-xs text-neutral-400">New password</label>
+          <label htmlFor={`pw-${user.id}`} className="text-xs text-neutral-600">New password</label>
           <input id={`pw-${user.id}`} type="password" minLength={10} required autoComplete="new-password" className={inputClass} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
           <button type="submit" className={buttonClass} disabled={demo || busy} title={demo ? "Read-only demo" : undefined}>Save password</button>
         </form>
@@ -150,17 +152,17 @@ function AddUserForm() {
 
   return (
     <form onSubmit={submit} className="panel flex flex-col gap-3 p-4">
-      <h3 className="text-sm font-semibold text-white">Add a user</h3>
+      <h3 className="text-sm font-semibold text-neutral-900">Add a user</h3>
       <div className="flex flex-wrap gap-2">
-        <label className="flex flex-col gap-1 text-xs text-neutral-400">New user email
+        <label className="flex flex-col gap-1 text-xs text-neutral-600">New user email
           <input type="email" required className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
-        <label className="flex flex-col gap-1 text-xs text-neutral-400">Initial password
+        <label className="flex flex-col gap-1 text-xs text-neutral-600">Initial password
           {/* new-password, not a current one: a password manager offering the
               admin's own credentials here would silently create the wrong user. */}
           <input type="password" required minLength={10} autoComplete="new-password" className={inputClass} value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
-        <label className="flex flex-col gap-1 text-xs text-neutral-400">New user role
+        <label className="flex flex-col gap-1 text-xs text-neutral-600">New user role
           <select className={inputClass} value={role} onChange={(e) => setRole(e.target.value as "admin" | "member")}>
             <option value="member">member</option>
             <option value="admin">admin</option>
@@ -169,7 +171,7 @@ function AddUserForm() {
       </div>
       <p className="text-xs text-neutral-500">Share the initial password with them directly; they can change it under Settings → Account.</p>
       {error ? <p role="alert" className="text-xs text-at-risk">{error}</p> : null}
-      <button type="submit" disabled={demo || busy} title={demo ? "Read-only demo" : undefined} className="self-start rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 disabled:opacity-50">
+      <button type="submit" disabled={demo || busy} title={demo ? "Read-only demo" : undefined} className="self-start rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50">
         {busy ? "Adding…" : "Add user"}
       </button>
     </form>
