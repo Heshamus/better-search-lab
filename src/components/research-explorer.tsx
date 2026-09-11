@@ -255,7 +255,7 @@ export function ResearchExplorer({
                       <input
                         type="checkbox"
                         aria-label={`Select ${item.keyword}`}
-                        className="h-3.5 w-3.5 accent-[var(--color-accent)]"
+                        className="h-3.5 w-3.5 accent-[var(--color-neutral-900)]"
                         checked={selected.has(item.keyword)}
                         onChange={() => toggleRow(item.keyword)}
                       />

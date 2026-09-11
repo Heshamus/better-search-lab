@@ -149,7 +149,7 @@ function ConversationCard({ conv, projectId }: { conv: StoredConversation; proje
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  className="block truncate text-xs text-neutral-600 hover:text-neutral-900"
+                  className="block truncate text-xs text-neutral-600 hover:text-neutral-900 hover:underline"
                 >
                   {url}
                 </a>
