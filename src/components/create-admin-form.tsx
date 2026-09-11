@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 
 const inputClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400";
+  "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400";
 
 /**
  * The setup wizard's `account` step: create the admin account, then sign in

@@ -42,9 +42,9 @@ export function PositionBadge({ pos }: { pos: number | null }) {
     pos <= 3
       ? "bg-up/15 text-up"
       : pos <= 10
-        ? "bg-accent/15 text-accent"
+        ? "bg-[--color-accent-tint] text-accent"
         : pos <= 20
-          ? "bg-at-risk/15 text-at-risk"
+          ? "bg-[--color-at-risk-tint] text-at-risk"
           : "bg-neutral-100 text-neutral-700";
   return <span className={`tnum rounded-md px-1.5 py-0.5 text-xs font-medium ${cls}`}>#{pos}</span>;
 }
