@@ -22,7 +22,7 @@ function Tile({ label, value, hint }: { label: string; value: string; hint: stri
   return (
     <div className="panel flex flex-col gap-1.5 px-4 py-3.5">
       <span className="eyebrow">{label}</span>
-      <span className="num text-[1.7rem] font-semibold leading-none tracking-tight text-white">{value}</span>
+      <span className="num text-[1.7rem] font-semibold leading-none tracking-tight text-neutral-900">{value}</span>
       <span className="text-[0.7rem] text-neutral-500">{hint}</span>
     </div>
   );
@@ -43,8 +43,8 @@ export function UsageReport({ summary }: { summary: UsageSummary }) {
   if (isEmpty) {
     return (
       <div className="panel px-6 py-16 text-center">
-        <p className="num text-2xl font-semibold text-white">$0.00</p>
-        <p className="mt-1.5 text-sm text-neutral-400">No usage yet this month.</p>
+        <p className="num text-2xl font-semibold text-neutral-900">$0.00</p>
+        <p className="mt-1.5 text-sm text-neutral-600">No usage yet this month.</p>
       </div>
     );
   }
@@ -60,7 +60,7 @@ export function UsageReport({ summary }: { summary: UsageSummary }) {
 
       <div className="panel flex flex-col gap-4 p-5">
         <div className="flex items-baseline justify-between gap-2">
-          <h3 className="text-sm font-semibold text-white">Spend over time</h3>
+          <h3 className="text-sm font-semibold text-neutral-900">Spend over time</h3>
           <span className="eyebrow">{days === 1 ? "1 day" : `${days} days`}</span>
         </div>
         <AreaTrend
@@ -75,14 +75,14 @@ export function UsageReport({ summary }: { summary: UsageSummary }) {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="panel flex flex-col gap-4 p-5">
-          <h3 className="text-sm font-semibold text-white">Cost by endpoint</h3>
+          <h3 className="text-sm font-semibold text-neutral-900">Cost by endpoint</h3>
           <HBars items={byEndpoint.map((e) => ({ label: shortEndpoint(e.endpoint), value: e.cost }))} valueFormat={usd} color="var(--color-series-4)" />
         </div>
 
         <div className="panel overflow-x-auto">
           <table className="w-full min-w-[420px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-neutral-800">
+              <tr className="border-b border-neutral-200">
                 <th className="eyebrow px-4 py-2.5">Endpoint</th>
                 <th className="eyebrow px-4 py-2.5">Cost</th>
                 <th className="eyebrow px-4 py-2.5">Rows</th>
@@ -90,10 +90,10 @@ export function UsageReport({ summary }: { summary: UsageSummary }) {
             </thead>
             <tbody>
               {byEndpoint.map((e) => (
-                <tr key={e.endpoint} data-testid={`usage-endpoint-${e.endpoint}`} className="border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20">
-                  <td className="px-4 py-2.5 font-medium text-neutral-200">{shortEndpoint(e.endpoint)}</td>
-                  <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{usd(e.cost)}</span></td>
-                  <td className="px-4 py-2.5"><span className="tnum text-neutral-400">{Intl.NumberFormat("en", { notation: "compact" }).format(e.rows)}</span></td>
+                <tr key={e.endpoint} data-testid={`usage-endpoint-${e.endpoint}`} className="border-b border-neutral-200 transition-colors last:border-0 hover:bg-neutral-50">
+                  <td className="px-4 py-2.5 font-medium text-neutral-800">{shortEndpoint(e.endpoint)}</td>
+                  <td className="px-4 py-2.5"><span className="tnum text-neutral-800">{usd(e.cost)}</span></td>
+                  <td className="px-4 py-2.5"><span className="tnum text-neutral-600">{Intl.NumberFormat("en", { notation: "compact" }).format(e.rows)}</span></td>
                 </tr>
               ))}
             </tbody>

@@ -16,11 +16,11 @@ export interface McpTokenSummary {
 
 const inputClass =
   "rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none " +
-  "focus:border-accent dark:border-neutral-700 dark:bg-neutral-950 dark:text-white";
+  "focus:border-neutral-400";
 
 const actionButtonClass =
-  "rounded-lg border border-neutral-700 px-2.5 py-1 text-xs font-medium text-neutral-300 " +
-  "transition-colors hover:bg-neutral-800/60 disabled:cursor-default disabled:opacity-50";
+  "rounded-lg border border-neutral-300 px-2.5 py-1 text-xs font-medium text-neutral-700 " +
+  "transition-colors hover:bg-neutral-100 disabled:cursor-default disabled:opacity-50";
 
 // createdAt/lastUsedAt arrive as `Date` from a server component (listApiTokens
 // reads straight off the DB) but as JSON-serialized strings once they've round
@@ -64,8 +64,8 @@ function TokenRow({ token }: { token: McpTokenSummary }) {
   }
 
   return (
-    <li className="flex items-center justify-between gap-3 border-b border-neutral-800/60 py-2 text-sm last:border-0">
-      <span className="text-neutral-300">
+    <li className="flex items-center justify-between gap-3 border-b border-neutral-200 py-2 text-sm last:border-0">
+      <span className="text-neutral-700">
         {token.label ?? "unlabeled"} · created {formatDate(token.createdAt)} ·{" "}
         {token.lastUsedAt ? `last used ${formatDate(token.lastUsedAt)}` : "never used"}
       </span>
@@ -158,7 +158,7 @@ export function McpTokenManager({ tokens }: { tokens: McpTokenSummary[] }) {
             onClick={handleGenerate}
             disabled={demo || generateState === "busy"}
             title={demo ? "Read-only demo" : undefined}
-            className="shrink-0 rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
+            className="shrink-0 rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50"
           >
             {generateState === "busy" ? "Generating…" : "Generate token"}
           </button>
@@ -169,12 +169,12 @@ export function McpTokenManager({ tokens }: { tokens: McpTokenSummary[] }) {
       </div>
 
       {mintedToken ? (
-        <div className="flex flex-col gap-2 rounded-lg border border-neutral-700 bg-neutral-900/40 p-3">
+        <div className="flex flex-col gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
           <p className="text-xs font-semibold text-accent">New token generated</p>
           <p className="text-xs font-medium text-at-risk">
             Copy this now — you won&rsquo;t be able to see it again.
           </p>
-          <code className="select-all break-all font-mono text-sm text-neutral-100">{mintedToken}</code>
+          <code className="select-all break-all font-mono text-sm text-neutral-800">{mintedToken}</code>
           <button type="button" onClick={handleCopy} className={`self-start ${actionButtonClass}`}>
             {copyState === "done" ? "Copied" : copyState === "error" ? "Copy failed" : "Copy"}
           </button>

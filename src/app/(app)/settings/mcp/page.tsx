@@ -14,7 +14,7 @@ export default async function McpPage() {
   return (
     <section className="flex flex-col gap-3">
       <div>
-        <h2 className="text-sm font-semibold text-white">MCP access tokens</h2>
+        <h2 className="text-sm font-semibold text-neutral-900">MCP access tokens</h2>
         <p className="text-xs text-neutral-500">Bearer tokens for the read-only MCP server. A token reads every project, so only admins mint them.</p>
       </div>
       {demo ? <DemoMcpToken /> : <McpTokenManager tokens={tokens} />}
