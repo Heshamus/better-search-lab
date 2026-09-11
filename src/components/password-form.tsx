@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useDemo } from "@/components/demo-provider";
 
 const inputClass =
-  "w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white outline-none focus:border-accent";
+  "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400";
 
 /** Own-password change. Success bumps session_version server-side, so we sign out explicitly. */
 export function PasswordForm() {
@@ -60,7 +60,7 @@ export function PasswordForm() {
       </div>
       <p className="text-xs text-neutral-500">Changing your password signs you out everywhere, including here.</p>
       {error ? <p role="alert" className="text-sm text-at-risk">{error}</p> : null}
-      <button type="submit" disabled={demo || busy} title={demo ? "Read-only demo" : undefined} className="self-start rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 disabled:opacity-50">
+      <button type="submit" disabled={demo || busy} title={demo ? "Read-only demo" : undefined} className="self-start rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:opacity-50">
         {busy ? "Changing…" : "Change password"}
       </button>
     </form>

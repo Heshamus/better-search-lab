@@ -6,7 +6,7 @@ import { useState } from "react";
 import { DEMO_ADMIN } from "@/lib/demo/public";
 
 const inputClass =
-  "w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-accent";
+  "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400";
 
 const REASON_COPY: Record<string, string> = {
   "signed-out": "You were signed out. Sign in again to continue.",
@@ -68,10 +68,10 @@ export function LoginForm({
   if (demo) {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-neutral-400">Two synthetic sites with ninety days of history. Nothing you do here is saved.</p>
+        <p className="text-sm text-neutral-600">Two synthetic sites with ninety days of history. Nothing you do here is saved.</p>
         {seedError ? <p role="alert" className="text-sm text-at-risk">Demo data failed to seed: {seedError}</p> : null}
         {error ? <p role="alert" className="text-sm text-at-risk">{error}</p> : null}
-        <button type="button" disabled={busy || !!seedError} onClick={() => void explore()} className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-neutral-900 transition-opacity disabled:opacity-50">
+        <button type="button" disabled={busy || !!seedError} onClick={() => void explore()} className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:opacity-50">
           {busy ? "Signing in…" : "Explore the demo"}
         </button>
       </div>
@@ -80,7 +80,7 @@ export function LoginForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      {notice ? <p className="rounded-lg bg-neutral-800/60 px-3 py-2 text-sm text-neutral-300">{notice}</p> : null}
+      {notice ? <p className="rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-700">{notice}</p> : null}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="login-email" className="eyebrow">Email</label>
         <input id="login-email" type="email" required autoComplete="email" className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -90,7 +90,7 @@ export function LoginForm({
         <input id="login-password" type="password" required autoComplete="current-password" className={inputClass} value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
       {error ? <p role="alert" className="text-sm text-at-risk">{error}</p> : null}
-      <button type="submit" disabled={busy} className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-neutral-900 transition-opacity disabled:opacity-50">
+      <button type="submit" disabled={busy} className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:opacity-50">
         {busy ? "Signing in…" : "Sign in"}
       </button>
     </form>

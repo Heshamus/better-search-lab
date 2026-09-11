@@ -25,12 +25,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <div className="mb-8 flex items-center gap-2.5">
         <Logo />
         <div className="leading-tight">
-          <div className="text-sm font-semibold tracking-tight text-white">Better Search Lab</div>
+          <div className="text-sm font-semibold tracking-tight text-neutral-900">Better Search Lab</div>
           <div className="text-[0.65rem] font-medium tracking-wide text-neutral-500">SEARCH &amp; GEO VISIBILITY</div>
         </div>
       </div>
       <section className="panel p-6">
-        <h1 className="mb-5 text-base font-semibold text-white">{demo ? "Try Better Search Lab" : "Sign in"}</h1>
+        <h1 className="mb-5 text-base font-semibold text-neutral-900">{demo ? "Try Better Search Lab" : "Sign in"}</h1>
         <LoginForm callbackUrl={safeCallback(sp.callbackUrl)} reason={sp.reason} demo={demo} seedError={demo ? getDemoSeedStatus()?.error : undefined} />
       </section>
     </main>
