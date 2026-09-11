@@ -9,8 +9,8 @@ import { useDemo } from "@/components/demo-provider";
 const NO_DRAFT_NOTE = "✍️ No draft — write your own";
 
 const actionButtonClass =
-  "rounded-lg border border-neutral-700 px-2.5 py-1 text-xs font-medium text-neutral-300 " +
-  "transition-colors hover:bg-neutral-800/60 disabled:cursor-default disabled:opacity-50";
+  "rounded-lg border border-neutral-300 px-2.5 py-1 text-xs font-medium text-neutral-700 " +
+  "transition-colors hover:bg-neutral-100 disabled:cursor-default disabled:opacity-50";
 
 /**
  * "3d ago" / "5h ago" style relative age from `postedAt`. Local to this
@@ -102,7 +102,7 @@ function ConversationCard({ conv, projectId }: { conv: StoredConversation; proje
           href={conv.threadUrl}
           target="_blank"
           rel="noreferrer"
-          className="text-sm font-medium text-accent hover:underline"
+          className="text-sm font-medium text-neutral-900 hover:underline"
         >
           {conv.title}
         </a>
@@ -114,13 +114,13 @@ function ConversationCard({ conv, projectId }: { conv: StoredConversation; proje
 
       <div className="flex flex-col gap-1">
         <span className="eyebrow">Why this one</span>
-        <p className="text-sm text-neutral-300">{conv.whyItMatters}</p>
+        <p className="text-sm text-neutral-700">{conv.whyItMatters}</p>
       </div>
 
       <div className="flex flex-col gap-2">
         {draftable ? (
           <>
-            <div className="whitespace-pre-wrap rounded bg-neutral-900/40 p-3 text-sm text-neutral-200">
+            <div className="whitespace-pre-wrap rounded bg-neutral-100 p-3 text-sm text-neutral-800">
               {conv.draftReply}
             </div>
             <div className="flex items-center gap-2">
@@ -128,7 +128,7 @@ function ConversationCard({ conv, projectId }: { conv: StoredConversation; proje
                 {copyState === "done" ? "Copied" : copyState === "error" ? "Copy failed" : "Copy"}
               </button>
               {showReviewFlag ? (
-                <span className="rounded bg-at-risk/10 px-1.5 py-0.5 text-[0.66rem] font-medium text-at-risk">
+                <span className="rounded bg-[--color-at-risk-tint] px-1.5 py-0.5 text-[0.66rem] font-medium text-at-risk">
                   review before posting
                 </span>
               ) : null}
@@ -149,7 +149,7 @@ function ConversationCard({ conv, projectId }: { conv: StoredConversation; proje
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  className="block truncate text-xs text-neutral-400 hover:text-accent"
+                  className="block truncate text-xs text-neutral-600 hover:text-neutral-900"
                 >
                   {url}
                 </a>
@@ -159,12 +159,12 @@ function ConversationCard({ conv, projectId }: { conv: StoredConversation; proje
         </div>
       ) : null}
 
-      <div className="flex items-center gap-2 border-t border-neutral-800 pt-3">
+      <div className="flex items-center gap-2 border-t border-neutral-200 pt-3">
         <a
           href={conv.threadUrl}
           target="_blank"
           rel="noreferrer"
-          className="text-xs font-medium text-accent hover:underline"
+          className="text-xs font-medium text-neutral-900 hover:underline"
         >
           Go to thread →
         </a>

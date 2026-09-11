@@ -40,25 +40,25 @@ export function TrendCard({
 
   // "Improvement" flips with `invert`: for a plain metric a rise (delta>0)
   // is good, but for a rank/position series a FALL (delta<0) is the climb.
-  let deltaClass = "bg-neutral-800/60 text-neutral-400";
+  let deltaClass = "bg-neutral-100 text-neutral-600";
   let deltaText = "";
   if (hasDelta) {
     const delta = points[points.length - 1] - points[0];
     const improved = invert ? delta < 0 : delta > 0;
     const declined = invert ? delta > 0 : delta < 0;
     deltaText = `${delta > 0 ? "+" : ""}${format(delta)}`;
-    if (improved) deltaClass = "bg-accent/15 text-accent";
-    else if (declined) deltaClass = "bg-at-risk/15 text-at-risk";
+    if (improved) deltaClass = "bg-[--color-accent-tint] text-accent";
+    else if (declined) deltaClass = "bg-[--color-at-risk-tint] text-at-risk";
   }
 
   return (
     <div className="panel flex flex-col gap-4 p-5">
       <div className="flex items-baseline justify-between gap-2">
-        <h3 className="text-sm font-semibold text-white">{title}</h3>
+        <h3 className="text-sm font-semibold text-neutral-900">{title}</h3>
         <span className="eyebrow">{invert ? "lower is better" : "higher is better"}</span>
       </div>
       <div className="flex items-baseline gap-2.5">
-        <span data-testid="trend-headline" className="num text-[1.7rem] font-semibold leading-none tracking-tight text-white">{headline}</span>
+        <span data-testid="trend-headline" className="num text-[1.7rem] font-semibold leading-none tracking-tight text-neutral-900">{headline}</span>
         {hasDelta ? (
           <span data-testid="trend-delta" className={`tnum rounded-md px-1.5 py-0.5 text-xs font-medium ${deltaClass}`}>
             {deltaText}

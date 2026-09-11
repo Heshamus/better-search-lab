@@ -37,10 +37,10 @@ function fmtCpc(n: number | null): string {
 }
 
 const primaryButtonClass =
-  "rounded-lg bg-accent px-4 py-2 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50";
+  "rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50";
 
 const promptBoxClass =
-  "rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400";
+  "rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500";
 
 /**
  * The Research view's seed -> keyword-ideas explorer (Task 7). Client
@@ -161,12 +161,12 @@ export function ResearchExplorer({
     <div className="flex flex-col gap-6">
       <form
         onSubmit={handleResearch}
-        className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900 sm:flex-row sm:items-end"
+        className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 sm:flex-row sm:items-end"
       >
         <div className="flex flex-1 flex-col gap-1">
           <label
             htmlFor="research-seed"
-            className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+            className="text-xs font-semibold uppercase tracking-wide text-neutral-500"
           >
             Seed keyword
           </label>
@@ -175,7 +175,7 @@ export function ResearchExplorer({
             value={seed}
             onChange={(event) => setSeed(event.target.value)}
             placeholder="e.g. best crm software"
-            className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-accent dark:border-neutral-700 dark:bg-neutral-950 dark:text-white"
+            className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-400"
           />
         </div>
         <button
@@ -190,7 +190,7 @@ export function ResearchExplorer({
 
       {recentSeeds.length > 0 ? (
         <div className="flex flex-col gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
             Recent searches
           </span>
           <div className="flex flex-wrap gap-2">
@@ -201,7 +201,7 @@ export function ResearchExplorer({
                 onClick={() => runSearch(s)}
                 disabled={demo || search.status === "loading"}
                 title={demo ? "Read-only demo" : undefined}
-                className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-600 transition-colors hover:border-accent hover:text-neutral-900 disabled:cursor-default disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:text-white"
+                className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 disabled:cursor-default disabled:opacity-50"
               >
                 {s}
               </button>
@@ -215,13 +215,13 @@ export function ResearchExplorer({
       ) : null}
 
       {search.status === "loading" ? (
-        <p className="rounded-xl border border-neutral-200 bg-white px-4 py-6 text-center text-sm text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+        <p className="rounded-xl border border-neutral-200 bg-white px-4 py-6 text-center text-sm text-neutral-500">
           Researching…
         </p>
       ) : null}
 
       {search.status === "error" ? (
-        <p className="rounded-xl border border-at-risk/40 bg-at-risk/10 px-4 py-3 text-sm text-at-risk">
+        <p className="rounded-xl border border-at-risk bg-[--color-at-risk-tint] px-4 py-3 text-sm text-at-risk">
           Couldn&rsquo;t fetch keyword ideas — try again.
         </p>
       ) : null}
@@ -235,7 +235,7 @@ export function ResearchExplorer({
           <div className="panel overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-left text-sm">
               <thead>
-                <tr className="border-b border-neutral-800">
+                <tr className="border-b border-neutral-200">
                   <th className="w-10 px-4 py-2.5" />
                   <th className="eyebrow px-4 py-2.5">Keyword</th>
                   <th className="eyebrow px-4 py-2.5">Volume</th>
@@ -249,7 +249,7 @@ export function ResearchExplorer({
                   <tr
                     key={item.keyword}
                     data-testid={`idea-row-${item.keyword}`}
-                    className="border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20"
+                    className="border-b border-neutral-200 transition-colors last:border-0 hover:bg-neutral-50"
                   >
                     <td className="px-4 py-2.5">
                       <input
@@ -260,11 +260,11 @@ export function ResearchExplorer({
                         onChange={() => toggleRow(item.keyword)}
                       />
                     </td>
-                    <td className="px-4 py-2.5 font-medium text-white">{item.keyword}</td>
-                    <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(item.searchVolume)}</span></td>
+                    <td className="px-4 py-2.5 font-medium text-neutral-900">{item.keyword}</td>
+                    <td className="px-4 py-2.5"><span className="tnum text-neutral-800">{formatCompact(item.searchVolume)}</span></td>
                     <td className="px-4 py-2.5"><KdMeter kd={item.difficulty} /></td>
-                    <td className="px-4 py-2.5"><span className="tnum text-neutral-300">{fmtCpc(item.cpc)}</span></td>
-                    <td className="px-4 py-2.5"><span className="tnum text-neutral-400">{item.competition == null ? "—" : item.competition.toFixed(2)}</span></td>
+                    <td className="px-4 py-2.5"><span className="tnum text-neutral-700">{fmtCpc(item.cpc)}</span></td>
+                    <td className="px-4 py-2.5"><span className="tnum text-neutral-600">{item.competition == null ? "—" : item.competition.toFixed(2)}</span></td>
                   </tr>
                 ))}
               </tbody>
@@ -277,7 +277,7 @@ export function ResearchExplorer({
               onClick={handleAddSelected}
               disabled={demo || selected.size === 0 || addState.status === "busy"}
               title={demo ? "Read-only demo" : undefined}
-              className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
+              className="rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50"
             >
               {addState.status === "busy" ? "Adding…" : "Add selected to tracking"}
             </button>

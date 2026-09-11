@@ -8,7 +8,7 @@ type SaveState = "idle" | "busy" | "done" | "error";
 
 const inputClass =
   "rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none " +
-  "focus:border-accent dark:border-neutral-700 dark:bg-neutral-950 dark:text-white";
+  "focus:border-neutral-400";
 
 /**
  * Settings screen's per-project Reddit Conversations config editor (Task 6):
@@ -118,7 +118,7 @@ export function RedditBriefEditor({
           onClick={handleSave}
           disabled={demo || save === "busy"}
           title={demo ? "Read-only demo" : undefined}
-          className="self-start rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
+          className="self-start rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50"
         >
           {save === "busy" ? "Saving…" : "Save"}
         </button>

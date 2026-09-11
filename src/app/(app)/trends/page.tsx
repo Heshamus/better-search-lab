@@ -34,9 +34,9 @@ export default async function TrendsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="eyebrow">Trends</div>
-          <p className="mt-1 text-sm text-neutral-400">
+          <p className="mt-1 text-sm text-neutral-600">
             Conversations worth joining — real Reddit threads where{" "}
-            <span className="font-medium text-neutral-200">{project.domain}</span> can add genuine value.
+            <span className="font-medium text-neutral-800">{project.domain}</span> can add genuine value.
           </p>
         </div>
         {configured ? <RunConversationsScanButton projectId={project.id} /> : null}
