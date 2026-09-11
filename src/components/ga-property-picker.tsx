@@ -23,14 +23,14 @@ export function GaPropertyPicker({ projectId, properties }: { projectId: string;
 
   return (
     <div className="panel flex flex-col items-center gap-4 px-6 py-14 text-center">
-      <div aria-hidden className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
+      <div aria-hidden className="flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <path d="M5 20V9M12 20V4M19 20v-7" />
         </svg>
       </div>
       <div>
-        <h1 className="text-lg font-semibold text-white">Choose your Analytics property</h1>
-        <p className="mx-auto mt-1 max-w-sm text-sm text-neutral-400">
+        <h1 className="text-lg font-semibold text-neutral-900">Choose your Analytics property</h1>
+        <p className="mx-auto mt-1 max-w-sm text-sm text-neutral-600">
           GA4 properties don&rsquo;t carry a domain, so pick the one that tracks this site.
         </p>
       </div>
@@ -41,7 +41,7 @@ export function GaPropertyPicker({ projectId, properties }: { projectId: string;
           value={selected}
           onChange={(e) => setSelected(e.target.value)}
           disabled={job.demo || job.state === "running"}
-          className="mt-1.5 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-neutral-100 outline-none focus:border-accent"
+          className="mt-1.5 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-400"
         >
           {groups.map(([account, props]) => (
             <optgroup key={account || "—"} label={account || "Account"}>
@@ -60,7 +60,7 @@ export function GaPropertyPicker({ projectId, properties }: { projectId: string;
         onClick={() => selected && void job.run(`/api/projects/${projectId}/ga/property`, { body: { propertyId: selected } })}
         disabled={job.demo || job.state === "running" || !selected}
         title={job.demo ? "Read-only demo" : undefined}
-        className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-90 disabled:cursor-default disabled:opacity-50"
+        className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50"
       >
         {job.state === "running" ? "Connecting…" : "Use this property"}
       </button>

@@ -7,7 +7,7 @@ function Tile({ label, value, hint }: { label: string; value: string; hint: stri
   return (
     <div className="panel flex flex-col gap-1.5 px-4 py-3.5">
       <span className="eyebrow">{label}</span>
-      <span className="num text-[1.7rem] font-semibold leading-none tracking-tight text-white">{value}</span>
+      <span className="num text-[1.7rem] font-semibold leading-none tracking-tight text-neutral-900">{value}</span>
       <span className="text-[0.7rem] text-neutral-500">{hint}</span>
     </div>
   );
@@ -57,7 +57,7 @@ export function GaDashboard({ data }: { data: GaData }) {
         <TrendCard title="Sessions over time" points={data.daily.map((d) => d.sessions)} labels={labels} format={formatCompact} emptyLabel="No session data yet" />
         <div className="panel flex flex-col gap-4 p-5">
           <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-sm font-semibold text-white">Traffic by channel</h3>
+            <h3 className="text-sm font-semibold text-neutral-900">Traffic by channel</h3>
             <span className="eyebrow">organic in green</span>
           </div>
           {segments.length ? (
@@ -69,19 +69,19 @@ export function GaDashboard({ data }: { data: GaData }) {
       </div>
 
       <div className="panel overflow-x-auto">
-        <div className="border-b border-neutral-800 px-4 py-2.5"><h3 className="text-sm font-semibold text-white">Top landing pages</h3></div>
+        <div className="border-b border-neutral-200 px-4 py-2.5"><h3 className="text-sm font-semibold text-neutral-900">Top landing pages</h3></div>
         <table className="w-full min-w-[360px] border-collapse text-left text-sm">
           <thead>
-            <tr className="border-b border-neutral-800">
+            <tr className="border-b border-neutral-200">
               <th className="eyebrow px-4 py-2.5">Landing page</th>
               <th className="eyebrow px-4 py-2.5">Sessions</th>
             </tr>
           </thead>
           <tbody>
             {data.topPages.length ? data.topPages.map((r) => (
-              <tr key={r.page} className="border-b border-neutral-800/50 transition-colors last:border-0 hover:bg-neutral-800/20">
-                <td className="px-4 py-2.5 font-medium text-white" title={r.page}>{shortPath(r.page)}</td>
-                <td className="px-4 py-2.5"><span className="tnum text-neutral-200">{formatCompact(r.sessions)}</span></td>
+              <tr key={r.page} className="border-b border-neutral-200 transition-colors last:border-0 hover:bg-neutral-50">
+                <td className="px-4 py-2.5 font-medium text-neutral-900" title={r.page}>{shortPath(r.page)}</td>
+                <td className="px-4 py-2.5"><span className="tnum text-neutral-800">{formatCompact(r.sessions)}</span></td>
               </tr>
             )) : <tr><td colSpan={2} className="px-4 py-6 text-center text-sm text-neutral-500">No landing-page data yet.</td></tr>}
           </tbody>

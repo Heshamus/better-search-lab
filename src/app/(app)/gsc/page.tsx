@@ -24,13 +24,13 @@ const ERROR_COPY: Record<string, string> = {
 function ConnectPanel({ projectId, demo }: { projectId: string; demo: boolean }) {
   return (
     <div className="panel flex flex-col items-center gap-4 px-6 py-16 text-center">
-      <div aria-hidden className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
+      <div aria-hidden className="flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <path d="M3 12h3l2.4-6.5L13 18l2.6-6H21" />
         </svg>
       </div>
-      <h1 className="text-lg font-semibold text-white">Connect Google Search Console</h1>
-      <p className="max-w-md text-sm text-neutral-400">
+      <h1 className="text-lg font-semibold text-neutral-900">Connect Google Search Console</h1>
+      <p className="max-w-md text-sm text-neutral-600">
         Pull your site&rsquo;s real clicks, impressions, positions and top queries — free, with up to 16 months of history.
         Read-only access; you can revoke it anytime in your Google account.
       </p>
@@ -39,14 +39,14 @@ function ConnectPanel({ projectId, demo }: { projectId: string; demo: boolean })
           type="button"
           disabled
           title="Read-only demo"
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-neutral-900 opacity-50"
+          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white opacity-50"
         >
           Connect Google Search Console
         </button>
       ) : (
         <a
           href={`/api/google/connect?projectId=${projectId}`}
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-90"
+          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#2a3138]"
         >
           Connect Google Search Console
         </a>
@@ -79,8 +79,8 @@ export default async function GscPage({ searchParams }: { searchParams: Promise<
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="eyebrow">Search Console</div>
-          <p className="mt-1 text-sm text-neutral-400">
-            Real search performance for <span className="font-medium text-neutral-200">{project.domain}</span>
+          <p className="mt-1 text-sm text-neutral-600">
+            Real search performance for <span className="font-medium text-neutral-800">{project.domain}</span>
             {connection?.propertyUrl ? ` · ${connection.propertyUrl}` : ""}.
           </p>
         </div>
@@ -93,7 +93,7 @@ export default async function GscPage({ searchParams }: { searchParams: Promise<
             ) : (
               <a
                 href={`/api/google/connect?projectId=${project.id}&from=gsc`}
-                className="text-xs font-medium text-neutral-400 underline-offset-2 transition-colors hover:text-neutral-200 hover:underline"
+                className="text-xs font-medium text-neutral-600 underline-offset-2 transition-colors hover:text-neutral-800 hover:underline"
               >
                 Reconnect
               </a>
@@ -104,7 +104,7 @@ export default async function GscPage({ searchParams }: { searchParams: Promise<
       </div>
 
       {errorMsg ? (
-        <p className="rounded-lg border border-at-risk/40 bg-at-risk/10 px-4 py-3 text-sm text-at-risk">{errorMsg}</p>
+        <p className="rounded-lg border border-at-risk bg-[--color-at-risk-tint] px-4 py-3 text-sm text-at-risk">{errorMsg}</p>
       ) : null}
 
       {!configured ? (
@@ -117,8 +117,8 @@ export default async function GscPage({ searchParams }: { searchParams: Promise<
         <ConnectPanel projectId={project.id} demo={demo} />
       ) : !data ? (
         <div className="panel flex flex-col items-center gap-3 px-6 py-14 text-center">
-          <p className="text-base font-semibold text-white">Connected — syncing your data…</p>
-          <p className="max-w-sm text-sm text-neutral-400">
+          <p className="text-base font-semibold text-neutral-900">Connected — syncing your data…</p>
+          <p className="max-w-sm text-sm text-neutral-600">
             We&rsquo;re pulling the last 90 days from Search Console. This takes a few seconds — hit sync if it doesn&rsquo;t appear.
           </p>
           <RunGscSyncButton projectId={project.id} label="Sync now" />
