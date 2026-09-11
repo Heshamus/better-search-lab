@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const inputClass = "w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-accent";
+const inputClass = "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400";
 
 async function readError(res: Response, fallback: string): Promise<string> {
   try { const j = (await res.json()) as { error?: string }; return j.error || fallback; } catch { return fallback; }
@@ -55,10 +55,10 @@ export function DataForSeoStep() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
       <div>
-        <h1 className="text-base font-semibold text-white">Connect DataForSEO</h1>
-        <p className="mt-1 text-sm text-neutral-400">
+        <h1 className="text-base font-semibold text-neutral-900">Connect DataForSEO</h1>
+        <p className="mt-1 text-sm text-neutral-600">
           DataForSEO supplies rankings, keyword research, competitors and backlinks. Pay-as-you-go, no subscription; a typical first build of 150 keywords costs about $0.37.{" "}
-          <a href="https://app.dataforseo.com/register" className="text-accent underline-offset-2 hover:underline" target="_blank" rel="noreferrer">Create an account</a> and copy the API login and password from API Access.
+          <a href="https://app.dataforseo.com/register" className="text-neutral-900 underline-offset-2 hover:underline" target="_blank" rel="noreferrer">Create an account</a> and copy the API login and password from API Access.
         </p>
       </div>
       <div className="flex flex-col gap-1.5">
@@ -71,7 +71,7 @@ export function DataForSeoStep() {
       </div>
       {detail ? <p role="status" className="text-sm text-up">{detail}</p> : null}
       {error ? <p role="alert" className="text-sm text-at-risk">{error}</p> : null}
-      <button type="submit" disabled={busy} className="self-start rounded-lg bg-accent px-3 py-2 text-sm font-medium text-neutral-900 disabled:opacity-50">
+      <button type="submit" disabled={busy} className="self-start rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-[#2a3138] disabled:opacity-50">
         {busy ? "Testing…" : "Test & save"}
       </button>
     </form>

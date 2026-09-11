@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LLM_PRESETS, LLM_PROVIDERS, type LlmProviderId } from "@/lib/config/presets";
 
-const inputClass = "w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-accent";
-const secondaryButton = "rounded-lg border border-neutral-700 px-3 py-2 text-sm font-medium text-neutral-300 transition-colors hover:bg-neutral-800/60 disabled:opacity-50";
+const inputClass = "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400";
+const secondaryButton = "rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 disabled:opacity-50";
 
 async function readError(res: Response, fallback: string): Promise<string> {
   try { const j = (await res.json()) as { error?: string }; return j.error || fallback; } catch { return fallback; }
@@ -71,8 +71,8 @@ export function LlmStep() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
       <div>
-        <h1 className="text-base font-semibold text-white">Add an AI assistant (optional)</h1>
-        <p className="mt-1 text-sm text-neutral-400">Used for niche extraction during profiling, phrasing the weekly actions, and the Reddit judge. Any OpenAI-compatible API, Anthropic, or a local Ollama. You can add or change it later under Settings → Integrations.</p>
+        <h1 className="text-base font-semibold text-neutral-900">Add an AI assistant (optional)</h1>
+        <p className="mt-1 text-sm text-neutral-600">Used for niche extraction during profiling, phrasing the weekly actions, and the Reddit judge. Any OpenAI-compatible API, Anthropic, or a local Ollama. You can add or change it later under Settings → Integrations.</p>
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="llm-provider" className="eyebrow">Provider</label>
@@ -97,7 +97,7 @@ export function LlmStep() {
       </div>
       {error ? <p role="alert" className="text-sm text-at-risk">{error}</p> : null}
       <div className="flex gap-2">
-        <button type="submit" disabled={busy} className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-neutral-900 disabled:opacity-50">{busy ? "Testing…" : "Test & continue"}</button>
+        <button type="submit" disabled={busy} className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-[#2a3138] disabled:opacity-50">{busy ? "Testing…" : "Test & continue"}</button>
         <button type="button" disabled={busy} onClick={() => void skip()} className={secondaryButton}>Skip for now</button>
       </div>
     </form>

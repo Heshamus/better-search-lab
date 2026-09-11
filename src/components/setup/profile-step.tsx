@@ -7,8 +7,8 @@ import { JobProgress } from "@/components/job-progress";
 import { ProfileReview } from "@/components/profile-review";
 import type { ProfileCandidateRow } from "@/lib/profile";
 
-const primary = "rounded-lg bg-accent px-3 py-2 text-sm font-medium text-neutral-900 disabled:opacity-50";
-const secondary = "rounded-lg border border-neutral-700 px-3 py-2 text-sm font-medium text-neutral-300 transition-colors hover:bg-neutral-800/60 disabled:opacity-50";
+const primary = "rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-[#2a3138] disabled:opacity-50";
+const secondary = "rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 disabled:opacity-50";
 
 async function patchOnboarding(projectId: string, body: Record<string, unknown>): Promise<string | null> {
   const res = await fetch(`/api/projects/${projectId}/onboarding`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
@@ -42,8 +42,8 @@ export function ProfileStep({ project, candidates, trackedCount }: {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h1 className="text-base font-semibold text-white">Profile {project.name}</h1>
-        <p className="mt-1 text-sm text-neutral-400">We crawl {project.domain}, read what it already ranks for, and expand into related keywords. Pick the ones worth tracking; the first build covers only those.</p>
+        <h1 className="text-base font-semibold text-neutral-900">Profile {project.name}</h1>
+        <p className="mt-1 text-sm text-neutral-600">We crawl {project.domain}, read what it already ranks for, and expand into related keywords. Pick the ones worth tracking; the first build covers only those.</p>
       </div>
       {candidates.length === 0 ? (
         <div className="flex flex-col gap-2">

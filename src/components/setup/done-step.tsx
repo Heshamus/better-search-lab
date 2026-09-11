@@ -19,9 +19,9 @@ export function DoneStep({ projectName }: { projectName: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-base font-semibold text-white">{projectName} is set up</h1>
-      <p className="text-sm text-neutral-400">The overview shows what to do next. Refresh runs on the schedule in Settings → Project; every integration can be added later under Settings → Integrations.</p>
-      <button type="button" disabled={busy} onClick={() => void open()} className="self-start rounded-lg bg-accent px-3 py-2 text-sm font-medium text-neutral-900 disabled:opacity-50">Open Overview</button>
+      <h1 className="text-base font-semibold text-neutral-900">{projectName} is set up</h1>
+      <p className="text-sm text-neutral-600">The overview shows what to do next. Refresh runs on the schedule in Settings → Project; every integration can be added later under Settings → Integrations.</p>
+      <button type="button" disabled={busy} onClick={() => void open()} className="self-start rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-[#2a3138] disabled:opacity-50">Open Overview</button>
     </div>
   );
 }

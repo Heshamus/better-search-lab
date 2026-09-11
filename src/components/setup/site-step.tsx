@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DEFAULT_MARKET, MARKETS } from "@/lib/markets";
 
-const inputClass = "w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-accent";
+const inputClass = "w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400";
 
 /** Same normalization as src/lib/competitors.ts — a URL pasted from the address bar becomes a bare host. */
 function bareHost(input: string): string {
@@ -44,8 +44,8 @@ export function SiteStep() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
       <div>
-        <h1 className="text-base font-semibold text-white">Your site</h1>
-        <p className="mt-1 text-sm text-neutral-400">The site you want to grow. Market and device decide which Google results are measured.</p>
+        <h1 className="text-base font-semibold text-neutral-900">Your site</h1>
+        <p className="mt-1 text-sm text-neutral-600">The site you want to grow. Market and device decide which Google results are measured.</p>
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="site-name" className="eyebrow">Site name</label>
@@ -71,7 +71,7 @@ export function SiteStep() {
         </div>
       </div>
       {error ? <p role="alert" className="text-sm text-at-risk">{error}</p> : null}
-      <button type="submit" disabled={busy || !name.trim() || !domain.trim()} className="self-start rounded-lg bg-accent px-3 py-2 text-sm font-medium text-neutral-900 disabled:opacity-50">
+      <button type="submit" disabled={busy || !name.trim() || !domain.trim()} className="self-start rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-[#2a3138] disabled:opacity-50">
         {busy ? "Creating…" : "Continue"}
       </button>
     </form>

@@ -14,7 +14,7 @@ const POLL_MS = 2000;
 const ROUTES: Record<JobKey, string> = { refreshAll: "refresh-all", audit: "audit", backlinks: "backlinks", organic: "organic-keywords" };
 const LABELS: Record<JobKey, string> = { refreshAll: "Rankings, gaps and opportunities", audit: "Site audit", backlinks: "Backlinks", organic: "Organic keywords" };
 const ORDER: JobKey[] = ["refreshAll", "audit", "backlinks", "organic"];
-const primary = "rounded-lg bg-accent px-3 py-2 text-sm font-medium text-neutral-900 disabled:opacity-50";
+const primary = "rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-[#2a3138] disabled:opacity-50";
 
 function message(e: unknown, fallback: string): string {
   return e instanceof Error ? e.message : fallback;
@@ -163,24 +163,24 @@ export function BuildStep({ projectId, onboarding, extrasCost }: { projectId: st
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h1 className="text-base font-semibold text-white">Build the first picture</h1>
-        <p className="mt-1 text-sm text-neutral-400">Rankings for every tracked keyword, competitor gaps, the first opportunity shortlist, and a site audit. Ten minutes at most; you can leave this page and come back.</p>
+        <h1 className="text-base font-semibold text-neutral-900">Build the first picture</h1>
+        <p className="mt-1 text-sm text-neutral-600">Rankings for every tracked keyword, competitor gaps, the first opportunity shortlist, and a site audit. Ten minutes at most; you can leave this page and come back.</p>
       </div>
       {phase === "pending" ? (
-        <label className="flex items-center gap-2 text-sm text-neutral-300">
+        <label className="flex items-center gap-2 text-sm text-neutral-700">
           <input type="checkbox" checked={extras} onChange={(e) => setExtras(e.target.checked)} />
           Also fetch backlinks and organic keywords (≈ ${extrasCost.toFixed(2)})
         </label>
       ) : null}
       {jobs.length > 0 ? (
-        <ul className="panel divide-y divide-neutral-800/60 px-4">
+        <ul className="panel divide-y divide-neutral-200 px-4">
           {jobs.map((j) => (
             <li key={j.key} data-testid={`build-job-${j.key}`} className="flex flex-col gap-1 py-2">
               <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-neutral-100">{j.label}</span>
-                <span className={`text-xs ${j.status === "done" ? "text-up" : j.status === "failed" ? "text-at-risk" : "text-neutral-400"}`}>{j.status === "running" ? "Running" : j.status === "done" ? "Done" : j.status === "failed" ? "Failed" : "Queued"}</span>
+                <span className="text-neutral-900">{j.label}</span>
+                <span className={`text-xs ${j.status === "done" ? "text-up" : j.status === "failed" ? "text-at-risk" : "text-neutral-600"}`}>{j.status === "running" ? "Running" : j.status === "done" ? "Done" : j.status === "failed" ? "Failed" : "Queued"}</span>
               </div>
-              {j.status === "running" && j.progress ? <span role="status" className="text-xs text-neutral-400">{j.progress}</span> : null}
+              {j.status === "running" && j.progress ? <span role="status" className="text-xs text-neutral-600">{j.progress}</span> : null}
               {j.status === "failed" ? <span role="alert" className="text-xs text-at-risk">{j.error}</span> : null}
             </li>
           ))}
