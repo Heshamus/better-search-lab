@@ -56,8 +56,8 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
     body = (
       <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-base font-semibold text-white">Create your admin account</h1>
-          <p className="mt-1 text-sm text-neutral-400">This is the only account that can manage users and integrations. You can add more people later in Settings.</p>
+          <h1 className="text-base font-semibold text-neutral-900">Create your admin account</h1>
+          <p className="mt-1 text-sm text-neutral-600">This is the only account that can manage users and integrations. You can add more people later in Settings.</p>
         </div>
         <CreateAdminForm next="/setup" />
       </div>

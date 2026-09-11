@@ -15,18 +15,18 @@ export function SetupWizard({ step, children }: { step: SetupStepId; children: R
         <div className="flex items-center gap-2.5">
           <Logo />
           <div className="leading-tight">
-            <div className="text-sm font-semibold tracking-tight text-white">Better Search Lab</div>
+            <div className="text-sm font-semibold tracking-tight text-neutral-900">Better Search Lab</div>
             <div className="text-[0.65rem] font-medium tracking-wide text-neutral-500">FIRST-RUN SETUP</div>
           </div>
         </div>
-        {step !== "account" ? <a href="/overview" className="text-xs text-neutral-400 hover:text-neutral-200">Exit setup</a> : null}
+        {step !== "account" ? <a href="/overview" className="text-xs text-neutral-600 hover:text-neutral-800">Exit setup</a> : null}
       </div>
       <ol className="mb-8 flex flex-wrap gap-2" aria-label="Setup steps">
         {STEP_ORDER.map((id, i) => (
           <li
             key={id}
             aria-current={id === step ? "step" : undefined}
-            className={`rounded-full px-2.5 py-1 text-[0.7rem] font-medium ${i < index ? "bg-accent/10 text-accent" : id === step ? "bg-accent text-neutral-900" : "bg-neutral-800/60 text-neutral-500"}`}
+            className={`rounded-full px-2.5 py-1 text-[0.7rem] font-medium ${i < index ? "bg-[--color-accent-tint] text-accent" : id === step ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-500"}`}
           >
             {LABELS[id]}
           </li>

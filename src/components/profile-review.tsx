@@ -9,10 +9,10 @@ import { useDemo } from "@/components/demo-provider";
 type AddState = "idle" | "busy" | "error";
 
 const addButtonClass =
-  "rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50";
+  "rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50";
 
 const emptyStateClass =
-  "rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400";
+  "rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500";
 
 /**
  * Task 6: the confirm/edit screen that turns auto-profile candidates
@@ -94,21 +94,21 @@ export function ProfileReview({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
         <table className="w-full min-w-[640px] border-collapse text-left text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 dark:border-neutral-800">
+            <tr className="border-b border-neutral-200">
               <th className="px-4 py-2" />
-              <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
                 Keyword
               </th>
-              <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
                 Source
               </th>
-              <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
                 Volume
               </th>
-              <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              <th className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
                 KD
               </th>
             </tr>
@@ -118,7 +118,7 @@ export function ProfileReview({
               <tr
                 key={c.id}
                 data-testid={`candidate-row-${c.id}`}
-                className="border-b border-neutral-100 last:border-0 dark:border-neutral-800/60"
+                className="border-b border-neutral-100 last:border-0"
               >
                 <td className="px-4 py-2">
                   <input
@@ -128,10 +128,10 @@ export function ProfileReview({
                     onChange={() => toggleRow(c.id)}
                   />
                 </td>
-                <td className="px-4 py-2 font-medium text-neutral-900 dark:text-white">{c.keyword}</td>
-                <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{c.source}</td>
-                <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(c.volume)}</td>
-                <td className="px-4 py-2 text-neutral-600 dark:text-neutral-300">{formatMetric(c.difficulty)}</td>
+                <td className="px-4 py-2 font-medium text-neutral-900">{c.keyword}</td>
+                <td className="px-4 py-2 text-neutral-600">{c.source}</td>
+                <td className="px-4 py-2 text-neutral-600">{formatMetric(c.volume)}</td>
+                <td className="px-4 py-2 text-neutral-600">{formatMetric(c.difficulty)}</td>
               </tr>
             ))}
           </tbody>
