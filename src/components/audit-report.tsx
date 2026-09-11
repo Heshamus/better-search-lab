@@ -30,7 +30,7 @@ function ScoreRing({ score }: { score: number }) {
           strokeDasharray={`${(score / 100) * c} ${c}`}
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
-        <text x={size / 2} y={size / 2 - 2} textAnchor="middle" fontSize="30" fontWeight="600" fill="var(--color-neutral-900)" fontFamily="var(--font-mono)" letterSpacing="-0.04em">
+        <text x={size / 2} y={size / 2 - 2} textAnchor="middle" fontSize="30" fontWeight="600" fill="var(--color-neutral-900)" letterSpacing="-0.04em">
           {score}
         </text>
         <text x={size / 2} y={size / 2 + 17} textAnchor="middle" fontSize="9.5" fill="var(--color-neutral-500)" letterSpacing="0.06em">
