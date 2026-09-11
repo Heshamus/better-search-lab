@@ -13,18 +13,18 @@ type SaveState = "idle" | "busy" | "error";
 type DeleteState = "idle" | "confirm" | "busy" | "error";
 
 const inputClass =
-  "rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-accent dark:border-neutral-700 dark:bg-neutral-950 dark:text-white";
+  "rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400";
 
-const labelClass = "text-xs font-medium text-neutral-500 dark:text-neutral-400";
+const labelClass = "text-xs font-medium text-neutral-500";
 
 const primaryButtonClass =
-  "rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50";
+  "rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50";
 
 const secondaryButtonClass =
-  "rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800";
+  "rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-default disabled:opacity-50";
 
 const dangerButtonClass =
-  "rounded-lg border border-at-risk/40 px-3 py-1.5 text-sm font-medium text-at-risk transition-colors hover:bg-at-risk/10 disabled:cursor-default disabled:opacity-50";
+  "rounded-lg border border-at-risk px-3 py-1.5 text-sm font-medium text-at-risk transition-colors hover:bg-[--color-at-risk-tint] disabled:cursor-default disabled:opacity-50";
 
 /**
  * Task 18: the current project's edit surface — the "edit" half of the
@@ -121,7 +121,7 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
     deleteState === "busy" ? "Deleting…" : deleteState === "confirm" ? "Click again to confirm" : "Delete project";
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="panel flex flex-col gap-4 p-4">
       <form onSubmit={handleSave} className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
           <label htmlFor="edit-project-name" className={labelClass}>
@@ -182,7 +182,7 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
         <JobProgress state={profile.state} progress={profile.progress} error={profile.error} />
       </form>
 
-      <div className="flex flex-col gap-1 border-t border-neutral-100 pt-4 dark:border-neutral-800/60">
+      <div className="flex flex-col gap-1 border-t border-neutral-100 pt-4">
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -202,7 +202,7 @@ export function ProjectEditForm({ project }: { project: { id: string; name: stri
         </div>
         {/* Always-mounted live regions: text toggles so the AT is already
             watching before the confirm/error copy lands. */}
-        <span role="status" aria-live="polite" className="text-xs text-neutral-500 dark:text-neutral-400">
+        <span role="status" aria-live="polite" className="text-xs text-neutral-500">
           {deleteState === "confirm"
             ? "This permanently deletes the project and all its keywords, competitors, and opportunities."
             : null}

@@ -18,7 +18,7 @@ const WEIGHT_LABELS: Record<(typeof WEIGHT_KEYS)[number], string> = {
 type SaveState = "idle" | "busy" | "done" | "error";
 
 const inputClass =
-  "rounded-lg border border-neutral-200 bg-white px-2 py-1 text-sm text-neutral-900 outline-none focus:border-accent dark:border-neutral-700 dark:bg-neutral-950 dark:text-white";
+  "rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-400";
 
 /**
  * Settings screen's per-project tuning form (Task 9): the five
@@ -91,16 +91,16 @@ export function SettingsForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
+      className="panel flex flex-col gap-4 p-4"
     >
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
         Opportunity weights
       </h2>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {WEIGHT_KEYS.map((key) => (
           <div key={key} className="flex flex-col gap-1">
-            <label htmlFor={`weight-${key}`} className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+            <label htmlFor={`weight-${key}`} className="text-xs font-medium text-neutral-500">
               {WEIGHT_LABELS[key]}
             </label>
             <input
@@ -117,10 +117,10 @@ export function SettingsForm({
         ))}
       </div>
 
-      <p className="text-xs text-neutral-400 dark:text-neutral-600">Weights sum: {sum.toFixed(2)}</p>
+      <p className="text-xs text-neutral-600">Weights sum: {sum.toFixed(2)}</p>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="refresh-cadence" className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+        <label htmlFor="refresh-cadence" className="text-xs font-medium text-neutral-500">
           Refresh cadence
         </label>
         <select
@@ -141,7 +141,7 @@ export function SettingsForm({
         type="submit"
         disabled={demo || state === "busy"}
         title={demo ? "Read-only demo" : undefined}
-        className="self-start rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity disabled:cursor-default disabled:opacity-50"
+        className="self-start rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138] disabled:cursor-default disabled:opacity-50"
       >
         {state === "busy" ? "Saving…" : "Save settings"}
       </button>

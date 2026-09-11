@@ -19,8 +19,7 @@ import { isDemoMode } from "@/lib/demo/mode";
 // route was already `ƒ` Dynamic.
 export const dynamic = "force-dynamic";
 
-const sectionHeadingClass =
-  "text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400";
+const sectionHeadingClass = "text-sm font-semibold uppercase tracking-wide text-neutral-500";
 
 // Server component (Task 18, mirrors Tasks 4-9): resolves the current project
 // directly — no /api fetch; the (app) layout validates the session against the users table on every render (middleware only pre-filters for a JWT) — and reads
@@ -53,7 +52,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   return (
     <div className="flex flex-col gap-8">
       {adminOnly ? (
-        <p role="status" className="rounded-lg bg-neutral-800/60 px-3 py-2 text-sm text-neutral-300">
+        <p role="status" className="rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-700">
           That section is for admins. Ask an admin if you need an integration connected or a user added.
         </p>
       ) : null}
@@ -61,17 +60,17 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       {allProjects.length > 0 ? (
         <section className="flex flex-col gap-2">
           <h2 className={sectionHeadingClass}>Your projects</h2>
-          <ul className="flex flex-col gap-0 rounded-xl border border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-900">
+          <ul className="panel flex flex-col gap-0 px-4">
             {allProjects.map((p: { id: string; name: string; domain: string }) => (
               <li
                 key={p.id}
                 data-testid={`project-row-${p.id}`}
-                className="flex items-center justify-between gap-3 border-b border-neutral-100 py-2 text-sm last:border-0 dark:border-neutral-800/60"
+                className="flex items-center justify-between gap-3 border-b border-neutral-100 py-2 text-sm last:border-0"
               >
-                <span className="font-medium text-neutral-900 dark:text-white">{p.name}</span>
-                <span className="text-neutral-500 dark:text-neutral-400">{p.domain}</span>
+                <span className="font-medium text-neutral-900">{p.name}</span>
+                <span className="text-neutral-500">{p.domain}</span>
                 {project && p.id === project.id ? (
-                  <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs font-medium text-accent">
+                  <span className="rounded-full bg-neutral-900 px-2 py-0.5 text-xs font-medium text-white">
                     Current
                   </span>
                 ) : null}
@@ -85,9 +84,9 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <section className="flex flex-col gap-6">
           <div className="flex flex-col gap-1">
             <h2 className={sectionHeadingClass}>Edit current project</h2>
-            <p className="text-xs text-neutral-400 dark:text-neutral-600">
+            <p className="text-xs text-neutral-600">
               Rename or correct the domain, re-profile the site, or delete it. Changes here affect{" "}
-              <span className="font-medium text-neutral-500 dark:text-neutral-400">{project.name}</span> only.
+              <span className="font-medium text-neutral-500">{project.name}</span> only.
             </p>
           </div>
 
@@ -140,8 +139,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       {!demo ? (
         <section className="flex flex-col gap-2">
           <h2 className={sectionHeadingClass}>Add a site</h2>
-          <p className="text-xs text-neutral-400">The setup wizard profiles the site, suggests competitors and runs the first build.</p>
-          <a href="/setup?step=site" className="self-start rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-90">Add a site</a>
+          <p className="text-xs text-neutral-600">The setup wizard profiles the site, suggests competitors and runs the first build.</p>
+          <a href="/setup?step=site" className="self-start rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2a3138]">Add a site</a>
         </section>
       ) : null}
     </div>
