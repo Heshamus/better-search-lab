@@ -26,7 +26,11 @@ export default defineConfig({
     // built locally, the compiled duplicate mcp/dist/tests/server.test.js —
     // and tries to run both under THIS config/environment instead of mcp's
     // own. Run mcp's suite from inside mcp/: `cd mcp && npx vitest run`.
-    exclude: ["**/node_modules/**", "**/.git/**", "mcp/**"],
+    // .worktrees/**: a dev worktree nested under the repo root (the Superpowers
+    // workflow puts them there) is a full copy of tests/**, so running the suite
+    // from the main checkout would double-scan every test — and can spuriously
+    // fail on a path/cwd-sensitive one.
+    exclude: ["**/node_modules/**", "**/.git/**", "mcp/**", "**/.worktrees/**"],
     // tests/postgres/** is matched by the default include and self-skips
     // (describe.skipIf) unless TEST_DATABASE_URL is set — see tests/postgres/README.md.
     // Every DB test builds a fresh PGlite via drizzle-kit `pushSchema`
