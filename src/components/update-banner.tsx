@@ -41,7 +41,7 @@ export function UpdateBanner({ current, latest, url }: { current: string; latest
         Copy
       </button>
       {url ? (
-        <a href={url} target="_blank" rel="noreferrer" className="text-neutral-900 underline underline-offset-2">
+        <a href={url} target="_blank" rel="noopener noreferrer" className="text-neutral-900 underline underline-offset-2">
           Release notes →
         </a>
       ) : null}

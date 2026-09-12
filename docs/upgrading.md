@@ -48,7 +48,7 @@ docker compose -f docker-compose.yml -f docker-compose.watchtower.yml up -d
 
 The trade-off is deliberate, not hidden: Watchtower needs the Docker socket (`/var/run/docker.sock`) to recreate containers, which is effectively root on the host. That's Watchtower's design, not Better Search Lab's — the app's own `web`/`worker` containers never get the socket, and nothing runs Watchtower unless you compose it in with the command above. If you'd rather not run an extra privileged container, the plain `docker compose pull && docker compose up -d` above is the same two commands with no socket involved; you just run it yourself instead of it running on a timer.
 
-Stop auto-updates any time with `docker compose stop watchtower`, or simply leave the overlay out of future `up -d` calls.
+Stop auto-updates any time with `docker compose -f docker-compose.yml -f docker-compose.watchtower.yml stop watchtower` (or `... rm -sf watchtower` to remove it). Simply leaving the overlay out of future `up -d` calls will not stop an already-running Watchtower — stop or remove it explicitly.
 
 ### Installs without Docker
 

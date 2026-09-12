@@ -33,7 +33,9 @@ export async function checkForUpdate(db: any, opts?: { fetchImpl?: typeof fetch 
       },
       null,
     );
-  } catch {
-    // fail-soft: never throw out of the scheduler/boot path
+  } catch (e) {
+    // fail-soft: never throw out of the scheduler/boot path. Log to worker
+    // stdout (ops-facing) so a persistent failure is greppable; never surfaced to a user.
+    console.warn("[lifecycle] update check failed (ignored):", e);
   }
 }
