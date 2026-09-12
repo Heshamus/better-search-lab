@@ -6,6 +6,8 @@ import { AppNav, NAV } from "@/components/app-nav";
 import { SiteSwitcher } from "@/components/site-switcher";
 import { Logo } from "@/components/icons";
 import { UpdateBanner } from "@/components/update-banner";
+import { FirstRunCard } from "@/components/first-run-card";
+import { useDemo } from "@/components/demo-provider";
 import type { UpdateState } from "@/lib/lifecycle/state";
 
 // The client half of the dashboard frame. The active nav slug comes from
@@ -30,6 +32,7 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const demo = useDemo();
   const active = activeSlugFromPathname(usePathname());
   const activeLabel = NAV.find(([slug]) => slug === active)?.[1] ?? "";
 
@@ -79,7 +82,10 @@ export function AppShell({
           <UpdateBanner current={update.current} latest={update.latest} url={update.url} />
         ) : null}
 
-        <main className="mx-auto w-full max-w-[1440px] flex-1 px-7 py-7">{children}</main>
+        <main className="mx-auto w-full max-w-[1440px] flex-1 px-7 py-7">
+          {user.role === "admin" && update?.firstRunPending && !demo ? <FirstRunCard /> : null}
+          {children}
+        </main>
       </div>
     </div>
   );
