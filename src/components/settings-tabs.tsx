@@ -7,6 +7,7 @@ const TABS: { href: string; label: string; adminOnly: boolean }[] = [
   { href: "/settings/integrations", label: "Integrations", adminOnly: true },
   { href: "/settings/users", label: "Users", adminOnly: true },
   { href: "/settings/mcp", label: "MCP", adminOnly: true },
+  { href: "/settings/running", label: "Running & updates", adminOnly: true },
   { href: "/settings/account", label: "Account", adminOnly: false },
 ];
 

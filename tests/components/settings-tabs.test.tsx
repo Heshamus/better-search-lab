@@ -13,7 +13,7 @@ describe("SettingsTabs", () => {
   it("shows every tab to an admin and marks the current one", () => {
     pathname = "/settings/users";
     render(<SettingsTabs role="admin" />);
-    expect(screen.getAllByRole("link").map((a) => a.textContent)).toEqual(["Project", "Integrations", "Users", "MCP", "Account"]);
+    expect(screen.getAllByRole("link").map((a) => a.textContent)).toEqual(["Project", "Integrations", "Users", "MCP", "Running & updates", "Account"]);
     expect(screen.getByRole("link", { name: "Users" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Project" })).not.toHaveAttribute("aria-current");
   });
