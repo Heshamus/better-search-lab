@@ -86,7 +86,7 @@ export const SETTINGS: readonly SettingDef[] = [
   def({ group: "llm", field: "provider", label: "Provider", description: "Which chat API to use.", secret: false, env: "LLM_PROVIDER", schema: z.enum(LLM_PROVIDERS), options: LLM_PROVIDERS }),
   def({ group: "llm", field: "baseUrl", label: "Base URL", description: "OpenAI-compatible endpoint root (filled by the preset; ignored for Anthropic).", secret: false, env: "LLM_BASE_URL", schema: httpUrl, placeholder: "https://api.deepseek.com" }),
   def({ group: "llm", field: "apiKey", label: "API key", description: "May be empty for a local Ollama.", secret: true, env: "LLM_API_KEY", legacyEnv: ["DEEPSEEK_API_KEY"], schema: text }),
-  def({ group: "llm", field: "model", label: "Model", description: "Model id; the preset suggests one, the dropdown lists what the provider reports.", secret: false, env: "LLM_MODEL", schema: text, placeholder: "deepseek-v4-pro" }),
+  def({ group: "llm", field: "model", label: "Model", description: "Model id; the preset suggests one, the dropdown lists what the provider reports.", secret: false, env: "LLM_MODEL", schema: text, placeholder: "deepseek-flash" }),
   def({ group: "llm", field: "effort", label: "Effort", description: "Reasoning depth for Anthropic models only.", secret: false, env: "LLM_EFFORT", schema: z.enum(EFFORT_LEVELS), options: EFFORT_LEVELS }),
 
   def({ group: "google", field: "clientId", label: "OAuth client ID", description: "From Google Cloud → APIs & Services → Credentials.", secret: false, env: "GOOGLE_CLIENT_ID", schema: text }),

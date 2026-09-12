@@ -14,16 +14,16 @@ describe("LlmStep", () => {
     const calls: { url: string; body?: any; method?: string }[] = [];
     vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
       calls.push({ url: String(url), method: init?.method, body: init?.body ? JSON.parse(String(init.body)) : undefined });
-      if (String(url).endsWith("/llm/test")) return new Response(JSON.stringify({ ok: true, detail: "deepseek-v4-pro answered" }), { status: 200 });
+      if (String(url).endsWith("/llm/test")) return new Response(JSON.stringify({ ok: true, detail: "deepseek-flash answered" }), { status: 200 });
       return new Response("{}", { status: 200 });
     }));
     render(<LlmStep />);
     fireEvent.change(screen.getByLabelText(/provider/i), { target: { value: "deepseek" } });
-    expect((screen.getByLabelText(/model/i) as HTMLInputElement).value).toBe("deepseek-v4-pro");
+    expect((screen.getByLabelText(/model/i) as HTMLInputElement).value).toBe("deepseek-flash");
     fireEvent.change(screen.getByLabelText(/api key/i), { target: { value: "sk-test" } });
     fireEvent.click(screen.getByRole("button", { name: /test & continue/i }));
     await waitFor(() => expect(refresh).toHaveBeenCalled());
-    expect(calls[0]).toMatchObject({ url: "/api/settings/integrations", method: "PUT", body: { values: { "llm.provider": "deepseek", "llm.baseUrl": "https://api.deepseek.com", "llm.apiKey": "sk-test", "llm.model": "deepseek-v4-pro" } } });
+    expect(calls[0]).toMatchObject({ url: "/api/settings/integrations", method: "PUT", body: { values: { "llm.provider": "deepseek", "llm.baseUrl": "https://api.deepseek.com", "llm.apiKey": "sk-test", "llm.model": "deepseek-flash" } } });
     expect(calls[1]).toMatchObject({ url: "/api/settings/integrations/llm/test", method: "POST" });
     expect(calls[2]).toMatchObject({ url: "/api/setup/state", method: "POST", body: { llmStep: "done" } });
   });

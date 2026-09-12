@@ -18,7 +18,7 @@ export interface LlmPreset {
 
 /** Defaults a provider preset fills in; every value stays editable in the UI. */
 export const LLM_PRESETS: Record<LlmProviderId, LlmPreset> = {
-  deepseek: { label: "DeepSeek", baseUrl: "https://api.deepseek.com", defaultModel: "deepseek-v4-pro", needsKey: true, kind: "openai-compatible" },
+  deepseek: { label: "DeepSeek", baseUrl: "https://api.deepseek.com", defaultModel: "deepseek-flash", needsKey: true, kind: "openai-compatible" },
   openai: { label: "OpenAI", baseUrl: "https://api.openai.com/v1", defaultModel: "gpt-5", needsKey: true, kind: "openai-compatible" },
   anthropic: { label: "Anthropic", baseUrl: null, defaultModel: "claude-opus-5", needsKey: true, kind: "anthropic" },
   openrouter: { label: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1", defaultModel: "openai/gpt-5", needsKey: true, kind: "openai-compatible" },

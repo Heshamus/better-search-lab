@@ -33,7 +33,7 @@ describe("testIntegration", () => {
   it("llm: one short completion", async () => {
     const fetchImpl = vi.fn(async () => ok({ choices: [{ message: { content: "OK" } }] }));
     const r = await testIntegration("llm", cfg({ DEEPSEEK_API_KEY: "k" }), { fetchImpl });
-    expect(r).toEqual({ ok: true, detail: "deepseek-v4-pro answered" });
+    expect(r).toEqual({ ok: true, detail: "deepseek-flash answered" });
     const bad = await testIntegration("llm", cfg({ DEEPSEEK_API_KEY: "k" }), { fetchImpl: vi.fn(async () => new Response("{}", { status: 401 })) });
     expect(bad.ok).toBe(false);
   });

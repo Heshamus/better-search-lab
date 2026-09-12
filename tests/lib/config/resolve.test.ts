@@ -45,7 +45,7 @@ describe("buildConfig (pure)", () => {
     expect(cfg.llm.provider).toBe("deepseek");
     expect(cfg.llm.apiKey).toBe("sk-legacy");
     expect(cfg.llm.baseUrl).toBe("https://api.deepseek.com");
-    expect(cfg.llm.model).toBe("deepseek-v4-pro");
+    expect(cfg.llm.model).toBe("deepseek-flash");
     expect(cfg.llm.kind).toBe("openai-compatible");
     expect(cfg.llm.effort).toBe("medium");
     expect(cfg.llm.configured).toBe(true);
