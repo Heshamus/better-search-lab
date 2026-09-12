@@ -6,6 +6,7 @@ import { StaleBuildReloader } from "@/components/stale-build-reloader";
 import { DemoProvider } from "@/components/demo-provider";
 import { DemoBanner } from "@/components/demo-banner";
 import { isDemoMode } from "@/lib/demo/mode";
+import { isSingleUserMode } from "@/lib/auth/single-user";
 
 export const metadata: Metadata = {
   title: "Better Search Lab",
@@ -28,6 +29,12 @@ export default function RootLayout({
       <body>
         <DemoProvider demo={isDemoMode()}>
           <DemoBanner />
+          {isSingleUserMode() && (
+            <div role="note" className="flex flex-wrap items-center justify-center gap-x-2 border-b border-[#e6c9ce] bg-[#fdf4f5] px-4 py-1.5 text-center text-xs text-neutral-700">
+              <span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-[#c24457]" />
+              <span>Single-user mode — sign-in is disabled. Don&rsquo;t expose this server to a network.</span>
+            </div>
+          )}
           <StaleBuildReloader />
           {children}
         </DemoProvider>

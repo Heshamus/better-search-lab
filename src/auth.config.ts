@@ -1,5 +1,6 @@
 import type { NextAuthConfig } from "next-auth";
 import { demoIframeCookies } from "@/lib/auth/demo-cookies";
+import { isSingleUserMode } from "@/lib/auth/single-user";
 
 // Edge-safe half of the Auth.js config (imported by middleware.ts — no DB, no
 // bcrypt). Middleware only verifies the JWT signature and is a fast pre-filter:
@@ -27,6 +28,8 @@ export const authConfig = {
   pages: { signIn: "/login" },
   callbacks: {
     authorized({ auth, request }) {
+      // Single-user / no-auth mode: no login is required at all (edge-safe check).
+      if (isSingleUserMode()) return true;
       if (isPublicPath(request.nextUrl.pathname)) return true;
       return !!auth?.user;
     },

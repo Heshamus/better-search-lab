@@ -13,6 +13,8 @@ export interface SetupInput {
   currentProjectId?: string;
   /** `?step=site` from Settings → "Add a site". */
   stepParam?: string;
+  /** Single-user / no-auth mode: the built-in admin is implicit, so the account step is skipped. */
+  singleUser?: boolean;
 }
 
 export interface SetupSelection { step: SetupStepId; project: ProjectRow | null; blocked?: "admin_required" }
@@ -24,8 +26,8 @@ export const STEP_ORDER: readonly SetupStepId[] = ["account", "dataforseo", "llm
  * table in the spec is testable line by line.
  */
 export function selectSetupStep(input: SetupInput): SetupSelection {
-  if (input.userCount === 0) return { step: "account", project: null };
-  const admin = input.role === "admin";
+  if (input.userCount === 0 && !input.singleUser) return { step: "account", project: null };
+  const admin = input.role === "admin" || input.singleUser === true;
   if (!input.cfg.dataforseo.configured) return { step: "dataforseo", project: null, ...(admin ? {} : { blocked: "admin_required" as const }) };
   // `?step=site` (Settings → "Add a site") outranks the optional AI step but
   // not the required DataForSEO one: an upgraded install that never recorded

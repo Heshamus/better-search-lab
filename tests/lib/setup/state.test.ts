@@ -19,6 +19,14 @@ describe("selectSetupStep", () => {
     expect(selectSetupStep({ ...base, cfg: cfg({}) }).step).toBe("llm");
     expect(selectSetupStep({ ...base }).step).toBe("site");
   });
+  it("single-user mode skips the account step and runs as admin", () => {
+    // Without the flag, an empty user table starts at the account step.
+    expect(selectSetupStep({ ...base, userCount: 0, role: null, cfg: cfg({ dataforseo: false }) }).step).toBe("account");
+    // With the flag, account is skipped and the implicit user counts as admin.
+    const sel = selectSetupStep({ ...base, userCount: 0, role: null, singleUser: true, cfg: cfg({ dataforseo: false }) });
+    expect(sel.step).toBe("dataforseo");
+    expect(sel.blocked).toBeUndefined();
+  });
   it("marks admin-only steps as blocked for a member and lets a member add a site", () => {
     expect(selectSetupStep({ ...base, role: "member", cfg: cfg({ dataforseo: false }) })).toMatchObject({ step: "dataforseo", blocked: "admin_required" });
     expect(selectSetupStep({ ...base, role: "member", cfg: cfg({}) })).toMatchObject({ step: "llm", blocked: "admin_required" });

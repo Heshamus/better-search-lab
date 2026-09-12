@@ -2,8 +2,9 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { countUsers } from "@/lib/auth/users";
-import { resolveSessionUser } from "@/lib/auth/session";
+import { ensureSingleUserAdmin, resolveSessionUser } from "@/lib/auth/session";
 import { isDemoMode } from "@/lib/demo/mode";
+import { isSingleUserMode } from "@/lib/auth/single-user";
 import { getConfig } from "@/lib/config/resolve";
 import { listProjects } from "@/lib/projects";
 import { listProfileCandidates } from "@/lib/profile";
@@ -36,6 +37,9 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
   // DataForSeoStep — a mutation entry point the demo boundary is supposed to
   // close off. The wizard has no place in a read-only demo at all.
   if (isDemoMode()) redirect("/overview");
+  // Single-user mode provisions the built-in admin so the account step is skipped.
+  const singleUser = isSingleUserMode();
+  if (singleUser) await ensureSingleUserAdmin(db);
   const sp = await searchParams;
   const userCount = await countUsers(db);
   const session = userCount === 0 ? null : await resolveSessionUser();
@@ -44,7 +48,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
   const cfg = await getConfig(db, { fresh: true });
   const projects = await listProjects(db);
   const currentProjectId = (await cookies()).get("sp_project")?.value;
-  const sel = selectSetupStep({ userCount, role: session?.role ?? null, cfg, projects, currentProjectId, stepParam: sp.step });
+  const sel = selectSetupStep({ userCount, role: session?.role ?? null, cfg, projects, currentProjectId, stepParam: sp.step, singleUser });
   if (sel.step === "done" && cfg.setup.completedAt) redirect("/overview");
 
   const extrasCost = estimateCost("/v3/backlinks/summary/live", 1) + estimateCost("/v3/backlinks/referring_domains/live", 1) + estimateCost("/v3/backlinks/anchors/live", 1) + estimateCost("/v3/dataforseo_labs/google/ranked_keywords/live", 1);

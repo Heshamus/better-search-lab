@@ -6,11 +6,14 @@ import { safeCallback } from "@/lib/auth/safe-callback";
 import { LoginForm } from "@/components/login-form";
 import { Logo } from "@/components/icons";
 import { isDemoMode } from "@/lib/demo/mode";
+import { isSingleUserMode } from "@/lib/auth/single-user";
 import { getDemoSeedStatus } from "@/lib/demo/boot";
 
 export const dynamic = "force-dynamic";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ callbackUrl?: string; reason?: string }> }) {
+  // Single-user / no-auth mode: there is no login — go straight into the app.
+  if (isSingleUserMode()) redirect("/overview");
   const demo = isDemoMode();
   // Never bounce to /setup in demo mode: the demo admin is seeded at boot,
   // but a failed seed can leave zero users too — and /setup would render

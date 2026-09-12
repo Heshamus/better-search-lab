@@ -27,6 +27,7 @@ export class UserNotFoundError extends Error { name = "UserNotFoundError"; }
 export class InvalidPasswordError extends Error { name = "InvalidPasswordError"; }
 export class EmailTakenError extends Error { name = "EmailTakenError"; }
 export class WeakPasswordError extends Error { name = "WeakPasswordError"; }
+export class NotSoleUserError extends Error { name = "NotSoleUserError"; }
 
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -134,6 +135,22 @@ export async function deleteUser(db: any, id: string, opts: { actorId: string })
       if (admins <= 1) throw new LastAdminError("cannot delete the last admin");
     }
     await tx.delete(users).where(eq(users.id, id));
+  });
+}
+
+/**
+ * Self-service reset for a SINGLE-USER install: the sole user deletes their own
+ * login, dropping the user count to zero so the app returns to /setup for a
+ * fresh admin. Refused when more than one user exists — in a team the
+ * self-delete / last-admin guards on deleteUser() apply and a teammate removes
+ * you instead. Global (single-tenant) data is untouched; the one FK to users
+ * (settings.updated_by) is ON DELETE SET NULL.
+ */
+export async function deleteOwnAccount(db: any, actorId: string): Promise<void> {
+  await withUsersLock(db, async (tx) => {
+    const total = await count(tx, sql`true`);
+    if (total !== 1) throw new NotSoleUserError("account deletion is only available on a single-user install");
+    await tx.delete(users).where(eq(users.id, actorId));
   });
 }
 

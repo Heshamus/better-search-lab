@@ -2,8 +2,8 @@ import { describe, it, expect, afterEach } from "vitest";
 import { compare } from "bcryptjs";
 import { createTestDb } from "@/db/test-db";
 import {
-  AdminAlreadyExistsError, EmailTakenError, InvalidPasswordError, LastAdminError, SelfDeleteError, UserNotFoundError, WeakPasswordError,
-  changeOwnPassword, countUsers, createFirstAdmin, createUser, deleteUser, findUserByEmail, listUsers, normalizeEmail,
+  AdminAlreadyExistsError, EmailTakenError, InvalidPasswordError, LastAdminError, NotSoleUserError, SelfDeleteError, UserNotFoundError, WeakPasswordError,
+  changeOwnPassword, countUsers, createFirstAdmin, createUser, deleteOwnAccount, deleteUser, findUserByEmail, listUsers, normalizeEmail,
   resetUserPassword, touchLastLogin, updateUserRole,
 } from "@/lib/auth/users";
 
@@ -15,6 +15,19 @@ const PW = "correct horse battery";
 describe("users", () => {
   it("normalizes emails", () => {
     expect(normalizeEmail("  Admin@Example.COM ")).toBe("admin@example.com");
+  });
+
+  it("account reset: the sole user can delete their own account; blocked once a second user exists", async () => {
+    const t = await createTestDb(); close = t.close;
+    const a = await createFirstAdmin(t.db, { email: "a@example.com", password: PW });
+    // A second user makes self-reset unavailable (a teammate must remove you).
+    const m = await createUser(t.db, { email: "m@example.com", password: PW, role: "member" });
+    await expect(deleteOwnAccount(t.db, a.id)).rejects.toBeInstanceOf(NotSoleUserError);
+    // Remove the second user; now the sole remaining user can reset.
+    await deleteUser(t.db, m.id, { actorId: a.id });
+    expect(await countUsers(t.db)).toBe(1);
+    await deleteOwnAccount(t.db, a.id);
+    expect(await countUsers(t.db)).toBe(0);
   });
 
   it("creates the first admin only on an empty table, with a bcrypt hash", async () => {

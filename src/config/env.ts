@@ -14,6 +14,13 @@ const Schema = z.object({
     .string()
     .optional()
     .transform((v) => v === "true" || v === "1"),
+  // "true" / "1" enables single-user / no-auth mode for a localhost self-host:
+  // the app auto-provisions one admin and skips the login/account requirement.
+  // Ignored in demo mode. Only use on a trusted box you don't expose to a network.
+  BSL_SINGLE_USER: z
+    .string()
+    .optional()
+    .transform((v) => v === "true" || v === "1"),
   // How many trusted proxies sit in front of the app. Each one APPENDS the
   // address it saw to x-forwarded-for, so the client is the Nth entry from the
   // right — see clientIp() in src/lib/auth/authenticate.ts. Default 1 (the

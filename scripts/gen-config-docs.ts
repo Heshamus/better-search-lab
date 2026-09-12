@@ -12,6 +12,7 @@ const BOOTSTRAP: { name: string; required: string; meaning: string }[] = [
   { name: "APP_URL", required: "recommended", meaning: "Public URL of this install. Used for the Google OAuth redirect, links in emails, and as the auth base URL. Also settable in Settings → Integrations → App." },
   { name: "ENCRYPTION_KEY", required: "no", meaning: "32-byte base64 key for encrypting integration secrets, instead of the key derived from `AUTH_SECRET`. Set it before the first secret is saved, or re-enter secrets after rotating." },
   { name: "DEMO_MODE", required: "no", meaning: "`true` boots the read-only demo with two synthetic sites and refuses every write." },
+  { name: "BSL_SINGLE_USER", required: "no", meaning: "`true` enables single-user / no-auth mode: the app auto-provisions one admin and skips the login/account requirement. For a localhost self-host only — **do not expose the server to a network with this on.** Ignored in demo mode." },
   { name: "TRUSTED_PROXY_HOPS", required: "no", meaning: "How many reverse proxies append to `X-Forwarded-For` (default 1). Used only to pick the client address for login rate limiting." },
 ];
 
