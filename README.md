@@ -44,6 +44,7 @@ Prefer the source? Clone the repository, copy `.env.example` to `.env`, set `AUT
 - **One command** (recommended): the installer above. `docs/install.md` covers updates, volumes, reverse proxies, and the worker.
 - **Railway**: the repo ships `railway.json` (web) and `railway.worker.json` (worker).
 - **Bare metal**: Node 22, pnpm, Postgres 16; `pnpm install && pnpm db:migrate && pnpm build && pnpm start`, plus `pnpm worker`.
+- **Keeping it updated**: `docker compose pull && docker compose up -d`, or opt in to hands-off updates with Watchtower — see [docs/upgrading.md](docs/upgrading.md).
 
 Only `DATABASE_URL` and `AUTH_SECRET` are required. Every integration is configured in the app; each can also be set by environment variable, and the environment wins — see [docs/configuration.md](docs/configuration.md).
 

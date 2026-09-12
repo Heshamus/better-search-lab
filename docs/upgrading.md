@@ -19,4 +19,40 @@ Migrations run automatically when the `web` container starts (`pnpm db:migrate`)
 
 ## Between 1.x releases
 
-Installer and image installs: `docker compose pull && docker compose up -d`. Source installs: `git pull && docker compose up -d --build`. Check the [CHANGELOG](../CHANGELOG.md) for anything marked *migration*.
+### Updating
+
+```bash
+cd better-search-lab && docker compose pull && docker compose up -d
+```
+
+Source installs: `git pull && docker compose up -d --build`. Either way, migrations run automatically when the `web` container starts (`pnpm db:migrate`) and are safe to re-run — there's no separate migration step to remember. Your data lives in the `db-data` named volume, not in the containers, so pulling a new image and recreating `web`/`worker` never touches it. Check the [CHANGELOG](../CHANGELOG.md) for anything marked *migration*.
+
+### Keeping it running
+
+Every service in `docker-compose.yml` starts with `restart: unless-stopped`, so Docker brings the whole stack back on its own after a host reboot or a crash — no systemd unit or cron job needed. The one thing Better Search Lab can't do from inside its own container is start Docker itself: on Docker Desktop (Mac/Windows), turn on **Settings → General → Start Docker Desktop when you log in**; on Linux, `systemctl enable docker` (most distributions already default to this).
+
+```bash
+docker compose up -d      # start (or resume) the stack
+docker compose down       # stop it; data in db-data is untouched
+```
+
+### Hands-off auto-update with Watchtower
+
+For updates without even the copy-pasted command above, opt in to the bundled [Watchtower](https://containrrr.dev/watchtower/) overlay. It polls the registry, and when a new `:latest` lands for the `web`/`worker` image it pulls it and recreates just those two containers automatically:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.watchtower.yml up -d
+```
+
+`docker-compose.watchtower.yml` merges onto `docker-compose.yml` — it adds one extra `watchtower` container and a label on `web`/`worker` so Watchtower knows what to watch; it never edits `docker-compose.yml` itself, and `db` is left alone.
+
+The trade-off is deliberate, not hidden: Watchtower needs the Docker socket (`/var/run/docker.sock`) to recreate containers, which is effectively root on the host. That's Watchtower's design, not Better Search Lab's — the app's own `web`/`worker` containers never get the socket, and nothing runs Watchtower unless you compose it in with the command above. If you'd rather not run an extra privileged container, the plain `docker compose pull && docker compose up -d` above is the same two commands with no socket involved; you just run it yourself instead of it running on a timer.
+
+Stop auto-updates any time with `docker compose stop watchtower`, or simply leave the overlay out of future `up -d` calls.
+
+### Installs without Docker
+
+Railway and bare-metal installs don't use `docker-compose.yml`, so neither `restart: unless-stopped` nor Watchtower applies — each manages its own process lifecycle instead:
+
+- **Railway** restarts crashed services on its own and redeploys automatically on every push to the branch it's watching. To update: push (or redeploy from the Railway dashboard) — `railway.json`'s start command runs migrations before starting the app, same as the Docker image, so there's no separate migrate step.
+- **Bare metal** has no supervisor built in. Put `pnpm start` and `pnpm worker` under whatever your host already uses (systemd, pm2, or another process manager) so they restart on crash and on boot. To update: `git pull`, `pnpm install`, `pnpm db:migrate`, `pnpm build`, then restart both processes yourself.

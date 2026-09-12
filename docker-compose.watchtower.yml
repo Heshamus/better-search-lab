@@ -1,0 +1,25 @@
+# docker-compose.watchtower.yml — OPT-IN hands-off auto-update.
+#   docker compose -f docker-compose.yml -f docker-compose.watchtower.yml up -d
+# Watchtower watches the web + worker images and recreates them when a new
+# :latest is pushed to the registry. It needs the Docker socket — that is
+# Watchtower's design and YOUR explicit choice; the app itself never gets the
+# socket. Nothing runs Watchtower unless you compose it in with the line above.
+#
+# The `web:`/`worker:` blocks below MERGE onto the same services in
+# docker-compose.yml — Compose combines the two files, so web/worker keep
+# every setting from the base file and simply gain a label. db and the base
+# file itself are untouched; --label-enable below means Watchtower only ever
+# looks at containers carrying that label, so it never touches `db`.
+services:
+  web:
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+  worker:
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+  watchtower:
+    image: containrrr/watchtower:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --cleanup --label-enable --interval 3600

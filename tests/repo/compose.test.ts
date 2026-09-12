@@ -41,3 +41,42 @@ describe("compose and image contract (spec §14.3)", () => {
     expect(r.deploy.startCommand).toBe("pnpm db:migrate && pnpm start");
   });
 });
+
+describe("opt-in Watchtower overlay + upgrading docs (spec §self-host-lifecycle)", () => {
+  it("docker-compose.watchtower.yml adds a Watchtower service, scoped to web/worker via label-enable, without editing the base compose file", () => {
+    const y = read("docker-compose.watchtower.yml");
+    expect(y).toContain("watchtower:");
+    expect(y).toContain("containrrr/watchtower");
+    // The docker socket is Watchtower's own explicit trade-off, not the app's.
+    expect(y).toContain("/var/run/docker.sock:/var/run/docker.sock");
+    // Scoped to web/worker only (never db, never itself) via label-enable.
+    expect(y).toContain("--label-enable");
+    expect(y).toContain("com.centurylinklabs.watchtower.enable=true");
+    expect(y).toContain("  web:");
+    expect(y).toContain("  worker:");
+    expect(y).not.toContain("  db:");
+    // The base compose file is untouched — this is a merge overlay, not an edit.
+    const base = read("docker-compose.yml");
+    expect(base).not.toContain("watchtower");
+    expect(base).not.toContain("com.centurylinklabs");
+  });
+  it("the panel's opt-in command references this exact overlay filename", () => {
+    // src/components/running-updates-panel.tsx hardcodes this string; if the
+    // overlay were ever renamed, that link would silently 404.
+    expect(read("src/components/running-updates-panel.tsx")).toContain(
+      "docker compose -f docker-compose.yml -f docker-compose.watchtower.yml up -d",
+    );
+  });
+  it("docs/upgrading.md documents the update command and the opt-in Watchtower path", () => {
+    const md = read("docs/upgrading.md");
+    expect(md).toContain("cd better-search-lab && docker compose pull && docker compose up -d");
+    expect(md).toContain("db-data");
+    expect(md).toContain("restart: unless-stopped");
+    expect(md).toContain("Watchtower");
+    expect(md).toContain("docker compose -f docker-compose.yml -f docker-compose.watchtower.yml up -d");
+    expect(md).toContain("docker.sock");
+    // Non-Docker installs manage their own restart + update.
+    expect(md).toContain("Railway");
+    expect(md).toContain("Bare metal");
+  });
+});
