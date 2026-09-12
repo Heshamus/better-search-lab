@@ -57,7 +57,7 @@ DataForSEO bills per request; the in-app **Usage** page shows exactly what was s
 Mint a token under **Settings → MCP**, then register the server with your agent:
 
 ```json
-{ "mcpServers": { "better-search-lab": { "command": "npx", "args": ["-y", "https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.0.0/downloads/better-search-lab-mcp.tgz"], "env": { "BSL_URL": "https://your-install.example.com", "BSL_TOKEN": "bsl_…" } } } }
+{ "mcpServers": { "better-search-lab": { "command": "npx", "args": ["-y", "https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.1.0/downloads/better-search-lab-mcp.tgz"], "env": { "BSL_URL": "https://your-install.example.com", "BSL_TOKEN": "bsl_…" } } } }
 ```
 
 Eleven read-only tools — projects, opportunities, gaps, competitors, audit, backlinks, Search Console, Analytics, AI visibility, Reddit conversations, keyword overview. See [docs/mcp.md](docs/mcp.md).

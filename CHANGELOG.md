@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-13
+
+### Added
+- Optional single-user / no-auth mode (`BSL_SINGLE_USER=1`) for localhost self-hosters: skips login and the account setup step, auto-provisions one built-in admin, and shows a persistent "don't expose this server to a network" banner. Default off; ignored in demo mode.
+- Self-service account reset: on a sole-user install, a "Delete account" action (Settings → Account) removes your login and returns the app to first-run setup for a fresh admin. Your data is untouched.
+- Self-host update lifecycle: a daily, fail-soft check against the latest GitLab release, an admin "update available" banner, a Settings → Running & updates panel, a one-time first-run guidance card, and an opt-in Watchtower auto-update overlay (`docker-compose.watchtower.yml`). Checks are inert in demo mode and dismissible per install.
+
+### Changed
+- The entire app interface moved to the light "Daylight" design — app shell, navigation, charts, tables, Overview, Opportunities, Rankings, Audit, Competitors, Backlinks, AI Visibility, Search Console, Analytics, Usage/MCP, login, the setup wizard, and Settings. Dark styling has been removed.
+- The DeepSeek assistant preset now defaults to `deepseek-flash`.
+
+### Fixed
+- The Docker stack now restarts automatically after a host reboot (`restart: unless-stopped`).
+
 ## [1.0.0] - 2026-09-09
 
 The first public release.
@@ -23,5 +37,6 @@ The first public release.
 - *Migration:* emails must be unique case-insensitively.
 - Report emails require a configured recipient (no hardcoded fallback).
 
-[Unreleased]: https://gitlab.com/betterbrainlab/better-search-lab/-/compare/v1.0.0...main
+[Unreleased]: https://gitlab.com/betterbrainlab/better-search-lab/-/compare/v1.1.0...main
+[1.1.0]: https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.1.0
 [1.0.0]: https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.0.0

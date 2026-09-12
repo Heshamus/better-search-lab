@@ -5,8 +5,8 @@ describe("release metadata", () => {
   it("both packages are at the same release version with repository metadata", () => {
     const root = JSON.parse(readFileSync("package.json", "utf8"));
     const mcp = JSON.parse(readFileSync("mcp/package.json", "utf8"));
-    expect(root.version).toBe("1.0.0");
-    expect(mcp.version).toBe("1.0.0");
+    expect(root.version).toBe("1.1.0");
+    expect(mcp.version).toBe("1.1.0");
     for (const p of [root, mcp]) {
       expect(p.repository).toMatchObject({ type: "git", url: expect.stringContaining("better-search-lab") });
       expect(p.homepage).toContain("better-search-lab");
