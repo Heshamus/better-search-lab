@@ -115,6 +115,9 @@ async function run(group: SettingGroupId, cfg: AppConfig, deps: { fetchImpl?: ty
     // stays exhaustive.
     case "setup":
       return { ok: false, detail: "Setup is not a testable integration." };
+
+    case "updates":
+      return { ok: false, detail: "Updates is not a testable integration." };
   }
 }
 

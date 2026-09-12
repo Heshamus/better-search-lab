@@ -6,7 +6,7 @@ import { LLM_PROVIDERS } from "./presets";
  * env parsing, the encrypted store, the Integrations form, the generated
  * docs page — is derived from this list. A setting exists in exactly one place.
  */
-export type SettingGroupId = "app" | "dataforseo" | "llm" | "google" | "edenai" | "email" | "reddit" | "apify" | "setup";
+export type SettingGroupId = "app" | "dataforseo" | "llm" | "google" | "edenai" | "email" | "reddit" | "apify" | "setup" | "updates";
 
 export interface SettingGroup {
   id: SettingGroupId;
@@ -57,6 +57,7 @@ export const GROUPS: readonly SettingGroup[] = [
   { id: "reddit", label: "Reddit API", description: "Primary source for Conversations worth joining (free, application-only OAuth)." },
   { id: "apify", label: "Apify", description: "Fallback Reddit source when the official API is absent or fails." },
   { id: "setup", label: "Setup", description: "Wizard progress. Written by the setup wizard, not an integration.", hidden: true },
+  { id: "updates", label: "Updates", description: "Update-check state and preference. Written by the worker and the Running & updates panel, not an integration.", hidden: true },
 ];
 
 const text = z.string().trim().min(1, "required");
@@ -118,6 +119,13 @@ export const SETTINGS: readonly SettingDef[] = [
 
   def({ group: "setup", field: "llmStep", label: "AI assistant step", description: "Whether the setup wizard's AI step was completed or skipped.", secret: false, env: "SETUP_LLM_STEP", schema: z.enum(SETUP_LLM_STEPS), options: SETUP_LLM_STEPS }),
   def({ group: "setup", field: "completedAt", label: "Setup completed at", description: "ISO timestamp of the first full wizard completion.", secret: false, env: "SETUP_COMPLETED_AT", schema: text }),
+
+  def({ group: "updates", field: "checkEnabled", label: "Check for updates", description: "Daily check against the public GitLab releases API. The app's only outbound call; turn off for zero external traffic.", secret: false, env: "UPDATES_CHECK_ENABLED", schema: bool, options: ["true", "false"] }),
+  def({ group: "updates", field: "latestVersion", label: "Latest known version", description: "Written by the daily worker check.", secret: false, env: "UPDATES_LATEST_VERSION", schema: text }),
+  def({ group: "updates", field: "latestUrl", label: "Latest release URL", description: "Release-notes link for the latest known version.", secret: false, env: "UPDATES_LATEST_URL", schema: text }),
+  def({ group: "updates", field: "checkedAt", label: "Last checked at", description: "ISO timestamp of the last successful check.", secret: false, env: "UPDATES_CHECKED_AT", schema: text }),
+  def({ group: "updates", field: "dismissedVersion", label: "Dismissed banner version", description: "The version whose update banner an admin dismissed.", secret: false, env: "UPDATES_DISMISSED_VERSION", schema: text }),
+  def({ group: "updates", field: "firstRunDismissedAt", label: "First-run card dismissed at", description: "ISO timestamp when an admin dismissed the one-time first-run card.", secret: false, env: "UPDATES_FIRST_RUN_DISMISSED_AT", schema: text }),
 ];
 
 const BY_KEY = new Map(SETTINGS.map((s) => [s.key, s]));
