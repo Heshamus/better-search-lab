@@ -5,6 +5,8 @@ import { signOut } from "next-auth/react";
 import { AppNav, NAV } from "@/components/app-nav";
 import { SiteSwitcher } from "@/components/site-switcher";
 import { Logo } from "@/components/icons";
+import { UpdateBanner } from "@/components/update-banner";
+import type { UpdateState } from "@/lib/lifecycle/state";
 
 // The client half of the dashboard frame. The active nav slug comes from
 // usePathname() (a shared layout has no server-side way to know which child
@@ -18,7 +20,15 @@ function activeSlugFromPathname(pathname: string | null): string {
   return VALID_SLUGS.has(firstSegment) ? firstSegment : "overview";
 }
 
-export function AppShell({ user, children }: { user: { email: string; role: "admin" | "member" }; children: React.ReactNode }) {
+export function AppShell({
+  user,
+  update,
+  children,
+}: {
+  user: { email: string; role: "admin" | "member" };
+  update?: UpdateState;
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const active = activeSlugFromPathname(usePathname());
   const activeLabel = NAV.find(([slug]) => slug === active)?.[1] ?? "";
@@ -64,6 +74,10 @@ export function AppShell({ user, children }: { user: { email: string; role: "adm
           <h1 className="text-[0.95rem] font-semibold tracking-tight text-neutral-900">{activeLabel}</h1>
           <SiteSwitcher />
         </header>
+
+        {user.role === "admin" && update?.available && !update.bannerDismissed && update.latest ? (
+          <UpdateBanner current={update.current} latest={update.latest} url={update.url} />
+        ) : null}
 
         <main className="mx-auto w-full max-w-[1440px] flex-1 px-7 py-7">{children}</main>
       </div>

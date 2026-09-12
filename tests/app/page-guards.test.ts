@@ -23,7 +23,10 @@ vi.mock("@/lib/auth/users", () => ({ countUsers: vi.fn() }));
 // they only need to be inert so the pre-existing redirect-story tests below
 // (driven by countUsers + auth()) can still reach the code path they assert.
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
-vi.mock("@/lib/config/resolve", () => ({ getConfig: vi.fn(async () => ({ dataforseo: { configured: false }, setup: { llmStep: undefined, completedAt: undefined } })) }));
+// Task 6's AppLayout now also reads cfg.updates (readUpdateState) on every
+// render — an empty stub is enough since none of the redirect assertions
+// below care about update state.
+vi.mock("@/lib/config/resolve", () => ({ getConfig: vi.fn(async () => ({ dataforseo: { configured: false }, setup: { llmStep: undefined, completedAt: undefined }, updates: {} })) }));
 vi.mock("@/lib/projects", () => ({ listProjects: vi.fn(async () => []) }));
 // Bare vi.fn() returns undefined (falsy) by default, so every pre-existing
 // test below runs as non-demo without touching it — only the demo-specific
