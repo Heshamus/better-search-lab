@@ -38,6 +38,7 @@ import type { DataForSeoClient } from "../src/lib/dataforseo/client";
 import { recipientWarning } from "../src/lib/email/recipient-warning";
 import { loadEnv } from "../src/config/env";
 import { isDemoMode } from "../src/lib/demo/mode";
+import { checkForUpdate } from "../src/lib/lifecycle/check";
 
 loadEnv(); // fail fast on a bad bootstrap env
 
@@ -183,3 +184,7 @@ registerSchedules({ schedule: (c, fn) => cron.schedule(c, fn), run });
 console.log("[worker] schedules registered");
 void queueLoop();
 console.log("[worker] queue drain started");
+
+void checkForUpdate(db); // once at boot
+cron.schedule("0 4 * * *", () => { void checkForUpdate(db); }); // daily update check
+console.log("[worker] update check scheduled");
