@@ -12,7 +12,7 @@
   "mcpServers": {
     "better-search-lab": {
       "command": "npx",
-      "args": ["-y", "https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.1.0/downloads/better-search-lab-mcp.tgz"],
+      "args": ["-y", "https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.1.1/downloads/better-search-lab-mcp.tgz"],
       "env": { "BSL_URL": "https://your-install.example.com", "BSL_TOKEN": "bsl_your_token" }
     }
   }

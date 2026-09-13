@@ -4,6 +4,11 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-09-13
+
+### Fixed
+- AI-assistant setup could fail for every provider with a mix of errors (an empty answer, or 400/404). Four causes, each fixed: the connection test capped the reply at 20 tokens, so reasoning models spent the whole budget thinking and returned no text; the OpenAI-compatible client always sent `max_tokens`, which OpenAI's `gpt-5`/o-series reject in favour of `max_completion_tokens`; the Anthropic client always sent enhanced parameters the API can reject; and the DeepSeek preset defaulted to a non-existent `deepseek-flash` model. Now the test proves connectivity on any clean response, the OpenAI-compatible client retries with `max_completion_tokens` when a provider requires it, the Anthropic client falls back to a plain Messages call, and DeepSeek defaults to `deepseek-chat`.
+
 ## [1.1.0] - 2026-09-13
 
 ### Added
@@ -37,6 +42,7 @@ The first public release.
 - *Migration:* emails must be unique case-insensitively.
 - Report emails require a configured recipient (no hardcoded fallback).
 
-[Unreleased]: https://gitlab.com/betterbrainlab/better-search-lab/-/compare/v1.1.0...main
+[Unreleased]: https://gitlab.com/betterbrainlab/better-search-lab/-/compare/v1.1.1...main
+[1.1.1]: https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.1.1
 [1.1.0]: https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.1.0
 [1.0.0]: https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.0.0
