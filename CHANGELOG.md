@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-09-13
+
+### Added
+- A new brand mark: the four-petal logo and favicon, in evergreen on an ink tile, replacing the previous RSS-style shell logo and ascending-bars favicon.
+
+### Changed
+- Competitor suggestions no longer return general platforms (YouTube, Reddit, LinkedIn, Facebook, Webflow, …) or domains too broad to be a real rival; they rank plausible competitors and say so honestly when none stand out — common for a new or niche site.
+- The tracked-competitor limit is raised from 5 to 10.
+- Settings → Integrations lists the AI providers by their friendly names (DeepSeek, Google Gemini, Ollama (local), …), matching the setup wizard, instead of raw ids.
+
 ## [1.1.1] - 2026-09-13
 
 ### Fixed
@@ -42,7 +52,8 @@ The first public release.
 - *Migration:* emails must be unique case-insensitively.
 - Report emails require a configured recipient (no hardcoded fallback).
 
-[Unreleased]: https://gitlab.com/betterbrainlab/better-search-lab/-/compare/v1.1.1...main
+[Unreleased]: https://gitlab.com/betterbrainlab/better-search-lab/-/compare/v1.1.2...main
+[1.1.2]: https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.1.2
 [1.1.1]: https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.1.1
 [1.1.0]: https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.1.0
 [1.0.0]: https://gitlab.com/betterbrainlab/better-search-lab/-/releases/v1.0.0

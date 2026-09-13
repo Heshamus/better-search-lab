@@ -1,6 +1,6 @@
 {
   "name": "@better-search-lab/mcp",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "type": "module",
   "description": "Stdio MCP server exposing a Better Search Lab install's read-only /api/mcp/* endpoints to coding agents.",
   "license": "AGPL-3.0-only",
