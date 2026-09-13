@@ -142,7 +142,10 @@ publish-image:
     # dind TLS env vars; bind them into a named context first, then build from it.
     - docker context create bsl-ci --docker "host=$DOCKER_HOST,ca=$DOCKER_CERT_PATH/ca.pem,cert=$DOCKER_CERT_PATH/cert.pem,key=$DOCKER_CERT_PATH/key.pem"
     - docker buildx create --use --name bsl-builder bsl-ci
-    - docker buildx build --platform linux/amd64,linux/arm64 --push $tags .
+    # --provenance=false --sbom=false: BuildKit's default attestation manifests
+    # trip the GitLab registry intermittently ("blob unknown to registry" on push);
+    # a plain per-platform manifest list pushes reliably.
+    - docker buildx build --platform linux/amd64,linux/arm64 --provenance=false --sbom=false --push $tags .
 
 package-mcp:
   stage: release
