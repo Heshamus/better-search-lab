@@ -74,12 +74,14 @@ export function CompetitorSuggestions({ projectId, atCap, onAdded }: { projectId
             <li key={r.domain} data-testid={`suggestion-${r.domain}`} className="flex flex-wrap items-center gap-3 py-2">
               <span className="min-w-0 flex-1 truncate text-sm text-neutral-900">{r.domain}</span>
               <span className="tnum text-xs text-neutral-500">{r.intersections} shared keywords · avg. position {r.avgPosition === null ? "—" : r.avgPosition.toFixed(1)}</span>
-              <button type="button" className={buttonClass} disabled={demo || atCap || adding.has(r.domain)} title={demo ? "Read-only demo" : atCap ? "Maximum 5 competitors" : undefined} onClick={() => void add(r.domain)}>
+              <button type="button" className={buttonClass} disabled={demo || atCap || adding.has(r.domain)} title={demo ? "Read-only demo" : atCap ? "Maximum 10 competitors" : undefined} onClick={() => void add(r.domain)}>
                 {adding.has(r.domain) ? "Adding…" : "Add"}
               </button>
             </li>
           ))}
         </ul>
+      ) : rows && rows.length === 0 ? (
+        <p className="text-xs text-neutral-500">No clear competitors stood out — common for a new or niche site. Add rivals by hand as you find them.</p>
       ) : null}
       {error ? <p role="alert" className="text-xs text-at-risk">{error}</p> : null}
     </div>

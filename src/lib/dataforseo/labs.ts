@@ -161,7 +161,7 @@ export async function keywordOverviewBulk(client: DataForSeoClient, p: {
   return { rows, rowsBilled: p.keywords.length };
 }
 
-export interface CompetitorSuggestion { domain: string; intersections: number; avgPosition: number | null; }
+export interface CompetitorSuggestion { domain: string; intersections: number; avgPosition: number | null; organicCount: number | null; }
 
 /** Domains that rank for the same keywords as `target` (Labs `competitors_domain`), most overlap first. */
 export async function competitorsDomain(client: DataForSeoClient, p: {
@@ -173,7 +173,7 @@ export async function competitorsDomain(client: DataForSeoClient, p: {
   const raw = resp?.tasks?.[0]?.result?.[0]?.items ?? [];
   const items: CompetitorSuggestion[] = raw
     .filter((i: any) => typeof i.domain === "string" && i.domain)
-    .map((i: any) => ({ domain: i.domain, intersections: typeof i.intersections === "number" ? i.intersections : 0, avgPosition: num(i.avg_position) }))
+    .map((i: any) => ({ domain: i.domain, intersections: typeof i.intersections === "number" ? i.intersections : 0, avgPosition: num(i.avg_position), organicCount: num(i.full_domain_metrics?.organic?.count) }))
     .sort((a: CompetitorSuggestion, b: CompetitorSuggestion) => b.intersections - a.intersections);
   return { items, rows: items.length };
 }

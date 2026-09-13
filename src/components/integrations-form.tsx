@@ -43,7 +43,7 @@ function Field({
       ) : field.options ? (
         <select id={id} className={inputClass} disabled={disabled} value={value} onChange={(e) => onChange(e.target.value)}>
           <option value="">—</option>
-          {field.options.map((o) => <option key={o} value={o}>{o}</option>)}
+          {field.options.map((o) => <option key={o} value={o}>{Object.hasOwn(LLM_PRESETS, o) ? LLM_PRESETS[o as LlmProviderId].label : o}</option>)}
         </select>
       ) : (
         <>

@@ -15,7 +15,7 @@ export type Competitor = { id: string; domain: string };
 // actual authority: addCompetitor throws CompetitorCapError -> 409 regardless
 // of what this constant says, so a drift here is a UX-copy bug, not a cap
 // bypass.
-const MAX_COMPETITORS = 5;
+const MAX_COMPETITORS = 10;
 
 const CAP_MESSAGE = `Maximum ${MAX_COMPETITORS} competitors`;
 const ADD_FAILURE_MESSAGE = "Couldn’t add competitor — try again.";
@@ -79,13 +79,13 @@ function CompetitorRow({ projectId, id, domain }: { projectId: string; id: strin
 
 /**
  * The Competitors view's management surface (Task 9): discrete add/delete
- * rows with a hard cap of 5. The cap is enforced server-side
+ * rows with a hard cap of 10. The cap is enforced server-side
  * (`addCompetitor` -> `CompetitorCapError` -> 409, see
  * src/app/api/projects/[id]/competitors/route.ts) — this component mirrors
- * it for UX (disabling the add input at 5/5 with an inline note) but also
+ * it for UX (disabling the add input at 10/10 with an inline note) but also
  * handles the 409 explicitly, so a client that's briefly out of sync with
- * the server (e.g. another tab just added the 5th competitor) still gets
- * the same honest "Maximum 5 competitors" message instead of a generic
+ * the server (e.g. another tab just added the 10th competitor) still gets
+ * the same honest "Maximum 10 competitors" message instead of a generic
  * failure. A non-cap failure (network error or any other non-2xx) shows a
  * distinct generic error — never a fabricated success and never mislabeled
  * as the cap.

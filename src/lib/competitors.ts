@@ -4,7 +4,7 @@ import type { IntersectionRow } from "@/lib/dataforseo/labs";
 import type { GapSignal } from "@/lib/core/detectors/types";
 
 // Task 7 (Competitor CRUD): hard cap enforced server-side by addCompetitor.
-export const MAX_COMPETITORS = 5;
+export const MAX_COMPETITORS = 10;
 
 export class CompetitorCapError extends Error {
   constructor() {

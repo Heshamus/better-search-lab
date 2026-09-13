@@ -56,7 +56,7 @@ describe("listCompetitors", () => {
 });
 
 describe("competitor CRUD", () => {
-  it("adds, dedupes, caps at 5, edits, and removes", async () => {
+  it("adds, dedupes, caps at the limit, edits, and removes", async () => {
     const t = await createTestDb(); close = t.close;
     const p = await createProject(t.db, { name: "HF", domain: "example-site.com" });
 
@@ -66,10 +66,11 @@ describe("competitor CRUD", () => {
     expect(again.id).toBe(a.id);
     expect((await listCompetitors(t.db, p.id)).length).toBe(1);
 
-    for (const d of ["b.com", "c.com", "d.com", "e.com"]) await addCompetitor(t.db, p.id, d);
+    // Fill to the cap (one already added), whatever the configured limit is.
+    for (let i = 0; i < MAX_COMPETITORS - 1; i++) await addCompetitor(t.db, p.id, `filler-${i}.com`);
     expect((await listCompetitors(t.db, p.id)).length).toBe(MAX_COMPETITORS);
 
-    // Dedupe-before-cap guarantee: the project is now at 5/5. Re-adding an
+    // Dedupe-before-cap guarantee: the project is now full. Re-adding an
     // ALREADY-TRACKED domain ("rival-a.com", added as `a` above) must return
     // the existing row rather than throwing CompetitorCapError, and must not
     // insert a duplicate. Awaiting it directly (no .rejects/try-catch) means
@@ -78,7 +79,7 @@ describe("competitor CRUD", () => {
     expect(dedupeAtCap.id).toBe(a.id);
     expect((await listCompetitors(t.db, p.id)).length).toBe(MAX_COMPETITORS);
 
-    await expect(addCompetitor(t.db, p.id, "f.com")).rejects.toBeInstanceOf(CompetitorCapError);
+    await expect(addCompetitor(t.db, p.id, "overflow.com")).rejects.toBeInstanceOf(CompetitorCapError);
 
     await updateCompetitorDomain(t.db, p.id, a.id, "rival-a-new.com");
     expect((await listCompetitors(t.db, p.id)).find((c) => c.id === a.id)!.domain).toBe("rival-a-new.com");
