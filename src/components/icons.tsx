@@ -152,12 +152,27 @@ export const IconArrowDown = (p: SVGProps<SVGSVGElement>) => (
 // Brand mark — a broadcast/"signal" motif (concentric arcs + source dot): search
 // visibility radiating outward. Accent-filled, sized to the sidebar wordmark.
 export function Logo({ size = 26 }: { size?: number }) {
+  // The four-petal pinwheel mark (shared with hesham.us / harperflow.io), in the
+  // evergreen gradient, on an ink tile — a small echo of the app icon.
+  const petal = "M50 51 C37 42 34 24 50 6 C66 24 63 42 50 51 Z";
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="1" y="1" width="22" height="22" rx="7" fill="var(--color-accent)" fillOpacity="0.12" stroke="var(--color-accent)" strokeOpacity="0.35" />
-      <circle cx="8" cy="16" r="1.7" fill="var(--color-accent)" />
-      <path d="M8 12.5c2 0 3.5 1.5 3.5 3.5" stroke="var(--color-accent)" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M8 9c4 0 7 3 7 7" stroke="var(--color-accent)" strokeWidth="1.7" strokeLinecap="round" />
+    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true">
+      <defs>
+        <linearGradient id="bsl-logo" x1="20" y1="14" x2="82" y2="88" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#4ecb8f" />
+          <stop offset="0.55" stopColor="#22a56a" />
+          <stop offset="1" stopColor="#12724f" />
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" rx="24" fill="#0f1216" />
+      <g transform="translate(50 50) scale(0.64) translate(-50 -50)">
+        <g transform="rotate(45 50 50)">
+          <path d={petal} fill="url(#bsl-logo)" />
+          <path d={petal} fill="url(#bsl-logo)" transform="rotate(90 50 50)" />
+          <path d={petal} fill="url(#bsl-logo)" transform="rotate(180 50 50)" />
+          <path d={petal} fill="url(#bsl-logo)" transform="rotate(270 50 50)" />
+        </g>
+      </g>
     </svg>
   );
 }
