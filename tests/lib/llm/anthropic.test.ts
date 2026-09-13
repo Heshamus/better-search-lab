@@ -50,6 +50,29 @@ describe("AnthropicProvider", () => {
     expect(Object.hasOwn(params, "thinking")).toBe(false);
   });
 
+  it("falls back to a plain Messages call when the enhanced params are rejected with a 400", async () => {
+    const client = fakeClient(textResponse);
+    client.create.mockRejectedValueOnce(Object.assign(new Error("unexpected parameter: output_config"), { status: 400 }));
+    const out = await new AnthropicProvider({ apiKey: "sk", client, effort: "low" }).chat([{ role: "user", content: "hi" }]);
+    expect(out).toBe("hello world");
+    expect(client.create).toHaveBeenCalledTimes(2);
+    const enhanced = client.create.mock.calls[0][0] as Record<string, unknown>;
+    const retry = client.create.mock.calls[1][0] as Record<string, unknown>;
+    expect(enhanced.output_config).toEqual({ effort: "low" });
+    expect(retry.output_config).toBeUndefined();
+    expect(retry.fallbacks).toBeUndefined();
+    expect(retry.betas).toBeUndefined();
+    expect(retry.model).toBe("claude-opus-5");
+    expect(retry.messages).toEqual([{ role: "user", content: "hi" }]);
+  });
+
+  it("does not fall back on a non-400 error", async () => {
+    const client = fakeClient(textResponse);
+    client.create.mockRejectedValue(Object.assign(new Error("rate limited"), { status: 429 }));
+    await expect(new AnthropicProvider({ apiKey: "sk", client }).chat([{ role: "user", content: "x" }])).rejects.toMatchObject({ status: 429 });
+    expect(client.create).toHaveBeenCalledTimes(1);
+  });
+
   it("throws a refusal LlmError carrying the stop_details category", async () => {
     const client = fakeClient({ content: [], stop_reason: "refusal", stop_details: { type: "refusal", category: "cyber", explanation: "no" } });
     await expect(new AnthropicProvider({ apiKey: "sk", client }).chat([{ role: "user", content: "x" }])).rejects.toMatchObject({ kind: "refusal", message: expect.stringContaining("cyber") });

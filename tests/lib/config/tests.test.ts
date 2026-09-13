@@ -33,9 +33,19 @@ describe("testIntegration", () => {
   it("llm: one short completion", async () => {
     const fetchImpl = vi.fn(async () => ok({ choices: [{ message: { content: "OK" } }] }));
     const r = await testIntegration("llm", cfg({ DEEPSEEK_API_KEY: "k" }), { fetchImpl });
-    expect(r).toEqual({ ok: true, detail: "deepseek-flash answered" });
+    expect(r).toEqual({ ok: true, detail: "deepseek-chat answered" });
     const bad = await testIntegration("llm", cfg({ DEEPSEEK_API_KEY: "k" }), { fetchImpl: vi.fn(async () => new Response("{}", { status: 401 })) });
     expect(bad.ok).toBe(false);
+  });
+  it("llm: a reasoning model that returns a clean 200 with empty content still counts as connected", async () => {
+    // A thinking model can spend its budget reasoning and return no text; the
+    // round-trip still proves the key, model and endpoint work. And the check
+    // must not starve it with a tiny token cap.
+    const fetchImpl = vi.fn(async () => ok({ choices: [{ message: { content: "" } }] }));
+    const r = await testIntegration("llm", cfg({ DEEPSEEK_API_KEY: "k" }), { fetchImpl });
+    expect(r.ok).toBe(true);
+    const body = JSON.parse((fetchImpl.mock.calls[0] as any)[1].body);
+    expect(body.max_tokens).toBeGreaterThan(20);
   });
   it("google: mints a service-account token, or explains the OAuth redirect URI", async () => {
     const fetchImpl = vi.fn(async () => ok({ access_token: "t" }));

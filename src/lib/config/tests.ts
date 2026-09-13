@@ -41,8 +41,15 @@ async function run(group: SettingGroupId, cfg: AppConfig, deps: { fetchImpl?: ty
     case "llm": {
       const chat = makeChatProvider(cfg, fetchImpl);
       if (!chat) return { ok: false, detail: NOT_CONFIGURED.llm };
-      const answer = await chat.chat([{ role: "user", content: "Reply with the single word OK." }], { maxTokens: 20 });
-      return answer.trim() ? { ok: true, detail: `${cfg.llm.model} answered` } : { ok: false, detail: `${cfg.llm.model} returned an empty answer` };
+      // A clean round-trip is the proof of connectivity. Don't cap the reply to
+      // a tiny budget — reasoning models (deepseek-reasoner, the o-series, gpt-5,
+      // gemini-2.5, opus-5) spend it thinking and return empty content — and
+      // treat an answer-less 200 as connected, not a failure. Real auth/model/
+      // request errors (401/404/400) throw and are reported by testIntegration.
+      const answer = await chat.chat([{ role: "user", content: "Reply with the single word OK." }]);
+      return answer.trim()
+        ? { ok: true, detail: `${cfg.llm.model} answered` }
+        : { ok: true, detail: `${cfg.llm.model} connected` };
     }
 
     case "google": {

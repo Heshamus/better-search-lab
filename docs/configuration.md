@@ -112,7 +112,7 @@ Choosing a provider fills the base URL and a default model; both stay editable.
 
 | Provider | Base URL | Default model | Needs a key |
 |---|---|---|---|
-| DeepSeek (`deepseek`) | `https://api.deepseek.com` | `deepseek-flash` | yes |
+| DeepSeek (`deepseek`) | `https://api.deepseek.com` | `deepseek-chat` | yes |
 | OpenAI (`openai`) | `https://api.openai.com/v1` | `gpt-5` | yes |
 | Anthropic (`anthropic`) | — | `claude-opus-5` | yes |
 | OpenRouter (`openrouter`) | `https://openrouter.ai/api/v1` | `openai/gpt-5` | yes |

@@ -41,20 +41,30 @@ export class AnthropicProvider implements ChatProvider {
     const turns = messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content }));
     if (!turns.some((t) => t.role === "user")) throw new LlmError("conversation needs at least one user message", 0, undefined, "transport");
 
+    const plain: Record<string, unknown> = {
+      model: this.model,
+      max_tokens: opts?.maxTokens ?? DEFAULT_MAX_TOKENS,
+      ...(system ? { system } : {}),
+      messages: turns,
+    };
+    // The server-side-fallback beta and output_config.effort are enhancements,
+    // not load-bearing. If the API rejects them (a 400 for an unknown/invalid
+    // parameter or beta), retry with a plain, universally-valid Messages call
+    // rather than hard-failing the whole assistant on setup.
+    const enhanced = { ...plain, betas: [FALLBACK_BETA], fallbacks: "default", output_config: { effort: this.effort } };
+    const statusOf = (e: unknown) => (typeof (e as { status?: unknown })?.status === "number" ? (e as { status: number }).status : 0);
     let res: AnthropicMessage;
     try {
-      res = await this.client.beta.messages.create({
-        model: this.model,
-        max_tokens: opts?.maxTokens ?? DEFAULT_MAX_TOKENS,
-        betas: [FALLBACK_BETA],
-        fallbacks: "default",
-        output_config: { effort: this.effort },
-        ...(system ? { system } : {}),
-        messages: turns,
-      });
+      res = await this.client.beta.messages.create(enhanced);
     } catch (e) {
-      const status = typeof (e as { status?: unknown })?.status === "number" ? (e as { status: number }).status : 0;
-      throw new LlmError(`anthropic: ${(e as Error)?.message ?? e}`, status, undefined, status ? "http" : "transport");
+      const status = statusOf(e);
+      if (status !== 400) throw new LlmError(`anthropic: ${(e as Error)?.message ?? e}`, status, undefined, status ? "http" : "transport");
+      try {
+        res = await this.client.beta.messages.create(plain);
+      } catch (e2) {
+        const status2 = statusOf(e2);
+        throw new LlmError(`anthropic: ${(e2 as Error)?.message ?? e2}`, status2, undefined, status2 ? "http" : "transport");
+      }
     }
     if (res.stop_reason === "refusal") {
       const category = res.stop_details?.category ?? "unspecified";
